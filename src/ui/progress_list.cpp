@@ -2,10 +2,10 @@
 
 #include <QHeaderView>
 
-enum class Column : int { DestIP = 0, FileName, FileSize, State, Progress };
+#include "model/column.h"
 
 ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
-  setContextMenuPolicy(Qt::CustomContextMenu);
+  //   setContextMenuPolicy(Qt::CustomContextMenu);
   setSelectionMode(QAbstractItemView::SingleSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -14,8 +14,8 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
   horizontalHeader()->setStretchLastSection(true);
   verticalHeader()->setVisible(false);
 
-  setColumnWidth((int)Column::FileName, 340);
-  setColumnWidth((int)Column::Progress, 160);
+  setColumnWidth((int)ProgressColumn::FileName, 340);
+  setColumnWidth((int)ProgressColumn::Progress, 160);
 }
 
 ProgressListView::~ProgressListView() {}

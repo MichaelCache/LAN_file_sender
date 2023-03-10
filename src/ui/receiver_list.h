@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QListView>
+#include <QTableView>
 
-class ReceiverListView : public QListView {
+class ReceiverListView : public QTableView {
  private:
   /* data */
  public:

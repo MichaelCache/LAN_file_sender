@@ -1,12 +1,8 @@
 #pragma once
 
-
 #include <QMainWindow>
 
-
-
 #include "main_widget.h"
-
 
 class MainWindow : public QMainWindow {
  public:
@@ -15,5 +11,4 @@ class MainWindow : public QMainWindow {
 
  private:
   MainWidget *m_central_widget;
-  
 };
