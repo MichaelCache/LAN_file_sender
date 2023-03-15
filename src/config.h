@@ -1,3 +1,5 @@
+#pragma once
+
 #if defined(Q_OS_WIN)
 #define OS_NAME "Windows"
 #elif defined(Q_OS_OSX)
@@ -8,7 +10,9 @@
 #define OS_NAME "Unknown"
 #endif
 
-#define APP_NAME = "LAN_file_sender"
+#include <QString>
+
+static const QString APP_NAME("LAN_file_sender");
 
 #define DefaultBroadcastPort 56780
 #define DefaultTransferPort 17116
