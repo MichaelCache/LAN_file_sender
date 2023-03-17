@@ -2,6 +2,7 @@
 
 #include <QLocalServer>
 #include <QHostAddress>
+#include <QUdpSocket>
 
 class LocalServer : public QLocalServer {
  public:
