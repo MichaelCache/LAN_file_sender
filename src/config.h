@@ -19,3 +19,5 @@ static const QString APP_NAME("LAN_file_sender");
 #define DefaultBroadcastInterval 5000    // 5 secs
 #define DefaultFileBufferSize 96 * 1024  // 96 KB
 #define MaxFileBufferSize 1024 * 1024    // 1 MB
+
+static const QString BroadCastMagic{"7463921"};

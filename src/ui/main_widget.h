@@ -7,6 +7,7 @@
 #include "model/receiver_model.h"
 #include "progress_list.h"
 #include "receiver_list.h"
+#include "server/local_server.h"
 
 class MainWidget : public QWidget {
  public:
@@ -20,4 +21,6 @@ class MainWidget : public QWidget {
   ReceiverModel *m_receiver_model;
   ProgressListView *m_progress_view;
   ProgressModel *m_progress_model;
+
+  LocalServer* m_local_server;
 };
