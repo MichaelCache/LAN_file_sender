@@ -18,7 +18,7 @@ class MainWidget : public QWidget {
   /* data */
   QHBoxLayout *m_hlayout;
   ReceiverListView *m_receiver_view;
-  ReceiverModel *m_receiver_model;
+  // ReceiverModel *m_receiver_model;
   ProgressListView *m_progress_view;
   ProgressModel *m_progress_model;
 

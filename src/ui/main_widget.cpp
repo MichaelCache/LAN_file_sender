@@ -1,9 +1,11 @@
 #include "main_widget.h"
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
+  m_local_server = new LocalServer(this);
+
   m_receiver_view = new ReceiverListView(this);
-  m_receiver_model = new ReceiverModel(this);
-  m_receiver_view->setModel(m_receiver_model);
+  // m_receiver_model = new ReceiverModel(this);
+  m_receiver_view->setModel(m_local_server->receivers());
 
   m_progress_view = new ProgressListView(this);
   m_progress_model = new ProgressModel(this);

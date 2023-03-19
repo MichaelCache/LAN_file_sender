@@ -15,9 +15,12 @@ LocalServer::LocalServer(QObject *parent) : QLocalServer(parent) {
           &LocalServer::receiveBroadcast);
 
   // sendBroadcast();
+  m_receiver = new ReceiverModel(this);
 }
 
 LocalServer::~LocalServer() {}
+
+ReceiverModel *LocalServer::receivers() { return m_receiver; }
 
 void LocalServer::sendBroadcast() {
   auto &setting = Setting::ins();
@@ -63,13 +66,15 @@ void LocalServer::receiveBroadcast() {
     QJsonObject obj = QJsonDocument::fromJson(data).object();
     if (obj.keys().length() == 4) {
       if (obj.value("magic").toString() == BroadCastMagic) {
-        if (m_remote_servers.contains(sender.toString())) {
+        if (m_receiver->contains(sender)) {
           continue;
         }
-        RemoteServer remote_server{sender, obj.value("name").toString(),
-                                   obj.value("os").toString()};
+        RemoteServer *remote_server = new RemoteServer{
+            sender, obj.value("name").toString(), obj.value("os").toString()};
 
-        m_remote_servers.insert(sender.toString(), remote_server);
+        m_receiver->add(remote_server);
+
+        // m_remote_servers.insert(sender.toString(), remote_server);
         // tell new remote server self host info
         sendHostInfo(sender);
       }
