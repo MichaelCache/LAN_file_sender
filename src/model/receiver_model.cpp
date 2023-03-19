@@ -14,27 +14,42 @@ ReceiverModel::ReceiverModel(QObject *parent) : QAbstractTableModel(parent) {
 ReceiverModel::~ReceiverModel() {}
 
 bool ReceiverModel::contains(QHostAddress addr) {
-  return m_remote_servers.contains(addr.toString());
+  return m_remote_servers_addrs.contains(addr.toString());
 }
 
 void ReceiverModel::add(RemoteServer *server) {
-  m_remote_servers.insert(server->addr().toString(), server);
+  if (contains(server->m_host_addr)) {
+    return;
+  }
+
+  m_remote_servers.push_back(server);
+  m_remote_servers_addrs.insert(server->m_host_addr.toString());
 }
 
-int ReceiverModel::rowCount(const QModelIndex &parent) const { return 1; }
-int ReceiverModel::columnCount(const QModelIndex &parent) const { return 3; }
+int ReceiverModel::rowCount(const QModelIndex &parent) const {
+  Q_UNUSED(parent);
+  return m_remote_servers.size();
+}
+
+int ReceiverModel::columnCount(const QModelIndex &parent) const {
+  Q_UNUSED(parent);
+  return (int)Column::Count;
+}
+
 QVariant ReceiverModel::data(const QModelIndex &index, int role) const {
   if (index.isValid()) {
     Column col = (Column)index.column();
 
+    auto receiver = m_remote_servers.at(index.row());
+
     if (role == Qt::DisplayRole) {
       switch (col) {
         case Column::IP:
-          return "192.168.1.1";
+          return receiver->m_host_addr.toString();
         case Column::Name:
-          return "LocalHost";
+          return receiver->m_host_name;
         case Column::OS:
-          return "Win";
+          return receiver->m_os;
         default:
           break;
       }

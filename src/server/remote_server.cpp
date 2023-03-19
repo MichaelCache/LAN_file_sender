@@ -5,4 +5,4 @@ RemoteServer::RemoteServer(const QHostAddress& ip, const QString& host_name,
 
 RemoteServer::~RemoteServer() {}
 
-QHostAddress RemoteServer::addr() const { return m_host_addr; }
+// QHostAddress RemoteServer::addr() const { return m_host_addr; }

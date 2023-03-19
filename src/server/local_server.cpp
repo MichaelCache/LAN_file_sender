@@ -43,6 +43,7 @@ QVector<QHostAddress> LocalServer::getBroadcastAddressFromInterfaces() {
       for (auto &&addressEntry : iface.addressEntries()) {
         if (!addressEntry.broadcast().isNull()) {
           addresses.push_back(addressEntry.broadcast());
+          qDebug() << addressEntry.broadcast().toString();
         }
       }
     }

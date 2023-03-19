@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QAbstractTableModel>
+#include <QVector>
+
 #include "server/remote_server.h"
 
 class ReceiverModel : public QAbstractTableModel {
@@ -10,7 +12,7 @@ class ReceiverModel : public QAbstractTableModel {
   ReceiverModel(QObject *parent = nullptr);
   ~ReceiverModel();
 
-  enum class Column : int { IP = 0, Name, OS };
+  enum class Column : int { IP = 0, Name, OS, Count };
 
   bool contains(QHostAddress);
   void add(RemoteServer *);
@@ -23,5 +25,6 @@ class ReceiverModel : public QAbstractTableModel {
                       int role = Qt::DisplayRole) const override;
 
  private:
-  QMap<QString, RemoteServer *> m_remote_servers;
+  QSet<QString> m_remote_servers_addrs;
+  QVector<RemoteServer *> m_remote_servers;
 };
