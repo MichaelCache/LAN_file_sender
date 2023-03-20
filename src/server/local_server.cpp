@@ -16,6 +16,8 @@ LocalServer::LocalServer(QObject *parent) : QLocalServer(parent) {
 
   // sendBroadcast();
   m_receiver = new ReceiverModel(this);
+  m_local_host = getLocalAddressFromInterfaces();
+  m_broadcast_ip = getBroadcastAddressFromInterfaces();
 }
 
 LocalServer::~LocalServer() {}
@@ -29,9 +31,8 @@ void LocalServer::sendBroadcast() {
                                                {"name", setting.hostName()},
                                                {"os", OS_NAME}}));
 
-  QVector<QHostAddress> addresses = getBroadcastAddressFromInterfaces();
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
-  for (auto &&address : addresses) {
+  for (auto &&address : m_broadcast_ip) {
     m_broadcast_udp.writeDatagram(data, address, port);
   }
 }
@@ -39,11 +40,12 @@ void LocalServer::sendBroadcast() {
 QVector<QHostAddress> LocalServer::getBroadcastAddressFromInterfaces() {
   QVector<QHostAddress> addresses;
   for (auto &&iface : QNetworkInterface::allInterfaces()) {
-    if (iface.flags() & QNetworkInterface::CanBroadcast) {
+    if ((iface.flags() & QNetworkInterface::CanBroadcast) &&
+        !(iface.flags() & QNetworkInterface::IsLoopBack)) {
       for (auto &&addressEntry : iface.addressEntries()) {
         if (!addressEntry.broadcast().isNull()) {
           addresses.push_back(addressEntry.broadcast());
-          qDebug() << addressEntry.broadcast().toString();
+          // qDebug() << addressEntry.broadcast().toString();
         }
       }
     }
@@ -61,24 +63,27 @@ void LocalServer::receiveBroadcast() {
 
     data.resize(static_cast<int>(datagram_size));
     QHostAddress sender;
+    quint16 port;
 
-    m_broadcast_udp.readDatagram(data.data(), data.size(), &sender);
+    m_broadcast_udp.readDatagram(data.data(), data.size(), &sender, &port);
+
+    // convert to ipv4 if work in ipv4/v6 hybird
+    sender = QHostAddress(sender.toIPv4Address());
 
     QJsonObject obj = QJsonDocument::fromJson(data).object();
-    // if (obj.keys().length() == 4) {
+    // if () {
     if (obj.value("magic").toString() == BroadCastMagic) {
-      if (m_receiver->contains(sender) ||
-          sender != QHostAddress(QHostAddress::LocalHost)) {
+      if (sender.isLoopback() || isLocalHost(sender)) {
         continue;
       }
       RemoteServer *remote_server = new RemoteServer{
           sender, obj.value("name").toString(), obj.value("os").toString()};
 
-      m_receiver->add(remote_server);
-
-      // m_remote_servers.insert(sender.toString(), remote_server);
-      // tell new remote server self host info
-      sendHostInfo(sender);
+      if (m_receiver->add(remote_server)) {
+        // m_remote_servers.insert(sender.toString(), remote_server);
+        // tell new remote server self host info
+        sendHostInfo(sender);
+      }
     }
     // }
   }
@@ -91,7 +96,27 @@ void LocalServer::sendHostInfo(QHostAddress dst) {
                                                {"name", setting.hostName()},
                                                {"os", OS_NAME}}));
 
-  // QVector<QHostAddress> addresses = getBroadcastAddressFromInterfaces();
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   m_broadcast_udp.writeDatagram(data, dst, port);
+}
+
+QVector<QHostAddress> LocalServer::getLocalAddressFromInterfaces() {
+  QVector<QHostAddress> addresses;
+  for (auto &&iface : QNetworkInterface::allInterfaces()) {
+    if (!(iface.flags() & QNetworkInterface::IsLoopBack)) {
+      for (auto &&addressEntry : iface.addressEntries()) {
+        addresses.push_back(addressEntry.ip());
+      }
+    }
+  }
+  return addresses;
+}
+
+bool LocalServer::isLocalHost(const QHostAddress &addr) const {
+  auto find = std::find(m_local_host.begin(), m_local_host.end(), addr);
+  if (find != m_local_host.end()) {
+    return true;
+  } else {
+    return false;
+  }
 }

@@ -5,4 +5,9 @@ RemoteServer::RemoteServer(const QHostAddress& ip, const QString& host_name,
 
 RemoteServer::~RemoteServer() {}
 
+bool RemoteServer::operator==(const RemoteServer& other) {
+  return m_host_addr == other.m_host_addr && m_host_name == other.m_host_name &&
+         m_os == other.m_os;
+}
+
 // QHostAddress RemoteServer::addr() const { return m_host_addr; }

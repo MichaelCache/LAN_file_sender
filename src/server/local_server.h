@@ -8,7 +8,6 @@
 #include "model/receiver_model.h"
 #include "remote_server.h"
 
-
 class LocalServer : public QLocalServer {
   Q_OBJECT
  public:
@@ -28,8 +27,12 @@ class LocalServer : public QLocalServer {
  private:
   void sendHostInfo(QHostAddress);
   QVector<QHostAddress> getBroadcastAddressFromInterfaces();
+  QVector<QHostAddress> getLocalAddressFromInterfaces();
 
-  QHostAddress m_local_host;
+  bool isLocalHost(const QHostAddress&) const;
+
+  QVector<QHostAddress> m_local_host;
+  QVector<QHostAddress> m_broadcast_ip;
   QUdpSocket m_broadcast_udp;
   ReceiverModel* m_receiver;
   // QMap<QString, RemoteServer*> m_remote_servers;
