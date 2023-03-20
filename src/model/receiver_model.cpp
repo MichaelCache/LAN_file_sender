@@ -38,8 +38,11 @@ bool ReceiverModel::add(RemoteServer *server) {
 
   } else {
     qDebug() << "add new server: " << server->m_host_addr;
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_remote_servers.push_back(server);
+    endInsertRows();
     m_remote_servers_addrs.insert(server->m_host_addr.toString());
+    return true;
   }
 }
 
@@ -68,7 +71,7 @@ QVariant ReceiverModel::data(const QModelIndex &index, int role) const {
         case Column::OS:
           return receiver->m_os;
         default:
-          break;
+          return QVariant();
       }
     }
 
@@ -88,7 +91,7 @@ QVariant ReceiverModel::headerData(int section, Qt::Orientation orientation,
       case Column::OS:
         return tr("OS");
       default:
-        break;
+        return QVariant();
     }
   }
 
