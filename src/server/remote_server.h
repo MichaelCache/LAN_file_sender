@@ -9,7 +9,6 @@ class RemoteServer : public QStandardItem {
   RemoteServer(const QHostAddress& ip, const QString& host_name = QString(),
                const QString& os = QString());
   ~RemoteServer();
-
   // QHostAddress addr() const;
 
 //  private:

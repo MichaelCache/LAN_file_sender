@@ -18,12 +18,21 @@ bool ReceiverModel::contains(QHostAddress addr) {
 }
 
 void ReceiverModel::add(RemoteServer *server) {
+  qDebug() << "add server: " << server->m_host_addr.toString();
   if (contains(server->m_host_addr)) {
+    auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
+                             [&server](const RemoteServer *s) {
+                               return s->m_host_addr == server->m_host_addr;
+                             });
+    if (find != m_remote_servers.end()) {
+      (*find)->m_host_name = server->m_host_name;
+      (*find)->m_os = server->m_os;
+    }
     return;
+  } else {
+    m_remote_servers.push_back(server);
+    m_remote_servers_addrs.insert(server->m_host_addr.toString());
   }
-
-  m_remote_servers.push_back(server);
-  m_remote_servers_addrs.insert(server->m_host_addr.toString());
 }
 
 int ReceiverModel::rowCount(const QModelIndex &parent) const {

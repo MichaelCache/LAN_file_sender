@@ -65,21 +65,22 @@ void LocalServer::receiveBroadcast() {
     m_broadcast_udp.readDatagram(data.data(), data.size(), &sender);
 
     QJsonObject obj = QJsonDocument::fromJson(data).object();
-    if (obj.keys().length() == 4) {
-      if (obj.value("magic").toString() == BroadCastMagic) {
-        if (m_receiver->contains(sender)) {
-          continue;
-        }
-        RemoteServer *remote_server = new RemoteServer{
-            sender, obj.value("name").toString(), obj.value("os").toString()};
-
-        m_receiver->add(remote_server);
-
-        // m_remote_servers.insert(sender.toString(), remote_server);
-        // tell new remote server self host info
-        sendHostInfo(sender);
+    // if (obj.keys().length() == 4) {
+    if (obj.value("magic").toString() == BroadCastMagic) {
+      if (m_receiver->contains(sender) ||
+          sender != QHostAddress(QHostAddress::LocalHost)) {
+        continue;
       }
+      RemoteServer *remote_server = new RemoteServer{
+          sender, obj.value("name").toString(), obj.value("os").toString()};
+
+      m_receiver->add(remote_server);
+
+      // m_remote_servers.insert(sender.toString(), remote_server);
+      // tell new remote server self host info
+      sendHostInfo(sender);
     }
+    // }
   }
 }
 
@@ -90,7 +91,7 @@ void LocalServer::sendHostInfo(QHostAddress dst) {
                                                {"name", setting.hostName()},
                                                {"os", OS_NAME}}));
 
-  QVector<QHostAddress> addresses = getBroadcastAddressFromInterfaces();
+  // QVector<QHostAddress> addresses = getBroadcastAddressFromInterfaces();
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   m_broadcast_udp.writeDatagram(data, dst, port);
 }
