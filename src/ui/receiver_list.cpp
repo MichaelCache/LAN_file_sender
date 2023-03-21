@@ -1,10 +1,17 @@
 #include "receiver_list.h"
-#include "model/column.h"
+
+#include <QHeaderView>
 
 ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
-  // setColumnWidth((int)ReceiverColumn::DestIP, 600);
-  // setColumnWidth((int)ReceiverColumn::Name, 300);
-  // setColumnWidth((int)ReceiverColumn::OS, 300);
+  setSelectionMode(QAbstractItemView::SingleSelection);
+  setSelectionBehavior(QAbstractItemView::SelectRows);
+  setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+  setWordWrap(false);
+  horizontalHeader()->setStretchLastSection(true);
+  horizontalHeader()->setSelectionMode(QAbstractItemView::NoSelection);
+  horizontalHeader()->setHighlightSections(false);
+  verticalHeader()->setVisible(false);
 }
 
 ReceiverListView::~ReceiverListView() {}

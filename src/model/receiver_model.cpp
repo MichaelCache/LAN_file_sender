@@ -2,8 +2,6 @@
 
 #include <QHostAddress>
 
-#include "column.h"
-
 ReceiverModel::ReceiverModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 ReceiverModel::~ReceiverModel() {}
@@ -15,8 +13,8 @@ bool ReceiverModel::contains(QHostAddress addr) {
 bool ReceiverModel::add(const RemoteServer &server) {
   if (contains(server.m_host_addr)) {
     auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
-                             [&server](const RemoteServer *s) {
-                               return s->m_host_addr == server.m_host_addr;
+                             [&server](const RemoteServer &s) {
+                               return s.m_host_addr == server.m_host_addr;
                              });
     if (find != m_remote_servers.end()) {
       if (*find == server) {
@@ -33,10 +31,9 @@ bool ReceiverModel::add(const RemoteServer &server) {
 
   } else {
     qDebug() << "add new server: " << server.m_host_addr;
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_remote_servers.push_back(server);
-    endInsertRows();
     m_remote_servers_addrs.insert(server.m_host_addr.toString());
+    emit layoutChanged();
     return true;
   }
 }
@@ -72,6 +69,7 @@ QVariant ReceiverModel::data(const QModelIndex &index, int role) const {
 
     return QVariant();
   }
+  return QVariant();
 }
 
 QVariant ReceiverModel::headerData(int section, Qt::Orientation orientation,
@@ -80,11 +78,11 @@ QVariant ReceiverModel::headerData(int section, Qt::Orientation orientation,
     Column col = (Column)section;
     switch (col) {
       case Column::IP:
-        return tr("Ip");
+        return "Ip";
       case Column::Name:
-        return tr("Name");
+        return "Name";
       case Column::OS:
-        return tr("OS");
+        return "OS";
       default:
         return QVariant();
     }

@@ -6,6 +6,7 @@
 
 class RemoteServer {
  public:
+  RemoteServer();
   RemoteServer(const QHostAddress& ip, const QString& host_name = QString(),
                const QString& os = QString());
   ~RemoteServer();
