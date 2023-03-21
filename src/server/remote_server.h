@@ -4,7 +4,7 @@
 #include <QStandardItem>
 #include <QString>
 
-class RemoteServer : public QStandardItem {
+class RemoteServer {
  public:
   RemoteServer(const QHostAddress& ip, const QString& host_name = QString(),
                const QString& os = QString());

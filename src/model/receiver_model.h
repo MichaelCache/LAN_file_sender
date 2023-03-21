@@ -15,7 +15,7 @@ class ReceiverModel : public QAbstractTableModel {
   enum class Column : int { IP = 0, Name, OS, Count };
 
   bool contains(QHostAddress);
-  bool add(RemoteServer *);
+  bool add(const RemoteServer &);
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -26,5 +26,5 @@ class ReceiverModel : public QAbstractTableModel {
 
  private:
   QSet<QString> m_remote_servers_addrs;
-  QVector<RemoteServer *> m_remote_servers;
+  QVector<RemoteServer> m_remote_servers;
 };

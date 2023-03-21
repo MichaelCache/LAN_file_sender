@@ -76,8 +76,8 @@ void LocalServer::receiveBroadcast() {
       if (sender.isLoopback() || isLocalHost(sender)) {
         continue;
       }
-      RemoteServer *remote_server = new RemoteServer{
-          sender, obj.value("name").toString(), obj.value("os").toString()};
+      RemoteServer remote_server{sender, obj.value("name").toString(),
+                                 obj.value("os").toString()};
 
       if (m_receiver->add(remote_server)) {
         // m_remote_servers.insert(sender.toString(), remote_server);
