@@ -12,7 +12,7 @@ class ReceiverModel : public QAbstractTableModel {
   ReceiverModel(QObject *parent = nullptr);
   ~ReceiverModel();
 
-  enum class Column : int { IP = 0, Name, OS, Count };
+  
 
   bool contains(QHostAddress);
   bool add(const RemoteServer &);

@@ -1,4 +1,7 @@
 #include "progress_model.h"
+#include "column.h"
+
+using TransferProgress::Column;
 
 namespace {
 QString sizeToString(qint64 size) {

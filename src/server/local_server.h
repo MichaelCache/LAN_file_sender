@@ -25,7 +25,7 @@ class LocalServer : public QLocalServer {
   void receiveBroadcast();
 
  private:
-  void sendHostInfo(QHostAddress);
+  void sendHostInfo(QHostAddress, const QString&);
   QVector<QHostAddress> getBroadcastAddressFromInterfaces();
   QVector<QHostAddress> getLocalAddressFromInterfaces();
 

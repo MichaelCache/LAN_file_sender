@@ -29,7 +29,8 @@ void LocalServer::sendBroadcast() {
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
                                                {"name", setting.hostName()},
-                                               {"os", OS_NAME}}));
+                                               {"os", OS_NAME},
+                                               {"type", "broadcast"}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   for (auto &&address : m_broadcast_ip) {
@@ -76,25 +77,28 @@ void LocalServer::receiveBroadcast() {
       if (sender.isLoopback() || isLocalHost(sender)) {
         continue;
       }
+
       RemoteServer remote_server{sender, obj.value("name").toString(),
                                  obj.value("os").toString()};
 
-      if (m_receiver->add(remote_server)) {
+      if (m_receiver->add(remote_server) &&
+          obj.value("type").toString() != "replay") {
         // m_remote_servers.insert(sender.toString(), remote_server);
         // tell new remote server self host info
-        sendHostInfo(sender);
+        sendHostInfo(sender, "reply");
       }
     }
     // }
   }
 }
 
-void LocalServer::sendHostInfo(QHostAddress dst) {
+void LocalServer::sendHostInfo(QHostAddress dst, const QString &type) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
                                                {"name", setting.hostName()},
-                                               {"os", OS_NAME}}));
+                                               {"os", OS_NAME},
+                                               {"type", type}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   m_broadcast_udp.writeDatagram(data, dst, port);

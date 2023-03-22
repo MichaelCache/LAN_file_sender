@@ -12,14 +12,7 @@ class ProgressModel : public QAbstractTableModel {
   ProgressModel(QObject *parent = nullptr);
   ~ProgressModel();
 
-  enum class Column : int {
-    DestIP = 0,
-    FileName,
-    FileSize,
-    State,
-    Progress,
-    Count
-  };
+  
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;

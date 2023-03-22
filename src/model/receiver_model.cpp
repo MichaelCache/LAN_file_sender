@@ -2,6 +2,11 @@
 
 #include <QHostAddress>
 
+#include "column.h"
+
+
+using RemoteClient::Column;
+
 ReceiverModel::ReceiverModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 ReceiverModel::~ReceiverModel() {}
@@ -12,8 +17,10 @@ bool ReceiverModel::contains(QHostAddress addr) {
 
 bool ReceiverModel::add(const RemoteServer &server) {
   if (contains(server.m_host_addr)) {
+    int row = 0;
     auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
-                             [&server](const RemoteServer &s) {
+                             [&server, &row](const RemoteServer &s) {
+                               row++;
                                return s.m_host_addr == server.m_host_addr;
                              });
     if (find != m_remote_servers.end()) {
@@ -23,6 +30,7 @@ bool ReceiverModel::add(const RemoteServer &server) {
         find->m_host_name = server.m_host_name;
         find->m_os = server.m_os;
         qDebug() << "update server: " << server.m_host_addr;
+        emit dataChanged(index(row, 0), index(row, (int)Column::Count));
         return true;
       }
     } else {
