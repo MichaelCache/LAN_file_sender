@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   // app.setQuitOnLastWindowClosed(false);
 
   MainWindow w;
-  w.resize(900, 500);
+  w.resize(950, 500);
   w.show();
 
   return app.exec();

@@ -18,7 +18,6 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
   verticalHeader()->setVisible(false);
 
   m_progress = new ProgressBar(this);
-  // m_progress->setAutoFillBackground(true);
   setItemDelegateForColumn((int)Column::Progress, m_progress);
 }
 

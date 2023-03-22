@@ -1,8 +1,7 @@
 #pragma once
 #include <QStyledItemDelegate>
 class ProgressBar : public QStyledItemDelegate {
- private:
-  /* data */
+  Q_OBJECT
  public:
   ProgressBar(QObject *parent = nullptr);
   ~ProgressBar();

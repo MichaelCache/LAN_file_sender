@@ -1,5 +1,7 @@
 #include "progress_model.h"
+
 #include "column.h"
+
 
 using TransferProgress::Column;
 
@@ -60,6 +62,11 @@ QString stateToString(TransferState state) {
 ProgressModel::ProgressModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 ProgressModel::~ProgressModel() {}
+
+void ProgressModel::add(const TransferTask &task) {
+  m_tasks.push_back(task);
+  emit layoutChanged();
+}
 
 int ProgressModel::rowCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);

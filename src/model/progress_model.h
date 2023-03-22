@@ -4,7 +4,6 @@
 
 #include "server/transfer_task.h"
 
-
 class ProgressModel : public QAbstractTableModel {
  private:
   /* data */
@@ -12,6 +11,7 @@ class ProgressModel : public QAbstractTableModel {
   ProgressModel(QObject *parent = nullptr);
   ~ProgressModel();
 
+  void add(const TransferTask&);
   
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
