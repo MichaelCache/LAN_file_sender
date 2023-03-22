@@ -1,8 +1,9 @@
 #include "progress_bar.h"
-#include "model/column.h"
 
-#include <QPainter>
 #include <QApplication>
+#include <QPainter>
+
+#include "model/column.h"
 
 ProgressBar::ProgressBar(QObject *parent) : QStyledItemDelegate(parent) {}
 
@@ -21,17 +22,18 @@ void ProgressBar::paint(QPainter *painter, const QStyleOptionViewItem &option,
     progressBarOption.progress = value;
     progressBarOption.text = QString("%1%").arg(progressBarOption.progress);
 
-    painter->save();
-    if (option.state & QStyle::State_Selected) {
+    if ((option.state & QStyle::State_Selected) &&
+        (option.state & QStyle::State_Active)) {
+      // highlight background if selected
+      painter->save();
       painter->fillRect(option.rect, option.palette.highlight());
       painter->setBrush(option.palette.highlightedText());
+      painter->restore();
     }
     QApplication::style()->drawControl(QStyle::CE_ProgressBar,
                                        &progressBarOption, painter);
 
-    painter->restore();
-
   } else {
-    return;
+    return QStyledItemDelegate::paint(painter, option, index);
   }
 }
