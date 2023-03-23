@@ -22,16 +22,17 @@ void ProgressBar::paint(QPainter *painter, const QStyleOptionViewItem &option,
     progressBarOption.progress = value;
     progressBarOption.text = QString("%1%").arg(progressBarOption.progress);
 
+    painter->save();
     if ((option.state & QStyle::State_Selected) &&
         (option.state & QStyle::State_Active)) {
       // highlight background if selected
-      painter->save();
+
       painter->fillRect(option.rect, option.palette.highlight());
       painter->setBrush(option.palette.highlightedText());
-      painter->restore();
     }
     QApplication::style()->drawControl(QStyle::CE_ProgressBar,
                                        &progressBarOption, painter);
+    painter->restore();
 
   } else {
     return QStyledItemDelegate::paint(painter, option, index);

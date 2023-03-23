@@ -7,6 +7,39 @@
 
 #include "config.h"
 #include "setting.h"
+namespace {
+
+QString msgTypeToStr(MsgType t) {
+  switch (t) {
+    case MsgType::New:
+      return "New";
+      break;
+    case MsgType::Update:
+      return "Update";
+      break;
+    case MsgType::Reply:
+      return "Reply";
+      break;
+    default:
+      return "None";
+      break;
+  }
+}
+
+MsgType strToMsgType(const QString &s) {
+  if (s == "None") {
+    return MsgType::None;
+  } else if (s == "New") {
+    return MsgType::New;
+  } else if (s == "Update") {
+    return MsgType::Update;
+  } else if (s == "Reply") {
+    return MsgType::Reply;
+  } else {
+  }
+}
+
+}  // namespace
 
 LocalServer::LocalServer(QObject *parent) : QLocalServer(parent) {
   // share port for broadcast and listen this port in same time
@@ -27,10 +60,11 @@ ReceiverModel *LocalServer::receivers() { return m_receiver; }
 void LocalServer::sendBroadcast() {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
-  QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
-                                               {"name", setting.hostName()},
-                                               {"os", OS_NAME},
-                                               {"type", "broadcast"}}));
+  QJsonObject obj(
+      QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
+                                   {"name", setting.hostName()},
+                                   {"os", OS_NAME},
+                                   {"type", msgTypeToStr(MsgType::New)}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   for (auto &&address : m_broadcast_ip) {
@@ -68,11 +102,10 @@ void LocalServer::receiveBroadcast() {
 
     m_broadcast_udp.readDatagram(data.data(), data.size(), &sender, &port);
 
-    // convert to ipv4 if work in ipv4/v6 hybird
+    // convert to ipv4 if work in ipv4/v6 hybird interface
     sender = QHostAddress(sender.toIPv4Address());
 
     QJsonObject obj = QJsonDocument::fromJson(data).object();
-    // if () {
     if (obj.value("magic").toString() == BroadCastMagic) {
       if (sender.isLoopback() || isLocalHost(sender)) {
         continue;
@@ -82,23 +115,21 @@ void LocalServer::receiveBroadcast() {
                                  obj.value("os").toString()};
 
       if (m_receiver->add(remote_server) &&
-          obj.value("type").toString() != "replay") {
-        // m_remote_servers.insert(sender.toString(), remote_server);
+          strToMsgType(obj.value("type").toString()) == MsgType::New) {
         // tell new remote server self host info
-        sendHostInfo(sender, "reply");
+        sendHostInfo(sender, MsgType::Reply);
       }
     }
-    // }
   }
 }
 
-void LocalServer::sendHostInfo(QHostAddress dst, const QString &type) {
+void LocalServer::sendHostInfo(QHostAddress dst, MsgType t) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
                                                {"name", setting.hostName()},
                                                {"os", OS_NAME},
-                                               {"type", type}}));
+                                               {"type", msgTypeToStr(t)}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   m_broadcast_udp.writeDatagram(data, dst, port);

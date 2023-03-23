@@ -8,6 +8,8 @@
 #include "model/receiver_model.h"
 #include "remote_server.h"
 
+enum class MsgType : int { None = 0, New, Update, Reply };
+
 class LocalServer : public QLocalServer {
   Q_OBJECT
  public:
@@ -25,7 +27,7 @@ class LocalServer : public QLocalServer {
   void receiveBroadcast();
 
  private:
-  void sendHostInfo(QHostAddress, const QString&);
+  void sendHostInfo(QHostAddress, MsgType);
   QVector<QHostAddress> getBroadcastAddressFromInterfaces();
   QVector<QHostAddress> getLocalAddressFromInterfaces();
 

@@ -18,6 +18,7 @@ bool ReceiverModel::contains(QHostAddress addr) {
 bool ReceiverModel::add(const RemoteServer &server) {
   if (contains(server.m_host_addr)) {
     int row = 0;
+    // find remote server in same ip, name or os may changed
     auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
                              [&server, &row](const RemoteServer &s) {
                                row++;
@@ -25,6 +26,7 @@ bool ReceiverModel::add(const RemoteServer &server) {
                              });
     if (find != m_remote_servers.end()) {
       if (*find == server) {
+        // remote server info not changed, no need update
         return false;
       } else {
         find->m_host_name = server.m_host_name;
