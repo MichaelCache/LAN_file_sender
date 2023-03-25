@@ -4,6 +4,7 @@
 #include "progress_bar.h"
 
 class ProgressListView : public QTableView {
+  Q_OBJECT
  private:
   /* data */
  public:

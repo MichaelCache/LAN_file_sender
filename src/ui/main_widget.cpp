@@ -1,5 +1,9 @@
 #include "main_widget.h"
 
+#include <QMessageBox>
+
+#include "config.h"
+
 // #include "model/transfer_task.h"
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
@@ -11,7 +15,9 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
   connect(m_host_broadcaster, &HostDetector::addHost, m_receiver_model,
           &ReceiverModel::add);
-  m_host_broadcaster->broadcast();
+  connect(m_host_broadcaster, &HostDetector::removeHost, m_receiver_model,
+          &ReceiverModel::remove);
+  m_host_broadcaster->broadcast(MsgType::New);
 
   m_progress_view = new ProgressListView(this);
   m_progress_model = new ProgressModel(this);
@@ -30,3 +36,5 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 }
 
 MainWidget::~MainWidget() {}
+
+void MainWidget::onClose() { m_host_broadcaster->broadcast(MsgType::Delete); }

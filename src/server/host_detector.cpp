@@ -41,6 +41,7 @@ MsgType strToMsgType(const QString &s) {
   } else if (s == "Delete") {
     return MsgType::Delete;
   } else {
+    return MsgType::None;
   }
 }
 
@@ -59,14 +60,13 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
 
 HostDetector::~HostDetector() {}
 
-void HostDetector::broadcast() {
+void HostDetector::broadcast(MsgType type) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
-  QJsonObject obj(
-      QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
-                                   {"name", setting.hostName()},
-                                   {"os", OS_NAME},
-                                   {"type", msgTypeToStr(MsgType::New)}}));
+  QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
+                                               {"name", setting.hostName()},
+                                               {"os", OS_NAME},
+                                               {"type", msgTypeToStr(type)}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   for (auto &&address : m_broadcast_ip) {
@@ -116,13 +116,17 @@ void HostDetector::receiveBroadcast() {
       RemoteHostInfo remote_server{sender, obj.value("name").toString(),
                                    obj.value("os").toString()};
 
-      emit addHost(remote_server);
       auto msg_type = strToMsgType(obj.value("type").toString());
-      if (msg_type == MsgType::New) {
-        // tell new remote server this host info
-        sendHostInfo(sender, MsgType::Reply);
+      if (msg_type == MsgType::New || msg_type == MsgType::Update ||
+          msg_type == MsgType::Reply) {
+        emit addHost(remote_server);
       } else if (msg_type == MsgType::Delete) {
         emit removeHost(remote_server);
+      }
+      
+      if (msg_type == MsgType::New) {
+        // send back new remote server this host info
+        sendHostInfo(sender, MsgType::Reply);
       }
     }
   }

@@ -10,9 +10,13 @@
 #include "server/host_detector.h"
 
 class MainWidget : public QWidget {
+  Q_OBJECT
  public:
   MainWidget(QWidget *parent = nullptr);
   ~MainWidget();
+
+public Q_SLOTS:
+  void onClose();
 
  private:
   /* data */

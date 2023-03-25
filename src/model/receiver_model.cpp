@@ -60,6 +60,7 @@ void ReceiverModel::remove(const RemoteHostInfo &server) {
   if (find != m_remote_servers.end()) {
     qDebug() << "remove server: " << server.m_host_addr;
     m_remote_servers.erase(find);
+    emit layoutChanged();
   }
 }
 

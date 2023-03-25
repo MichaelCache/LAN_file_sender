@@ -25,7 +25,7 @@ class HostDetector : public QObject {
   void removeHost(const RemoteHostInfo&);
 
  public Q_SLOTS:
-  void broadcast();
+  void broadcast(MsgType type);
 
  private Q_SLOTS:
   void receiveBroadcast();

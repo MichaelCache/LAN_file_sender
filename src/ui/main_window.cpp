@@ -2,9 +2,10 @@
 
 #include <QAction>
 #include <QMenuBar>
+#include <QMessageBox>
 
+#include "config.h"
 #include "setting_dialog.h"
-
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_central_widget = new MainWidget(this);
@@ -24,4 +25,16 @@ MainWindow::~MainWindow() {}
 void MainWindow::openSettingDialog() {
   SettingDialog dialog;
   dialog.exec();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+  QMessageBox::StandardButton resBtn = QMessageBox::question(
+      this, APP_NAME, "Are you sure?", QMessageBox::Yes | QMessageBox::No,
+      QMessageBox::No);
+  if (resBtn != QMessageBox::Yes) {
+    event->ignore();
+  } else {
+    m_central_widget->onClose();
+    event->accept();
+  }
 }
