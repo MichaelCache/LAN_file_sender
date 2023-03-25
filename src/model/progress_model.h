@@ -2,7 +2,7 @@
 
 #include <QAbstractTableModel>
 
-#include "server/transfer_task.h"
+#include "transfer_info.h"
 
 class ProgressModel : public QAbstractTableModel {
  private:
@@ -11,8 +11,7 @@ class ProgressModel : public QAbstractTableModel {
   ProgressModel(QObject *parent = nullptr);
   ~ProgressModel();
 
-  void add(const TransferTask&);
-  
+  void add(const TransferInfo &);
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -22,5 +21,5 @@ class ProgressModel : public QAbstractTableModel {
                       int role = Qt::DisplayRole) const override;
 
  private:
-  QVector<TransferTask> m_tasks;
+  QVector<TransferInfo> m_tasks;
 };

@@ -63,7 +63,7 @@ ProgressModel::ProgressModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 ProgressModel::~ProgressModel() {}
 
-void ProgressModel::add(const TransferTask &task) {
+void ProgressModel::add(const TransferInfo &task) {
   m_tasks.push_back(task);
   emit layoutChanged();
 }

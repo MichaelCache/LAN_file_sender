@@ -13,12 +13,12 @@ enum class TransferState {
   Finish
 };
 
-class TransferTask {
+class TransferInfo {
  private:
   /* data */
  public:
-  TransferTask(/* args */);
-  ~TransferTask();
+  TransferInfo(/* args */);
+  ~TransferInfo();
 
   QHostAddress m_dest_ip;
   QString m_file_name;

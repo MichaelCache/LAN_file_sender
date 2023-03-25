@@ -4,7 +4,6 @@
 
 #include "column.h"
 
-
 using RemoteClient::Column;
 
 ReceiverModel::ReceiverModel(QObject *parent) : QAbstractTableModel(parent) {}
@@ -15,28 +14,28 @@ bool ReceiverModel::contains(QHostAddress addr) {
   return m_remote_servers_addrs.contains(addr.toString());
 }
 
-bool ReceiverModel::add(const RemoteServer &server) {
+void ReceiverModel::add(const RemoteHostInfo &server) {
   if (contains(server.m_host_addr)) {
     int row = 0;
     // find remote server in same ip, name or os may changed
     auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
-                             [&server, &row](const RemoteServer &s) {
+                             [&server, &row](const RemoteHostInfo &s) {
                                row++;
                                return s.m_host_addr == server.m_host_addr;
                              });
     if (find != m_remote_servers.end()) {
       if (*find == server) {
         // remote server info not changed, no need update
-        return false;
+        return;
       } else {
         find->m_host_name = server.m_host_name;
         find->m_os = server.m_os;
         qDebug() << "update server: " << server.m_host_addr;
         emit dataChanged(index(row, 0), index(row, (int)Column::Count));
-        return true;
+        return;
       }
     } else {
-      return false;
+      return;
     }
 
   } else {
@@ -44,7 +43,23 @@ bool ReceiverModel::add(const RemoteServer &server) {
     m_remote_servers.push_back(server);
     m_remote_servers_addrs.insert(server.m_host_addr.toString());
     emit layoutChanged();
-    return true;
+    return;
+  }
+}
+
+void ReceiverModel::remove(const RemoteHostInfo &server) {
+  auto it = m_remote_servers_addrs.find(server.m_host_addr.toString());
+  if (it != m_remote_servers_addrs.end()) {
+    m_remote_servers_addrs.erase(it);
+  }
+
+  auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
+                           [&server](const RemoteHostInfo &s) {
+                             return s.m_host_addr == server.m_host_addr;
+                           });
+  if (find != m_remote_servers.end()) {
+    qDebug() << "remove server: " << server.m_host_addr;
+    m_remote_servers.erase(find);
   }
 }
 

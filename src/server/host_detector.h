@@ -1,27 +1,31 @@
 #pragma once
 
+#include <QAtomicInt>
 #include <QHostAddress>
-#include <QLocalServer>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTimer>
 #include <QUdpSocket>
 
+#include "model/host_info.h"
 #include "model/receiver_model.h"
-#include "remote_server.h"
 
-enum class MsgType : int { None = 0, New, Update, Reply };
+enum class MsgType : int { None = 0, New, Update, Reply, Delete };
 
-class LocalServer : public QLocalServer {
+class HostDetector : public QObject {
   Q_OBJECT
  public:
-  LocalServer(QObject* parent = nullptr);
-  ~LocalServer();
+  HostDetector(QObject* parent = nullptr);
+  ~HostDetector();
 
   QString getDefaultDownloadPath();
 
-  ReceiverModel* receivers();
+ Q_SIGNALS:
+  void addHost(const RemoteHostInfo&);
+  void removeHost(const RemoteHostInfo&);
 
  public Q_SLOTS:
-  void sendBroadcast();
+  void broadcast();
 
  private Q_SLOTS:
   void receiveBroadcast();
@@ -33,9 +37,7 @@ class LocalServer : public QLocalServer {
 
   bool isLocalHost(const QHostAddress&) const;
 
-  QVector<QHostAddress> m_local_host;
+  QVector<QHostAddress> m_local_host_ip;
   QVector<QHostAddress> m_broadcast_ip;
-  QUdpSocket m_broadcast_udp;
-  ReceiverModel* m_receiver;
-  // QMap<QString, RemoteServer*> m_remote_servers;
+  QUdpSocket* m_broadcast_udp;
 };

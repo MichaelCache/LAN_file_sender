@@ -16,9 +16,9 @@ class Setting : public QSettings {
 
   QString getDefaultDownloadPath();
 
-  quint16 mTransferPort{0};
-  qint32 mFileBuffSize{0};
+  qint32 m_file_buffer_size{0};
   QString m_download_dir;
   QString m_hostname{""};
-  bool mReplaceExistingFile{false};
+  bool m_replace_exsit_file{false};
+  quint8 m_max_thread{5};
 };

@@ -4,14 +4,14 @@
 #include <QStandardItem>
 #include <QString>
 
-class RemoteServer {
+class RemoteHostInfo {
  public:
-  RemoteServer();
-  RemoteServer(const QHostAddress& ip, const QString& host_name = QString(),
+  RemoteHostInfo();
+  RemoteHostInfo(const QHostAddress& ip, const QString& host_name = QString(),
                const QString& os = QString());
-  ~RemoteServer();
+  ~RemoteHostInfo();
 
-  bool operator==(const RemoteServer&);
+  bool operator==(const RemoteHostInfo&);
   // QHostAddress addr() const;
 
   //  private:

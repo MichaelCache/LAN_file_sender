@@ -3,7 +3,7 @@
 #include <QAbstractTableModel>
 #include <QVector>
 
-#include "server/remote_server.h"
+#include "host_info.h"
 
 class ReceiverModel : public QAbstractTableModel {
  private:
@@ -12,11 +12,6 @@ class ReceiverModel : public QAbstractTableModel {
   ReceiverModel(QObject *parent = nullptr);
   ~ReceiverModel();
 
-  
-
-  bool contains(QHostAddress);
-  bool add(const RemoteServer &);
-
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index,
@@ -24,7 +19,12 @@ class ReceiverModel : public QAbstractTableModel {
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
 
+  bool contains(QHostAddress);
+ public Q_SLOTS:
+  void add(const RemoteHostInfo &);
+  void remove(const RemoteHostInfo &);
+
  private:
   QSet<QString> m_remote_servers_addrs;
-  QVector<RemoteServer> m_remote_servers;
+  QVector<RemoteHostInfo> m_remote_servers;
 };

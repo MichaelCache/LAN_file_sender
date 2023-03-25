@@ -7,7 +7,7 @@
 #include "model/receiver_model.h"
 #include "progress_list.h"
 #include "receiver_list.h"
-#include "server/local_server.h"
+#include "server/host_detector.h"
 
 class MainWidget : public QWidget {
  public:
@@ -18,9 +18,9 @@ class MainWidget : public QWidget {
   /* data */
   QHBoxLayout *m_hlayout;
   ReceiverListView *m_receiver_view;
-  // ReceiverModel *m_receiver_model;
+  ReceiverModel *m_receiver_model;
   ProgressListView *m_progress_view;
   ProgressModel *m_progress_model;
 
-  LocalServer* m_local_server;
+  HostDetector *m_host_broadcaster;
 };
