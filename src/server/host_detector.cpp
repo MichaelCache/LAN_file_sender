@@ -64,7 +64,7 @@ void HostDetector::broadcast(MsgType type) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
-                                               {"name", setting.hostName()},
+                                               {"name", setting.m_hostname},
                                                {"os", OS_NAME},
                                                {"type", msgTypeToStr(type)}}));
 
@@ -123,7 +123,7 @@ void HostDetector::receiveBroadcast() {
       } else if (msg_type == MsgType::Delete) {
         emit removeHost(remote_server);
       }
-      
+
       if (msg_type == MsgType::New) {
         // send back new remote server this host info
         sendHostInfo(sender, MsgType::Reply);
@@ -136,7 +136,7 @@ void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
-                                               {"name", setting.hostName()},
+                                               {"name", setting.m_hostname},
                                                {"os", OS_NAME},
                                                {"type", msgTypeToStr(t)}}));
 

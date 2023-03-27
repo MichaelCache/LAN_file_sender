@@ -23,16 +23,18 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_progress_model = new ProgressModel(this);
   m_progress_view->setModel(m_progress_model);
 
-  // for test
-//   auto task = TransferInfo();
-//   task.m_progress = 60;
-//   m_progress_model->add(task);
+  m_hlayout = new QHBoxLayout(this);
+  m_hlayout->addWidget(m_receiver_view, 3);
+  m_hlayout->addWidget(m_progress_view, 6);
 
-//   m_hlayout = new QHBoxLayout(this);
-//   m_hlayout->addWidget(m_receiver_view, 3);
-//   m_hlayout->addWidget(m_progress_view, 6);
+  // for progress test
+  auto task = TransferInfo();
+  task.m_progress = 60;
+  m_progress_model->add(task);
 
-  // m_local_server = new LocalServer(this);
+  // for receiver test
+  RemoteHostInfo receiver(QHostAddress("192.168.10.31"), "Num", "Linux");
+  m_receiver_model->add(receiver);
 }
 
 MainWidget::~MainWidget() {}

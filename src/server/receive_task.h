@@ -9,8 +9,8 @@
 #include "package_type.h"
 
 
-class ReceiveTask : public QRunnable, public QObject {
-  Q_OBJECT
+class ReceiveTask : public QRunnable {
+  // Q_OBJECT
  private:
   /* data */
  public:
@@ -19,11 +19,11 @@ class ReceiveTask : public QRunnable, public QObject {
 
   virtual void run() override;
 
- Q_SIGNALS:
-  void error(const QString&);
-  void receiveNewFile(TransferInfo&);
+//  Q_SIGNALS:
+//   void error(const QString&);
+//   void receiveNewFile(TransferInfo&);
 
- private Q_SLOTS:
+//  private Q_SLOTS:
   // void onReadyRead();
   // void onDisconnected();
 

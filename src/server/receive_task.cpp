@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTcpSocket>
+#include <QFile>
 
 #include "package_type.h"
 #include "setting.h"
@@ -64,11 +65,11 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   // }
 
   // mInfo->setFilePath(download_file_dir);
-  m_file = new QFile(download_file_dir, this);
+  m_file = new QFile(download_file_dir);
   if (m_file->open(QIODevice::WriteOnly)) {
     info.m_state = TransferState::Transfering;
-    emit receiveNewFile(info);
+    // emit receiveNewFile(info);
   } else {
-    emit error("Failed to write " + download_file_dir);
+    // emit error("Failed to write " + download_file_dir);
   }
 }

@@ -11,10 +11,9 @@ class TransferServer : public QTcpServer {
   TransferServer(/* args */);
   ~TransferServer();
 
-  void sendFile(const QString& filename);
-
  private Q_SLOTS:
-  void onReceiveFile();
+  void sendFile(const QString& filename);
+  // void onReceiveFile();
 
  protected:
   void incomingConnection(qintptr socketDescriptor);
@@ -22,4 +21,5 @@ class TransferServer : public QTcpServer {
  private:
   QThreadPool* m_pool;
   QTcpSocket* m_receive_socket;
+  QTcpSocket* m_send_socket;
 };
