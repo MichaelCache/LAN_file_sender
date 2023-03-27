@@ -2,6 +2,7 @@
 
 #include <QCloseEvent>
 #include <QMainWindow>
+#include <QMessageBox>
 
 #include "main_widget.h"
 
@@ -21,4 +22,5 @@ class MainWindow : public QMainWindow {
   MainWidget *m_central_widget;
   QMenuBar *m_menubar;
   QAction *m_setting;
+  QMessageBox *m_close_msg;
 };

@@ -3,7 +3,7 @@
 #include <QHeaderView>
 
 ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
-  setSelectionMode(QAbstractItemView::SingleSelection);
+  setSelectionMode(QAbstractItemView::MultiSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
   setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);

@@ -18,6 +18,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   connect(m_setting, &QAction::triggered, this, &MainWindow::openSettingDialog);
 
   setMenuBar(m_menubar);
+
+  // close dialog
+  m_close_msg = new QMessageBox(this);
+  m_close_msg->setText("Are you sure?");
+  m_close_msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+  m_close_msg->setDefaultButton(QMessageBox::No);
 }
 
 MainWindow::~MainWindow() {}
@@ -28,10 +34,8 @@ void MainWindow::openSettingDialog() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-  QMessageBox::StandardButton resBtn = QMessageBox::question(
-      this, APP_NAME, "Are you sure?", QMessageBox::Yes | QMessageBox::No,
-      QMessageBox::No);
-  if (resBtn != QMessageBox::Yes) {
+  auto ret = m_close_msg->exec();
+  if (ret != QMessageBox::Yes) {
     event->ignore();
   } else {
     m_central_widget->onClose();
