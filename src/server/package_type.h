@@ -9,4 +9,4 @@ enum class PackageType : char {
   Resume
 };
 
-using PackageSize = uint64_t;
+using PackageSize = uint32_t;

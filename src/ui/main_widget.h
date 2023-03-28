@@ -8,6 +8,7 @@
 #include "progress_list.h"
 #include "receiver_list.h"
 #include "server/host_detector.h"
+#include "server/transfer_server.h"
 
 class MainWidget : public QWidget {
   Q_OBJECT
@@ -27,4 +28,5 @@ public Q_SLOTS:
   ProgressModel *m_progress_model;
 
   HostDetector *m_host_broadcaster;
+  TransferServer* m_file_transfer;
 };

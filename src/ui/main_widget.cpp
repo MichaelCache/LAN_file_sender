@@ -8,6 +8,7 @@
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_host_broadcaster = new HostDetector(this);
+  m_file_transfer = new TransferServer(this);
 
   m_receiver_view = new ReceiverListView(this);
   m_receiver_model = new ReceiverModel(this);
@@ -18,6 +19,11 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   connect(m_host_broadcaster, &HostDetector::removeHost, m_receiver_model,
           &ReceiverModel::remove);
   m_host_broadcaster->broadcast(MsgType::New);
+
+  connect(m_receiver_view, &ReceiverListView::sendFile, m_file_transfer,
+          &TransferServer::sendFile);
+
+  m_file_transfer->listen(QHostAddress::Any, DefaultTransferPort);
 
   m_progress_view = new ProgressListView(this);
   m_progress_model = new ProgressModel(this);

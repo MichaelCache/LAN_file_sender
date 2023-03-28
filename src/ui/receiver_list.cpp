@@ -3,6 +3,9 @@
 #include <QContextMenuEvent>
 #include <QHeaderView>
 
+#include "model/column.h"
+
+
 ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
   setSelectionMode(QAbstractItemView::MultiSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -19,6 +22,8 @@ ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
           &ReceiverListView::onReceiverContextMenuRequested);
 
   m_file_dialog = new QFileDialog(this);
+  connect(m_file_dialog, &QFileDialog::fileSelected, this,
+          &ReceiverListView::onSendFile);
 
   m_right_menu = new QMenu(this);
   m_send_ac = new QAction("Send", this);
@@ -36,11 +41,10 @@ void ReceiverListView::onReceiverContextMenuRequested(const QPoint &pos) {
   }
 }
 
-void ReceiverListView::onSendFile() {
-  // QModelIndex currIndex = currentIndex();
-  // QModelIndex fileNameIndex = model()->index(
-  //     currIndex.row(), (int)TransferTableModel::Column::FileName);
-  // QString fileName = mSenderModel->data(fileNameIndex).toString();
-
-  // QDesktopServices::openUrl(QUrl::fromLocalFile(fileName));
+void ReceiverListView::onSendFile(const QString &filename) {
+  QModelIndex curr_index = currentIndex();
+  QModelIndex ip_index =
+      model()->index(curr_index.row(), (int)RemoteClient::Column::IP);
+  auto dst = QHostAddress(model()->data(ip_index).toString());
+  emit sendFile(filename, dst);
 }
