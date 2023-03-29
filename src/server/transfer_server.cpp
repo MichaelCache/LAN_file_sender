@@ -2,6 +2,7 @@
 
 #include <QByteArray>
 #include <QDataStream>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QtGlobal>
@@ -15,6 +16,7 @@ TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {
   // How many threads I want at any given time
   // If there are more connections, they will be qued until a threads is closed
   m_pool->setMaxThreadCount(Setting::ins().m_max_thread);
+  m_receive_buffer.clear();
 }
 
 TransferServer::~TransferServer() {}
@@ -38,14 +40,16 @@ void TransferServer::onReadyRead() {
   while (m_receive_buffer.size()) {
     PackageSize size{0};
     memcpy(&size, m_receive_buffer.data(), sizeof(PackageSize));
-    m_receive_buffer.remove(0, sizeof(PackageSize));
-
+    // m_receive_buffer.remove(0, sizeof(PackageSize));
+    auto data = m_receive_buffer.mid(0, size);
+    data.remove(0, sizeof(PackageSize));
     PackageType type;
-    memcpy(&type, m_receive_buffer.data(), sizeof(PackageType));
-    m_receive_buffer.remove(0, sizeof(PackageType));
+    memcpy(&type, data.data(), sizeof(PackageType));
+    data.remove(0, sizeof(PackageType));
     // Q_ASSERT(m_receive_buffer.size() == size);
     qDebug() << size;
-    processPackage(type, m_receive_buffer);
+
+    processPackage(type, data);
     m_receive_buffer.remove(0, size);
   }
 }
@@ -54,11 +58,21 @@ void TransferServer::processPackage(PackageType type, QByteArray& data) {
   switch (type) {
     case PackageType::Header: {
       QJsonObject obj = QJsonDocument::fromJson(data).object();
-      auto filename = obj.value("name").toString();
+      auto filename = QFileInfo(obj.value("name").toString());
+      m_receive_file = new QFile(filename.fileName());
+      m_receive_file->open(QIODevice::Append);
+
       qDebug() << filename;
 
       // m_receive_file->open()
     } break;
+    case PackageType::Data: {
+      m_receive_file->write(data);
+    } break;
+    case PackageType::Finish: {
+      m_receive_file->close();
+      m_receive_socket->disconnectFromHost();
+    }
 
     default:
       break;
@@ -98,15 +112,23 @@ void TransferServer::sendFile(const QString& filename,
 void TransferServer::onBytesWritten(qint64 bytes) {
   Q_UNUSED(bytes);
   // send file data
-  if (!m_send_file->bytesToWrite()) {
-    QByteArray file_buffer(DefaultFileBufferSize);
+  if (!m_send_socket->bytesToWrite()) {
+    QByteArray file_buffer;  //(DefaultFileBufferSize, '\0');
+    quint32 size;
+    if (m_byte_remain < DefaultFileBufferSize) {
+      file_buffer.resize(m_byte_remain);
+      size = m_byte_remain;
+    } else {
+      file_buffer.resize(DefaultFileBufferSize);
+      size = DefaultFileBufferSize;
+    }
+
     // if (m_byte_remain < m_file_size) {
     //   mFileBuff.resize(mBytesRemaining);
     //   mFileBuffSize = mFileBuff.size();
     // }
 
-    qint64 bytes_read =
-        m_send_file->read(file_buffer.data(), DefaultFileBufferSize);
+    qint64 bytes_read = m_send_file->read(file_buffer.data(), size);
     if (bytes_read == -1) {
       // emit mInfo->errorOcurred(tr("Error while reading file."));
       return;
@@ -152,9 +174,9 @@ void TransferServer::onDisconnected() {}
 
 QByteArray TransferServer::preparePackage(PackageType type, QByteArray data) {
   QByteArray result;
-  PackageSize size = data.size();
+  PackageSize size = sizeof(PackageSize) + sizeof(PackageType) + data.size();
   result.append((char*)(&size), sizeof(PackageSize));
   result.append((char*)(&type), sizeof(PackageType));
-  result.prepend(data);
+  result.append(data);
   return result;
 }
