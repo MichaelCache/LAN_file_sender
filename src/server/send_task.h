@@ -1,12 +1,17 @@
 #pragma once
 
-#include <QRunnable>
+#include <QFile>
+#include <QTcpSocket>
+#include <Qthread>
 
-class SendTask : public QRunnable {
+class SendTask : public QThread {
  private:
   /* data */
  public:
   SendTask(/* args */);
   ~SendTask();
   virtual void run() override;
+
+ private:
+  QFile* m_send_file{nullptr};
 };

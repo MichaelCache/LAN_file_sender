@@ -1,5 +1,6 @@
 #include "transfer_server.h"
 
+#include <QByteArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QtGlobal>
@@ -24,6 +25,17 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
 
   // m_pool->start(receive_task);
   qDebug() << "tcp handler: " << socketDescriptor;
+  auto receive_socket = new QTcpSocket();
+  receive_socket->setSocketDescriptor(socketDescriptor);
+  auto data = receive_socket->readAll();
+  PackageSize size;
+  memcpy(&size, data.data(), sizeof(PackageSize));
+  data.remove(0, sizeof(PackageSize));
+  PackageType type;
+  memcpy(&type, data.data(), sizeof(PackageType));
+  data.remove(0, sizeof(PackageType));
+  QJsonObject obj = QJsonDocument::fromJson(data).object();
+  qDebug() << size << " "  << " " << obj;
 }
 
 void TransferServer::sendFile(const QString& filename,
