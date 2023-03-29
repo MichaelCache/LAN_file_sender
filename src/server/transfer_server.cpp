@@ -1,6 +1,7 @@
 #include "transfer_server.h"
 
 #include <QByteArray>
+#include <QDataStream>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QtGlobal>
@@ -25,17 +26,43 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
 
   // m_pool->start(receive_task);
   qDebug() << "tcp handler: " << socketDescriptor;
-  auto receive_socket = new QTcpSocket();
-  receive_socket->setSocketDescriptor(socketDescriptor);
-  auto data = receive_socket->readAll();
-  PackageSize size;
-  memcpy(&size, data.data(), sizeof(PackageSize));
-  data.remove(0, sizeof(PackageSize));
-  PackageType type;
-  memcpy(&type, data.data(), sizeof(PackageType));
-  data.remove(0, sizeof(PackageType));
-  QJsonObject obj = QJsonDocument::fromJson(data).object();
-  qDebug() << size << " "  << " " << obj;
+  m_receive_socket = new QTcpSocket();
+  m_receive_socket->setSocketDescriptor(socketDescriptor);
+  connect(m_receive_socket, &QTcpSocket::readyRead, this,
+          &TransferServer::onReadyRead);
+}
+
+void TransferServer::onReadyRead() {
+  m_receive_buffer.append(m_receive_socket->readAll());
+
+  while (m_receive_buffer.size()) {
+    PackageSize size{0};
+    memcpy(&size, m_receive_buffer.data(), sizeof(PackageSize));
+    m_receive_buffer.remove(0, sizeof(PackageSize));
+
+    PackageType type;
+    memcpy(&type, m_receive_buffer.data(), sizeof(PackageType));
+    m_receive_buffer.remove(0, sizeof(PackageType));
+    // Q_ASSERT(m_receive_buffer.size() == size);
+    qDebug() << size;
+    processPackage(type, m_receive_buffer);
+    m_receive_buffer.remove(0, size);
+  }
+}
+
+void TransferServer::processPackage(PackageType type, QByteArray& data) {
+  switch (type) {
+    case PackageType::Header: {
+      QJsonObject obj = QJsonDocument::fromJson(data).object();
+      auto filename = obj.value("name").toString();
+      qDebug() << filename;
+
+      // m_receive_file->open()
+    } break;
+
+    default:
+      break;
+  }
 }
 
 void TransferServer::sendFile(const QString& filename,
@@ -43,15 +70,15 @@ void TransferServer::sendFile(const QString& filename,
   // mInfo->setFilePath(mFilePath);
   m_send_file = new QFile(filename, this);
   bool ok = m_send_file->open(QIODevice::ReadOnly);
-  qint64 file_size;
   if (ok) {
-    file_size = m_send_file->size();
+    m_file_size = m_send_file->size();
+    m_byte_remain = m_file_size;
     // mInfo->setDataSize(mFileSize);
     // mBytesRemaining = mFileSize;
     // emit mInfo->fileOpened();
   }
 
-  if (file_size > 0) {
+  if (m_file_size > 0) {
     m_send_socket = new QTcpSocket(this);
     m_send_socket->connectToHost(dst, DefaultTransferPort,
                                  QAbstractSocket::ReadWrite);
@@ -70,13 +97,46 @@ void TransferServer::sendFile(const QString& filename,
 
 void TransferServer::onBytesWritten(qint64 bytes) {
   Q_UNUSED(bytes);
-
+  // send file data
   if (!m_send_file->bytesToWrite()) {
-    // sendData();
+    QByteArray file_buffer(DefaultFileBufferSize);
+    // if (m_byte_remain < m_file_size) {
+    //   mFileBuff.resize(mBytesRemaining);
+    //   mFileBuffSize = mFileBuff.size();
+    // }
+
+    qint64 bytes_read =
+        m_send_file->read(file_buffer.data(), DefaultFileBufferSize);
+    if (bytes_read == -1) {
+      // emit mInfo->errorOcurred(tr("Error while reading file."));
+      return;
+    }
+
+    m_byte_remain -= bytes_read;
+    if (m_byte_remain < 0) m_byte_remain = 0;
+
+    // mInfo->setProgress((int)((mFileSize - mBytesRemaining) * 100 /
+    // mFileSize));
+    auto data = preparePackage(PackageType::Data, file_buffer);
+    m_send_socket->write(data);
+    // writePacket(mFileBuffSize, PacketType::Data, mFileBuff);
+
+    if (!m_byte_remain) {
+      finish();
+    }
   }
 }
 
+void TransferServer::finish() {
+  m_send_file->close();
+  // mInfo->setState(TransferState::Finish);
+  // emit mInfo->done();
+  auto data = preparePackage(PackageType::Finish);
+  m_send_socket->write(data);
+}
+
 void TransferServer::onConnected() {
+  // send file header
   QString filename = m_send_file->fileName();
   auto filesize = m_send_file->size();
 
@@ -92,7 +152,7 @@ void TransferServer::onDisconnected() {}
 
 QByteArray TransferServer::preparePackage(PackageType type, QByteArray data) {
   QByteArray result;
-  PackageSize size = sizeof(PackageSize) + sizeof(PackageType) + data.size();
+  PackageSize size = data.size();
   result.append((char*)(&size), sizeof(PackageSize));
   result.append((char*)(&type), sizeof(PackageType));
   result.prepend(data);

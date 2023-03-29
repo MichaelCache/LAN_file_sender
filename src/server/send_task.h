@@ -2,7 +2,7 @@
 
 #include <QFile>
 #include <QTcpSocket>
-#include <Qthread>
+#include <QThread>
 
 class SendTask : public QThread {
  private:
