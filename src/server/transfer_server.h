@@ -7,6 +7,7 @@
 #include <QByteArray>
 
 #include "package_type.h"
+#include "send_task.h"
 
 class TransferServer : public QTcpServer {
   Q_OBJECT
@@ -21,9 +22,6 @@ class TransferServer : public QTcpServer {
   // void onReceiveFile();
 
  private Q_SLOTS:
-  void onBytesWritten(qint64 byte);
-  void onConnected();
-  void onDisconnected();
 
   void onReadyRead();
 
@@ -31,7 +29,6 @@ class TransferServer : public QTcpServer {
   void incomingConnection(qintptr socketDescriptor);
 
  private:
-  void finish();
   QByteArray preparePackage(PackageType type, QByteArray data = QByteArray());
   void processPackage(PackageType, QByteArray&);
 
@@ -44,4 +41,5 @@ class TransferServer : public QTcpServer {
 
   QByteArray m_receive_buffer;
   QFile* m_receive_file{nullptr};
+  QVector<SendTask*> m_senders;
 };
