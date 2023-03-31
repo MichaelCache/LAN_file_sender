@@ -3,6 +3,8 @@
 #include <QSettings>
 #include <QtGlobal>
 
+#include "config.h"
+
 class Setting : public QSettings {
   Q_OBJECT
  public:

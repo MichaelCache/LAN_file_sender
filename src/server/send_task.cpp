@@ -7,7 +7,7 @@
 
 SendTask::SendTask(const QHostAddress& host, const QString& filename)
     : m_dst(host), m_filename(filename) {
-  m_socket = new QTcpSocket();
+  m_socket = new QTcpSocket(this);
 
   connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
   connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
@@ -22,6 +22,7 @@ void SendTask::run() {
   } else {
     quit();
   }
+  QThread::run();
 }
 
 void SendTask::onBytesWritten(qint64 byte) {

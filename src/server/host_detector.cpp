@@ -3,53 +3,36 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkInterface>
+#include <QProcess>
 #include <QStandardPaths>
 
 #include "config.h"
 #include "setting.h"
-namespace {
-
-QString msgTypeToStr(MsgType t) {
-  switch (t) {
-    case MsgType::New:
-      return "New";
-      break;
-    case MsgType::Update:
-      return "Update";
-      break;
-    case MsgType::Reply:
-      return "Reply";
-      break;
-    case MsgType::Delete:
-      return "Delete";
-      break;
-    default:
-      return "None";
-      break;
-  }
-}
-
-MsgType strToMsgType(const QString &s) {
-  if (s == "None") {
-    return MsgType::None;
-  } else if (s == "New") {
-    return MsgType::New;
-  } else if (s == "Update") {
-    return MsgType::Update;
-  } else if (s == "Reply") {
-    return MsgType::Reply;
-  } else if (s == "Delete") {
-    return MsgType::Delete;
-  } else {
-    return MsgType::None;
-  }
-}
-
-}  // namespace
 
 HostDetector::HostDetector(QObject *parent) : QObject(parent) {
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
+
+  // TODO:
+  if (m_local_host_ip.empty()) {
+// no LAN, establish DHCP
+#ifdef Q_OS_WIN
+    QString dhcp_command =
+        "netsh dhcpserver add optiondef 60 \"PXEClient\" STRING 0 "
+        "comment=\"PXE support\"";
+#else
+    QString dhcp_command = "sudo systemctl start isc-dhcp-server.service";
+#endif
+    QProcess dhcp_process;
+    dhcp_process.start(dhcp_command);
+    dhcp_process.waitForFinished();
+    if (dhcp_process.exitCode() == 0) {
+      m_local_host_ip = getLocalAddressFromInterfaces();
+      m_broadcast_ip = getBroadcastAddressFromInterfaces();
+    } else {
+      qDebug() << "DHCP server failed to start";
+    }
+  }
 
   // share port for broadcast and listen this port in same time
   m_broadcast_udp = new QUdpSocket(this);
@@ -66,7 +49,7 @@ void HostDetector::broadcast(MsgType type) {
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
                                                {"name", setting.m_hostname},
                                                {"os", OS_NAME},
-                                               {"type", msgTypeToStr(type)}}));
+                                               {"type", (int)type}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   for (auto &&address : m_broadcast_ip) {
@@ -116,7 +99,7 @@ void HostDetector::receiveBroadcast() {
       RemoteHostInfo remote_server{sender, obj.value("name").toString(),
                                    obj.value("os").toString()};
 
-      auto msg_type = strToMsgType(obj.value("type").toString());
+      auto msg_type = (MsgType)(obj.value("type").toInt());
       if (msg_type == MsgType::New || msg_type == MsgType::Update ||
           msg_type == MsgType::Reply) {
         emit addHost(remote_server);
@@ -138,7 +121,7 @@ void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
                                                {"name", setting.m_hostname},
                                                {"os", OS_NAME},
-                                               {"type", msgTypeToStr(t)}}));
+                                               {"type", (int)t}}));
 
   QByteArray data(QJsonDocument(obj).toJson(QJsonDocument::Compact));
   m_broadcast_udp->writeDatagram(data, dst, port);

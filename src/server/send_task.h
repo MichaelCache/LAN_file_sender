@@ -8,8 +8,7 @@
 #include "tcp_package.h"
 
 class SendTask : public QThread, public TcpPackage {
- private:
-  /* data */
+  Q_OBJECT
  public:
   SendTask(const QHostAddress& host, const QString& filename);
   ~SendTask();
@@ -22,7 +21,6 @@ class SendTask : public QThread, public TcpPackage {
   void onDisconnected();
 
  private:
-  
   void sendHeader();
   void sendFileData();
   void sendFinish();
