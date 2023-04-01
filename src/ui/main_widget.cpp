@@ -3,6 +3,7 @@
 #include <QMessageBox>
 
 #include "config.h"
+#include "setting.h"
 
 // #include "model/transfer_task.h"
 
@@ -23,7 +24,7 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   connect(m_receiver_view, &ReceiverListView::sendFile, m_file_transfer,
           &TransferServer::sendFile);
 
-  m_file_transfer->listen(QHostAddress::Any, DefaultTransferPort);
+  m_file_transfer->listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
 
   m_progress_view = new ProgressListView(this);
   m_progress_model = new ProgressModel(this);

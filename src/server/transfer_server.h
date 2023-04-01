@@ -8,6 +8,7 @@
 
 #include "package_type.h"
 #include "send_task.h"
+#include "receive_task.h"
 
 class TransferServer : public QTcpServer {
   Q_OBJECT

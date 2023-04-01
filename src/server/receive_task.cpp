@@ -11,7 +11,7 @@
 
 ReceiveTask::ReceiveTask(qintptr descriptor) : m_socket_descriptor(descriptor) {
   m_socket = new QTcpSocket(this);
-
+  m_socket->setSocketDescriptor(m_socket_descriptor);
   connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
   connect(m_socket, &QTcpSocket::disconnected, this,
           &ReceiveTask::onDisconnected);
@@ -20,11 +20,11 @@ ReceiveTask::ReceiveTask(qintptr descriptor) : m_socket_descriptor(descriptor) {
 ReceiveTask::~ReceiveTask() {}
 
 void ReceiveTask::run() {
-  if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
-  } else {
-    quit();
-  }
-  QThread::run();
+  // if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
+  // } else {
+  //   quit();
+  // }
+  // QThread::run();
 }
 
 void ReceiveTask::onReadyRead() {

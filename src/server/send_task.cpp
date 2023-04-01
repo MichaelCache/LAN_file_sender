@@ -17,12 +17,12 @@ SendTask::SendTask(const QHostAddress& host, const QString& filename)
 SendTask::~SendTask() {}
 
 void SendTask::run() {
-  if (m_socket) {
-    m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
-  } else {
-    quit();
-  }
-  QThread::run();
+  // if (m_socket) {
+  m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
+  // } else {
+  //   quit();
+  // }
+  // QThread::run();
 }
 
 void SendTask::onBytesWritten(qint64 byte) {
