@@ -19,8 +19,9 @@ TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {
 TransferServer::~TransferServer() {}
 
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
-  auto receiver = new ReceiveTask(socketDescriptor);
-  m_receivers.push_back(receiver);
+  auto receiver = new ReceiveTask(socketDescriptor, this);
+  // m_receivers.push_back(receiver);
+  connect(receiver, &QThread::finished, receiver, &QThread::deleteLater);
   receiver->run();
   // Delete that object when you're done (instead of using signals and slots)
   // receive_task->setAutoDelete(true);
@@ -31,7 +32,8 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
 void TransferServer::sendFile(const QString& filename,
                               const QHostAddress& dst) {
   // mInfo->setFilePath(mFilePath);
-  auto sender = new SendTask(dst, filename);
-  m_senders.push_back(sender);
+  auto sender = new SendTask(dst, filename, this);
+  // m_senders.push_back(sender);
+  connect(sender, &QThread::finished, sender, &QThread::deleteLater);
   sender->run();
 }

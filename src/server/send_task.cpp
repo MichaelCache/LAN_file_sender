@@ -5,24 +5,19 @@
 
 #include "setting.h"
 
-SendTask::SendTask(const QHostAddress& host, const QString& filename)
-    : m_dst(host), m_filename(filename) {
+SendTask::SendTask(const QHostAddress& host, const QString& filename,
+                   QObject* parent)
+    : QThread(parent), m_dst(host), m_filename(filename) {}
+
+SendTask::~SendTask() { qDebug() << "Sender thread deconstruct"; }
+
+void SendTask::run() {
   m_socket = new QTcpSocket(this);
 
   connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
   connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
   connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
-}
-
-SendTask::~SendTask() {}
-
-void SendTask::run() {
-  // if (m_socket) {
   m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
-  // } else {
-  //   quit();
-  // }
-  // QThread::run();
 }
 
 void SendTask::onBytesWritten(qint64 byte) {
@@ -59,6 +54,7 @@ void SendTask::sendHeader() {
 
   QByteArray send_data = preparePackage(PackageType::Header, header_data);
   m_socket->write(send_data);
+  qDebug() << "Sender: send header " << obj;
 }
 void SendTask::sendFileData() {
   QByteArray file_buffer;
@@ -80,10 +76,12 @@ void SendTask::sendFileData() {
 
   auto data = preparePackage(PackageType::Data, file_buffer);
   m_socket->write(data);
+  qDebug() << "Sender: send data ";
 }
 
 void SendTask::sendFinish() {
   m_send_file->close();
   auto data = preparePackage(PackageType::Finish);
   m_socket->write(data);
+  qDebug() << "Sender: send finish ";
 }

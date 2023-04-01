@@ -10,7 +10,7 @@
 class SendTask : public QThread, public TcpPackage {
   Q_OBJECT
  public:
-  SendTask(const QHostAddress& host, const QString& filename);
+  SendTask(const QHostAddress& host, const QString& filename, QObject* parent = nullptr);
   ~SendTask();
 
   virtual void run() override;

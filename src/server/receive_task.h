@@ -13,7 +13,7 @@ class ReceiveTask : public QThread {
  private:
   /* data */
  public:
-  ReceiveTask(qintptr descriptor);
+  ReceiveTask(qintptr descriptor, QObject* parent = nullptr);
   ~ReceiveTask();
 
   virtual void run() override;
