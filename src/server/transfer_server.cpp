@@ -12,28 +12,38 @@
 #include "setting.h"
 
 TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {
+  m_progress_model = new ProgressModel(this);
   // How many threads I want at any given time
   // If there are more connections, they will be qued until a threads is closed
 }
 
 TransferServer::~TransferServer() {}
 
+ProgressModel* TransferServer::progressModel() { return m_progress_model; }
+
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
   auto receiver = new ReceiveTask(socketDescriptor, this);
   // m_receivers.push_back(receiver);
   connect(receiver, &QThread::finished, receiver, &QThread::deleteLater);
+  connect(receiver, &ReceiveTask::addProgress, m_progress_model,
+          &ProgressModel::add);
+  connect(receiver, &ReceiveTask::updateProgress, m_progress_model,
+          &ProgressModel::update);
+  connect(receiver, &ReceiveTask::removeProgress, m_progress_model,
+          &ProgressModel::remove);
   receiver->run();
-  // Delete that object when you're done (instead of using signals and slots)
-  // receive_task->setAutoDelete(true);
-
-  // m_pool->start(receive_task);
 }
 
 void TransferServer::sendFile(const QString& filename,
                               const QHostAddress& dst) {
-  // mInfo->setFilePath(mFilePath);
   auto sender = new SendTask(dst, filename, this);
   // m_senders.push_back(sender);
   connect(sender, &QThread::finished, sender, &QThread::deleteLater);
+  connect(sender, &SendTask::addProgress, m_progress_model,
+          &ProgressModel::add);
+  connect(sender, &SendTask::updateProgress, m_progress_model,
+          &ProgressModel::update);
+  connect(sender, &SendTask::removeProgress, m_progress_model,
+          &ProgressModel::remove);
   sender->run();
 }

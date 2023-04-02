@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QVBoxLayout>
 #include <QWidget>
 
 #include "model/progress_model.h"
@@ -16,17 +18,18 @@ class MainWidget : public QWidget {
   MainWidget(QWidget *parent = nullptr);
   ~MainWidget();
 
-public Q_SLOTS:
+ public Q_SLOTS:
   void onClose();
 
  private:
-  /* data */
-  QHBoxLayout *m_hlayout;
+  QVBoxLayout *m_vlayout_level_0;
+  QHBoxLayout *m_hlayout_level_1;
   ReceiverListView *m_receiver_view;
-  ReceiverModel *m_receiver_model;
   ProgressListView *m_progress_view;
-  ProgressModel *m_progress_model;
 
-  HostDetector *m_host_broadcaster;
-  TransferServer* m_file_transfer;
+  QLabel *m_localhost_info;
+
+  // servers;
+  HostDetector *m_host_detector;
+  TransferServer *m_file_transfer;
 };

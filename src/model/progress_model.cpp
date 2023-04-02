@@ -1,7 +1,8 @@
 #include "progress_model.h"
 
-#include "column.h"
+#include <QMutexLocker>
 
+#include "column.h"
 
 using TransferProgress::Column;
 
@@ -63,11 +64,6 @@ ProgressModel::ProgressModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 ProgressModel::~ProgressModel() {}
 
-void ProgressModel::add(const TransferInfo &task) {
-  m_tasks.push_back(task);
-  emit layoutChanged();
-}
-
 int ProgressModel::rowCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return m_tasks.size();
@@ -85,6 +81,8 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::DisplayRole) {
       switch (col) {
+        case Column::Type:
+          return task.m_type;
         case Column::DestIP:
           return task.m_dest_ip.toString();
         case Column::FileName:
@@ -110,6 +108,8 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
     Column col = (Column)section;
     switch (col) {
+      case Column::Type:
+        return "Type";
       case Column::DestIP:
         return "DestIP";
       case Column::FileName:
@@ -126,4 +126,48 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   }
 
   return QVariant();
+}
+
+void ProgressModel::add(const TransferInfo &info) {
+  QMutexLocker locker(&m_lock);
+  removeMarked();
+  m_tasks.push_back(info);
+  emit layoutChanged();
+}
+
+void ProgressModel::remove(const TransferInfo &info) {
+  QMutexLocker locker(&m_lock);
+  auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
+  //  [&info](const TransferInfo &s) { return s == info; });
+  if (find != m_tasks.end()) {
+    // qDebug() << "remove server: " << server.m_host_addr;
+    // m_tasks.erase(find);
+    m_mark_remove.push_back(info);
+    // emit layoutChanged();
+  }
+}
+
+void ProgressModel::update(const TransferInfo &info) {
+  QMutexLocker locker(&m_lock);
+  auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
+  if (find != m_tasks.end()) {
+    *find = info;
+    int row = m_tasks.indexOf(*find);
+
+    emit dataChanged(index(row, (int)Column::Count - 2),
+                     index(row, (int)Column::Count - 1));
+  }
+}
+
+void ProgressModel::removeMarked() {
+  for (auto &&i : m_mark_remove) {
+    auto find = std::find(m_tasks.begin(), m_tasks.end(), i);
+    //  [&info](const TransferInfo &s) { return s == info; });
+    if (find != m_tasks.end()) {
+      // qDebug() << "remove server: " << server.m_host_addr;
+      m_tasks.erase(find);
+      // emit layoutChanged();
+    }
+  }
+  m_mark_remove.clear();
 }

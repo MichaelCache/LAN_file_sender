@@ -2,11 +2,12 @@
 
 namespace RemoteClient {
 enum class Column : int { IP = 0, Name, OS, Count };
-}  // namespace RemoteServer
+}  // namespace RemoteClient
 
 namespace TransferProgress {
 enum class Column : int {
-  DestIP = 0,
+  Type = 0,
+  DestIP,
   FileName,
   FileSize,
   State,

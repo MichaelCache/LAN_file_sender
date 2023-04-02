@@ -1,5 +1,6 @@
 #include "host_detector.h"
 
+#include <QHostInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkInterface>
@@ -9,9 +10,17 @@
 #include "config.h"
 #include "setting.h"
 
+
 HostDetector::HostDetector(QObject *parent) : QObject(parent) {
+  m_receiver_model = new ReceiverModel(this);
+  connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
+  connect(this, &HostDetector::removeHost, m_receiver_model,
+          &ReceiverModel::remove);
+
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
+
+  m_localhost_name = QHostInfo::localHostName();
 
   // TODO:
   if (m_local_host_ip.empty()) {
@@ -42,6 +51,8 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
 }
 
 HostDetector::~HostDetector() {}
+
+ReceiverModel *HostDetector::receiverModel() { return m_receiver_model; }
 
 void HostDetector::broadcast(MsgType type) {
   auto &setting = Setting::ins();

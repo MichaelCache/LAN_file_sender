@@ -18,9 +18,10 @@ class ReceiveTask : public QThread {
 
   virtual void run() override;
 
-  //  Q_SIGNALS:
-  //   void error(const QString&);
-  //   void receiveNewFile(TransferInfo&);
+ Q_SIGNALS:
+  void addProgress(const TransferInfo&);
+  void removeProgress(const TransferInfo&);
+  void updateProgress(const TransferInfo&);
 
  private Q_SLOTS:
   void onReadyRead();
@@ -33,6 +34,10 @@ class ReceiveTask : public QThread {
   void processPackageFinish(QByteArray& data);
 
   QTcpSocket* m_socket;
+  QHostAddress m_from;
+  QString m_filename;
+  quint64 m_file_size{0};
+  quint64 m_byte_read{0};
   qintptr m_socket_descriptor{0};
   QByteArray m_buff;
   QFile* m_file;

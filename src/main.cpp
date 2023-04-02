@@ -7,11 +7,8 @@ int main(int argc, char *argv[]) {
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QApplication app(argc, argv);
 
-  // wait finish file transfer even window closed;
-  // app.setQuitOnLastWindowClosed(false);
-
   MainWindow w;
-  w.resize(950, 500);
+  w.resize(1000, 500);
   w.show();
 
   return app.exec();

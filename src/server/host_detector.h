@@ -18,7 +18,7 @@ class HostDetector : public QObject {
   HostDetector(QObject* parent = nullptr);
   ~HostDetector();
 
-  QString getDefaultDownloadPath();
+  ReceiverModel* receiverModel();
 
  Q_SIGNALS:
   void addHost(const RemoteHostInfo&);
@@ -37,7 +37,10 @@ class HostDetector : public QObject {
 
   bool isLocalHost(const QHostAddress&) const;
 
+  ReceiverModel* m_receiver_model;
+
   QVector<QHostAddress> m_local_host_ip;
   QVector<QHostAddress> m_broadcast_ip;
+  QString m_localhost_name;
   QUdpSocket* m_broadcast_udp;
 };

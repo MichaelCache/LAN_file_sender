@@ -28,9 +28,9 @@ void ReceiveTask::onReadyRead() {
   while (m_buff.size()) {
     PackageSize size{0};
     memcpy(&size, m_buff.data(), sizeof(PackageSize));
-    
-    if(size>m_buff.size()){
-      // buff not cotains completely package
+
+    if (size > m_buff.size()) {
+      // buff not cotains completely package, wait for more data
       break;
     }
 
@@ -39,8 +39,6 @@ void ReceiveTask::onReadyRead() {
     PackageType type;
     memcpy(&type, data.data(), sizeof(PackageType));
     data.remove(0, sizeof(PackageType));
-    // Q_ASSERT(m_receive_buffer.size() == size);
-    // qDebug() << size;
 
     processPackage(type, data);
     m_buff.remove(0, size);
@@ -71,22 +69,35 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
 
 void ReceiveTask::processPackageHeader(QByteArray& data) {
   QJsonObject obj = QJsonDocument::fromJson(data).object();
-  auto filename = QFileInfo(obj.value("name").toString());
-  m_file = new QFile(filename.fileName());
+  m_filename = obj.value("name").toString();
+  m_file = new QFile(m_filename);
   m_file->open(QIODevice::Append);
+  m_from = QHostAddress(m_socket->peerAddress().toIPv4Address());
+  m_file_size = obj.value("size").toInt();
   qDebug() << "Receiver: receive head: " << obj;
+  TransferInfo info("Down", m_from, m_filename, m_file_size,
+                    TransferState::Transfering, 0);
+  emit addProgress(info);
 }
 
 void ReceiveTask::processPackageData(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->write(data);
+    m_byte_read += data.size();
+    TransferInfo info("Down", m_from, m_filename, m_file_size,
+                      TransferState::Transfering,
+                      m_byte_read * 100 / m_file_size);
+    emit updateProgress(info);
+    qDebug() << "Receiver: receive data " << data.size();
   }
-  qDebug() << "Receiver: receive data " << data.size();
 }
 
 void ReceiveTask::processPackageFinish(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->close();
+    TransferInfo info("Down", m_from, m_filename, m_file_size,
+                      TransferState::Transfering, 100);
+    emit updateProgress(info);
+    qDebug() << "Receiver: receive finish ";
   }
-  qDebug() << "Receiver: receive finish ";
 }
