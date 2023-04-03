@@ -20,6 +20,9 @@ class HostDetector : public QObject {
 
   ReceiverModel* receiverModel();
 
+  const QString& hostName();
+  const QVector<QHostAddress>& hostIp();
+
  Q_SIGNALS:
   void addHost(const RemoteHostInfo&);
   void removeHost(const RemoteHostInfo&);

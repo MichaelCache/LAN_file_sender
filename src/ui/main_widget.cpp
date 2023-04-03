@@ -21,27 +21,33 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_progress_view = new ProgressListView(this);
   m_progress_view->setModel(m_file_transfer->progressModel());
 
-  m_hlayout_level_1 = new QHBoxLayout(this);
-  m_hlayout_level_1->addWidget(m_receiver_view, 3);
-  m_hlayout_level_1->addWidget(m_progress_view, 6);
+  m_receiver_progress_layout = new QHBoxLayout();
+  m_receiver_progress_layout->addWidget(m_receiver_view, 3);
+  m_receiver_progress_layout->addWidget(m_progress_view, 6);
 
-#if 0
-  m_vlayout_level_0 = new QVBoxLayout(this);
-  m_localhost_info = new QLabel(this);
-  m_vlayout_level_0->addLayout(m_hlayout_level_1);
-#endif
+  m_localhostname = new QLabel(this);
+  m_localhostname->setText("Host Name: " + m_host_detector->hostName());
 
-  // m_localhost_info->text = QString("HostName %1  IP: ").arg(m_de)
-  // m_vlayout_level_0->addWidget();
+  m_localhostip = new QLabel(this);
+  QString local_ips = "Host IP: ";
+  for (auto&& i : m_host_detector->hostIp()) {
+    local_ips.append(QHostAddress(i.toIPv4Address()).toString() + "/");
+  }
+  if (local_ips.endsWith("/")) {
+    local_ips.chop(1);
+  }
+  m_localhostip->setText(local_ips);
 
-  // for progress test
-  //   auto task = TransferInfo();
-  //   task.m_progress = 60;
-  //   m_progress_model->add(task);
+  m_bottom_labels_layout = new QHBoxLayout();
+  m_bottom_labels_layout->addWidget(m_localhostname);
+  m_bottom_labels_layout->addStretch(200);
+  m_bottom_labels_layout->addWidget(m_localhostip);
 
-  //   // for receiver test
-  //   RemoteHostInfo receiver{QHostAddress("192.168.10.31"), "Num", "Linux"};
-  //   m_receiver_model->add(receiver);
+  m_main_layout = new QVBoxLayout();
+  m_main_layout->addLayout(m_receiver_progress_layout);
+  m_main_layout->addLayout(m_bottom_labels_layout);
+
+  setLayout(m_main_layout);
 }
 
 MainWidget::~MainWidget() {}

@@ -10,18 +10,7 @@
 #include "config.h"
 #include "setting.h"
 
-
 HostDetector::HostDetector(QObject *parent) : QObject(parent) {
-  m_receiver_model = new ReceiverModel(this);
-  connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
-  connect(this, &HostDetector::removeHost, m_receiver_model,
-          &ReceiverModel::remove);
-
-  m_local_host_ip = getLocalAddressFromInterfaces();
-  m_broadcast_ip = getBroadcastAddressFromInterfaces();
-
-  m_localhost_name = QHostInfo::localHostName();
-
   // TODO:
   if (m_local_host_ip.empty()) {
 // no LAN, establish DHCP
@@ -36,12 +25,20 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
     dhcp_process.start(dhcp_command);
     dhcp_process.waitForFinished();
     if (dhcp_process.exitCode() == 0) {
-      m_local_host_ip = getLocalAddressFromInterfaces();
-      m_broadcast_ip = getBroadcastAddressFromInterfaces();
     } else {
       qDebug() << "DHCP server failed to start";
     }
   }
+
+  m_receiver_model = new ReceiverModel(this);
+  connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
+  connect(this, &HostDetector::removeHost, m_receiver_model,
+          &ReceiverModel::remove);
+
+  m_localhost_name = QHostInfo::localHostName();
+
+  m_local_host_ip = getLocalAddressFromInterfaces();
+  m_broadcast_ip = getBroadcastAddressFromInterfaces();
 
   // share port for broadcast and listen this port in same time
   m_broadcast_udp = new QUdpSocket(this);
@@ -53,6 +50,9 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
 HostDetector::~HostDetector() {}
 
 ReceiverModel *HostDetector::receiverModel() { return m_receiver_model; }
+
+const QString &HostDetector::hostName() { return m_localhost_name; }
+const QVector<QHostAddress> &HostDetector::hostIp() { return m_local_host_ip; }
 
 void HostDetector::broadcast(MsgType type) {
   auto &setting = Setting::ins();
@@ -141,10 +141,21 @@ void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
 QVector<QHostAddress> HostDetector::getLocalAddressFromInterfaces() {
   QVector<QHostAddress> addresses;
   for (auto &&iface : QNetworkInterface::allInterfaces()) {
-    if (!(iface.flags() & QNetworkInterface::IsLoopBack)) {
-      for (auto &&addressEntry : iface.addressEntries()) {
-        addresses.push_back(addressEntry.ip());
+    // ignore not running interface
+    // ignore loop back interface
+    if (!(iface.flags() & QNetworkInterface::IsRunning) ||
+        (iface.flags() & QNetworkInterface::IsLoopBack)) {
+      continue;
+    }
+
+    for (auto &&addressEntry : iface.addressEntries()) {
+      auto ip = QHostAddress(addressEntry.ip().toIPv4Address());
+      if ((ip == QHostAddress::Any) || (ip == QHostAddress::LocalHost) ||
+          (ip == QHostAddress::LocalHostIPv6) || (ip == QHostAddress::Null) ||
+          (ip == QHostAddress::AnyIPv4) || (ip == QHostAddress::AnyIPv6)) {
+        continue;
       }
+      addresses.push_back(ip);
     }
   }
   return addresses;

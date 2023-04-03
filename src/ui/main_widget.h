@@ -22,12 +22,14 @@ class MainWidget : public QWidget {
   void onClose();
 
  private:
-  QVBoxLayout *m_vlayout_level_0;
-  QHBoxLayout *m_hlayout_level_1;
+  QVBoxLayout *m_main_layout;
+  QHBoxLayout *m_receiver_progress_layout;
+  QHBoxLayout *m_bottom_labels_layout;
   ReceiverListView *m_receiver_view;
   ProgressListView *m_progress_view;
 
-  QLabel *m_localhost_info;
+  QLabel *m_localhostname;
+  QLabel *m_localhostip;
 
   // servers;
   HostDetector *m_host_detector;
