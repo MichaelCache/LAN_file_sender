@@ -1,75 +1,103 @@
 #include "receive_task.h"
 
 #include <QDir>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTcpSocket>
-#include <QFile>
 
 #include "package_type.h"
 #include "setting.h"
 
-ReceiveTask::ReceiveTask(int descriptor) : m_socket_descriptor(descriptor) {
-  m_receive_tcp = new QTcpSocket();
-}
+ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
+    : QThread(parent), m_socket_descriptor(descriptor) {}
 
 ReceiveTask::~ReceiveTask() {}
 
 void ReceiveTask::run() {
-  if (m_receive_tcp->setSocketDescriptor(m_socket_descriptor)) {
-    m_buff.append(m_receive_tcp->readAll());
-    while (m_buff.size() > sizeof(PackageSize) + sizeof(PackageType)) {
-      PackageType type = static_cast<PackageType>(m_buff.at(0));
-      processPackage(m_buff, type);
-    }
+  m_socket = new QTcpSocket(this);
+  if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
+    connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
+    connect(m_socket, &QTcpSocket::disconnected, this,
+            &ReceiveTask::onDisconnected);
   }
 }
 
-// void ReceiveTask::onReadyRead() { m_buff.append(m_receive_tcp->readAll()); }
-// void ReceiveTask::onDisconnected() {}
+void ReceiveTask::onReadyRead() {
+  m_buff.append(m_socket->readAll());
+  while (m_buff.size()) {
+    PackageSize size{0};
+    memcpy(&size, m_buff.data(), sizeof(PackageSize));
 
-void ReceiveTask::processPackage(QByteArray& data, PackageType type) {
+    if (size > m_buff.size()) {
+      // buff not cotains completely package, wait for more data
+      break;
+    }
+
+    auto data = m_buff.mid(0, size);
+    data.remove(0, sizeof(PackageSize));
+    PackageType type;
+    memcpy(&type, data.data(), sizeof(PackageType));
+    data.remove(0, sizeof(PackageType));
+
+    processPackage(type, data);
+    m_buff.remove(0, size);
+  }
+}
+
+void ReceiveTask::onDisconnected() {
+  m_file->close();
+  quit();
+}
+
+void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
   switch (type) {
     case PackageType::Header:
       processPackageHeader(data);
       break;
-
+    case PackageType::Data:
+      processPackageData(data);
+      break;
+    case PackageType::Finish:
+      processPackageFinish(data);
+      m_socket->disconnectFromHost();
+      break;
     default:
       break;
   }
 }
 
 void ReceiveTask::processPackageHeader(QByteArray& data) {
-  TransferInfo info;
   QJsonObject obj = QJsonDocument::fromJson(data).object();
-  auto file_size = obj.value("size").toVariant().value<qint64>();
-  info.m_file_size = file_size;
+  m_filename = obj.value("name").toString();
+  m_file = new QFile(m_filename);
+  m_file->open(QIODevice::Append);
+  m_from = QHostAddress(m_socket->peerAddress().toIPv4Address());
+  m_file_size = obj.value("size").toInt();
+  qDebug() << "Receiver: receive head: " << obj;
+  TransferInfo info("Down", m_from, m_filename, m_file_size,
+                    TransferState::Transfering, 0);
+  emit addProgress(info);
+}
 
-  QString filename = obj.value("name").toString();
-  info.m_file_name = filename;
-  QString foldername = obj.value("folder").toString();
-  QString download_dir = Setting::ins().m_download_dir;
-  if (!foldername.isEmpty())
-    download_dir = download_dir + QDir::separator() + foldername;
-
-  // mkdir if not exist
-  QDir dir(download_dir);
-  if (!dir.exists()) {
-    dir.mkpath(download_dir);
+void ReceiveTask::processPackageData(QByteArray& data) {
+  if (m_file && m_file->isOpen()) {
+    m_file->write(data);
+    m_byte_read += data.size();
+    TransferInfo info("Down", m_from, m_filename, m_file_size,
+                      TransferState::Transfering,
+                      m_byte_read * 100 / m_file_size);
+    emit updateProgress(info);
+    qDebug() << "Receiver: receive data " << data.size();
   }
+}
 
-  QString download_file_dir = download_dir + QDir::separator() + filename;
-
-  // if (!Setting::ins()->getReplaceExistingFile()) {
-  //   download_file_dir = Util::getUniqueFileName(filename, download_dir);
-  // }
-
-  // mInfo->setFilePath(download_file_dir);
-  m_file = new QFile(download_file_dir);
-  if (m_file->open(QIODevice::WriteOnly)) {
-    info.m_state = TransferState::Transfering;
-    // emit receiveNewFile(info);
-  } else {
-    // emit error("Failed to write " + download_file_dir);
+void ReceiveTask::processPackageFinish(QByteArray& data) {
+  if (m_file && m_file->isOpen()) {
+    m_file->close();
+    TransferInfo info("Down", m_from, m_filename, m_file_size,
+                      TransferState::Transfering, 100);
+    emit updateProgress(info);
+    qDebug() << "Receiver: receive finish ";
   }
 }

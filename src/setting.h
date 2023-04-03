@@ -3,18 +3,23 @@
 #include <QSettings>
 #include <QtGlobal>
 
+#include "config.h"
+
 class Setting : public QSettings {
   Q_OBJECT
  public:
   ~Setting();
   static Setting &ins();
 
-  qint32 m_file_buffer_size{0};
+  quint32 m_file_buffer_size{DefaultFileBufferSize};
   QString m_download_dir;
   QString m_hostname{""};
   bool m_replace_exsit_file{false};
-  int m_max_thread{5};
+  quint32 m_max_send_thread{5};
+  quint32 m_max_receive_thread{5};
+  quint32 m_file_trans_port{DefaultTransferPort};
 
  private:
   Setting(const QString &organization = QString(), QObject *parent = nullptr);
+  QString getDefaultDownloadPath();
 };

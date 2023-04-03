@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QHostAddress>
-#include <QStandardItem>
 #include <QString>
 
 class RemoteHostInfo {

@@ -1,47 +1,49 @@
 #include "transfer_server.h"
 
+#include <QByteArray>
+#include <QDataStream>
+#include <QFileInfo>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QtGlobal>
+
+#include "config.h"
 #include "receive_task.h"
 #include "setting.h"
 
-TransferServer::TransferServer(/* args */) {
-  m_pool = new QThreadPool(this);
+TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {
+  m_progress_model = new ProgressModel(this);
   // How many threads I want at any given time
   // If there are more connections, they will be qued until a threads is closed
-  m_pool->setMaxThreadCount(Setting::ins().m_max_thread);
 }
 
 TransferServer::~TransferServer() {}
 
-void TransferServer::incomingConnection(qintptr socketDescriptor) {
-  // ReceiveTask* receive_task = new ReceiveTask(socketDescriptor);
-  // Delete that object when you're done (instead of using signals and slots)
-  // receive_task->setAutoDelete(true);
+ProgressModel* TransferServer::progressModel() { return m_progress_model; }
 
-  // m_pool->start(receive_task);
-  qDebug() << "tcp handler: " << socketDescriptor;
+void TransferServer::incomingConnection(qintptr socketDescriptor) {
+  auto receiver = new ReceiveTask(socketDescriptor, this);
+  // m_receivers.push_back(receiver);
+  connect(receiver, &QThread::finished, receiver, &QThread::deleteLater);
+  connect(receiver, &ReceiveTask::addProgress, m_progress_model,
+          &ProgressModel::add);
+  connect(receiver, &ReceiveTask::updateProgress, m_progress_model,
+          &ProgressModel::update);
+  connect(receiver, &ReceiveTask::removeProgress, m_progress_model,
+          &ProgressModel::remove);
+  receiver->run();
 }
 
-void TransferServer::sendFile(const QString& filename){
-  // mInfo->setFilePath(mFilePath);
-  //   mFile = new QFile(mFilePath, this);
-  //   bool ok = mFile->open(QIODevice::ReadOnly);
-  //   if (ok) {
-  //       mFileSize = mFile->size();
-  //       mInfo->setDataSize(mFileSize);
-  //       mBytesRemaining = mFileSize;
-  //       emit mInfo->fileOpened();
-  //   }
-
-  //   if (mFileSize > 0) {
-  //       QHostAddress receiverAddress = mReceiverDev.getAddress();
-  //       setSocket(new QTcpSocket(this));
-  //       mSocket->connectToHost(receiverAddress, Settings::instance()->getTransferPort(), QAbstractSocket::ReadWrite);
-  //       mInfo->setState(TransferState::Waiting);
-
-  //       connect(mSocket, &QTcpSocket::bytesWritten, this, &Sender::onBytesWritten);
-  //       connect(mSocket, &QTcpSocket::connected, this, &Sender::onConnected);
-  //       connect(mSocket, &QTcpSocket::disconnected, this, &Sender::onDisconnected);
-  //   }
-
-  //   return ok && mSocket;
+void TransferServer::sendFile(const QString& filename,
+                              const QHostAddress& dst) {
+  auto sender = new SendTask(dst, filename, this);
+  // m_senders.push_back(sender);
+  connect(sender, &QThread::finished, sender, &QThread::deleteLater);
+  connect(sender, &SendTask::addProgress, m_progress_model,
+          &ProgressModel::add);
+  connect(sender, &SendTask::updateProgress, m_progress_model,
+          &ProgressModel::update);
+  connect(sender, &SendTask::removeProgress, m_progress_model,
+          &ProgressModel::remove);
+  sender->run();
 }
