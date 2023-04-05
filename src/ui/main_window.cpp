@@ -5,7 +5,9 @@
 #include <QMessageBox>
 
 #include "config.h"
+#include "server/dhcp_server.h"
 #include "setting_dialog.h"
+
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_central_widget = new MainWidget(this);
@@ -37,6 +39,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   auto ret = m_close_msg->exec();
   if (ret != QMessageBox::Yes) {
     event->ignore();
+#ifdef Q_OS_WIN
+    dhcpServerStop();
+#else
+#endif
   } else {
     m_central_widget->onClose();
     event->accept();

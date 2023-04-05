@@ -8,27 +8,11 @@
 #include <QStandardPaths>
 
 #include "config.h"
+#include "dhcp_server.h"
 #include "setting.h"
 
 HostDetector::HostDetector(QObject *parent) : QObject(parent) {
   // TODO:
-  if (m_local_host_ip.empty()) {
-// no LAN, establish DHCP
-#ifdef Q_OS_WIN
-    QString dhcp_command =
-        "netsh dhcpserver add optiondef 60 \"PXEClient\" STRING 0 "
-        "comment=\"PXE support\"";
-#else
-    QString dhcp_command = "sudo systemctl start isc-dhcp-server.service";
-#endif
-    QProcess dhcp_process;
-    dhcp_process.start(dhcp_command);
-    dhcp_process.waitForFinished();
-    if (dhcp_process.exitCode() == 0) {
-    } else {
-      qDebug() << "DHCP server failed to start";
-    }
-  }
 
   m_receiver_model = new ReceiverModel(this);
   connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
@@ -39,6 +23,25 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
 
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
+
+  if (m_local_host_ip.empty()) {
+#ifdef Q_OS_WIN
+    dhcpServerStart();
+#else
+#endif
+    m_local_host_ip = getLocalAddressFromInterfaces();
+    m_broadcast_ip = getBroadcastAddressFromInterfaces();
+  }
+
+  qDebug() << "Local host";
+  for (auto &&i : m_local_host_ip) {
+    qDebug() << i.toString();
+  }
+
+  qDebug() << "Local broadcast";
+  for (auto &&i : m_broadcast_ip) {
+    qDebug() << i.toString();
+  }
 
   // share port for broadcast and listen this port in same time
   m_broadcast_udp = new QUdpSocket(this);
@@ -71,8 +74,10 @@ void HostDetector::broadcast(MsgType type) {
 QVector<QHostAddress> HostDetector::getBroadcastAddressFromInterfaces() {
   QVector<QHostAddress> addresses;
   for (auto &&iface : QNetworkInterface::allInterfaces()) {
-    if ((iface.flags() & QNetworkInterface::CanBroadcast) &&
-        !(iface.flags() & QNetworkInterface::IsLoopBack)) {
+    auto flag = iface.flags();
+    if ((flag & QNetworkInterface::CanBroadcast) &&
+        !(flag & QNetworkInterface::IsLoopBack) &&
+        (flag & QNetworkInterface::IsRunning)) {
       for (auto &&addressEntry : iface.addressEntries()) {
         if (!addressEntry.broadcast().isNull()) {
           addresses.push_back(addressEntry.broadcast());
@@ -141,21 +146,21 @@ void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
 QVector<QHostAddress> HostDetector::getLocalAddressFromInterfaces() {
   QVector<QHostAddress> addresses;
   for (auto &&iface : QNetworkInterface::allInterfaces()) {
-    // ignore not running interface
-    // ignore loop back interface
-    if (!(iface.flags() & QNetworkInterface::IsRunning) ||
-        (iface.flags() & QNetworkInterface::IsLoopBack)) {
-      continue;
-    }
-
-    for (auto &&addressEntry : iface.addressEntries()) {
-      auto ip = QHostAddress(addressEntry.ip().toIPv4Address());
-      if ((ip == QHostAddress::Any) || (ip == QHostAddress::LocalHost) ||
-          (ip == QHostAddress::LocalHostIPv6) || (ip == QHostAddress::Null) ||
-          (ip == QHostAddress::AnyIPv4) || (ip == QHostAddress::AnyIPv6)) {
-        continue;
+    auto flag = iface.flags();
+    // ignore loop back interface and ignore not up interface
+    if (!(flag & QNetworkInterface::IsLoopBack) &&
+        (flag & QNetworkInterface::IsUp)) {
+      for (auto &&addressEntry : iface.addressEntries()) {
+        auto ip = QHostAddress(addressEntry.ip().toIPv4Address());
+        if ((ip == QHostAddress::Any) ||
+            // ignore 127.0.0.1
+            (ip == QHostAddress::LocalHost) ||
+            (ip == QHostAddress::LocalHostIPv6) || (ip == QHostAddress::Null) ||
+            (ip == QHostAddress::AnyIPv4) || (ip == QHostAddress::AnyIPv6)) {
+          continue;
+        }
+        addresses.push_back(ip);
       }
-      addresses.push_back(ip);
     }
   }
   return addresses;

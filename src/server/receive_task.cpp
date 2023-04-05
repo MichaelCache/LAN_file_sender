@@ -10,7 +10,9 @@
 #include "setting.h"
 
 ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
-    : QThread(parent), m_socket_descriptor(descriptor) {}
+    : QThread(parent), m_socket_descriptor(descriptor) {
+  m_status.m_type = "Download";
+}
 
 ReceiveTask::~ReceiveTask() {}
 
@@ -69,35 +71,37 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
 
 void ReceiveTask::processPackageHeader(QByteArray& data) {
   QJsonObject obj = QJsonDocument::fromJson(data).object();
-  m_filename = obj.value("name").toString();
-  m_file = new QFile(m_filename);
+  auto filename = obj.value("name").toString();
+  m_file = new QFile(filename);
   m_file->open(QIODevice::Append);
-  m_from = QHostAddress(m_socket->peerAddress().toIPv4Address());
-  m_file_size = obj.value("size").toInt();
-  qDebug() << "Receiver: receive head: " << obj;
-  TransferInfo info("Down", m_from, m_filename, m_file_size,
-                    TransferState::Transfering, 0);
-  emit addProgress(info);
+  auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
+  auto file_size = obj.value("size").toInt();
+  // qDebug() << "Receiver: receive head: " << obj;
+  
+  m_status.m_dest_ip = from_ip;
+  m_status.m_file_name = filename;
+  m_status.m_file_size = file_size;
+  m_status.m_state = TransferState::Waiting;
+  m_status.m_progress = 0;
+  emit addProgress(m_status);
 }
 
 void ReceiveTask::processPackageData(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->write(data);
     m_byte_read += data.size();
-    TransferInfo info("Down", m_from, m_filename, m_file_size,
-                      TransferState::Transfering,
-                      m_byte_read * 100 / m_file_size);
-    emit updateProgress(info);
-    qDebug() << "Receiver: receive data " << data.size();
+    auto progress = m_byte_read * 100 / m_status.m_file_size;
+    m_status.m_progress = progress;
+    emit updateProgress(m_status);
+    // qDebug() << "Receiver: receive data " << data.size();
   }
 }
 
 void ReceiveTask::processPackageFinish(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->close();
-    TransferInfo info("Down", m_from, m_filename, m_file_size,
-                      TransferState::Transfering, 100);
-    emit updateProgress(info);
-    qDebug() << "Receiver: receive finish ";
+    m_status.m_state = TransferState::Finish;
+    m_status.m_progress = 100;
+    emit updateProgress(m_status);
   }
 }

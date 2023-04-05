@@ -4,6 +4,8 @@
 #include <dhcpsapi.h>
 #include <iphlpapi.h>
 
+#include <QtCore>
+#include <iostream>
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "dhcpsapi.lib")
 
@@ -12,12 +14,30 @@ WCHAR serverIpAddress[] = L"192.168.1.1";
 void dhcpServerStart() {
   // Initialize the DHCP server
   DWORD dwError = 0;
+  dwError = DhcpDsInit();
+  if (dwError != ERROR_SUCCESS) {
+    std::cout << "init DHCP server: " << dwError << std::endl;
+  }
+
+  LPDHCP_SERVER_INFO_ARRAY serverArray;
+  dwError = DhcpEnumServers(0, NULL, &serverArray, NULL, NULL);
+  if (dwError != ERROR_SUCCESS) {
+    std::cout << "get DHCP server: " << dwError << std::endl;
+  } else {
+    auto count = serverArray->NumElements;
+    for (size_t i = 0; i < count; i++) {
+      auto server = serverArray[i];
+      std::cout << server.Servers->ServerAddress << std::endl;
+    }
+  }
+
   DHCPDS_SERVER serverInfo = {0};
   serverInfo.ServerName = serverIpAddress;
   dwError = DhcpAddServer(0, NULL, &serverInfo, NULL, NULL);
   if (dwError != ERROR_SUCCESS) {
     //     printf("Error adding DHCP server: %d\n", dwError);
     //     // return 1;
+    qDebug() << QString("Error adding DHCP server: %1").arg(dwError);
   }
 
   // create a subnet
@@ -34,7 +54,7 @@ void dhcpServerStart() {
   auto dwResult = DhcpCreateSubnet(serverIpAddress, subnetAddress, &subnetInfo);
 
   if (dwResult != ERROR_SUCCESS) {
-    // handle error
+    qDebug() << QString("Create subnet error %1").arg(dwResult);
   }
 
   // create a range
@@ -54,7 +74,7 @@ void dhcpServerStart() {
       DhcpAddSubnetElementV4(serverIpAddress, subnetAddress, &elementData);
 
   if (dwResult != ERROR_SUCCESS) {
-    // handle error
+    qDebug() << QString("Create subnet element error %1").arg(dwResult);
   }
 }
 
@@ -65,5 +85,6 @@ void dhcpServerStop() {
   if (dwError != ERROR_SUCCESS) {
     // printf("Error deleting DHCP server: %d\n", dwError);
     // return 1;
+    qDebug() << QString("Error deleting DHCP server: %1").arg(dwError);
   }
 }

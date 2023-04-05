@@ -22,7 +22,7 @@ TransferServer::~TransferServer() {}
 ProgressModel* TransferServer::progressModel() { return m_progress_model; }
 
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
-  auto receiver = new ReceiveTask(socketDescriptor, this);
+  auto receiver = new ReceiveTask(socketDescriptor);
   // m_receivers.push_back(receiver);
   connect(receiver, &QThread::finished, receiver, &QThread::deleteLater);
   connect(receiver, &ReceiveTask::addProgress, m_progress_model,
@@ -36,7 +36,7 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
 
 void TransferServer::sendFile(const QString& filename,
                               const QHostAddress& dst) {
-  auto sender = new SendTask(dst, filename, this);
+  auto sender = new SendTask(dst, filename);
   // m_senders.push_back(sender);
   connect(sender, &QThread::finished, sender, &QThread::deleteLater);
   connect(sender, &SendTask::addProgress, m_progress_model,

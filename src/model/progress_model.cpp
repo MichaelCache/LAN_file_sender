@@ -68,6 +68,7 @@ int ProgressModel::rowCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return m_tasks.size();
 }
+
 int ProgressModel::columnCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return (int)Column::Count;

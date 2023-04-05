@@ -35,7 +35,7 @@ class SendTask : public QThread, public TcpPackage {
   QFile* m_send_file{nullptr};
   QString m_filename;
   QTcpSocket* m_socket;
-  quint64 m_file_size{0};
   quint64 m_byte_remain{0};
   QHostAddress m_dst;
+  TransferInfo m_status;
 };
