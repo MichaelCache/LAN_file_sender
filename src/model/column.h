@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtCore>
+
 namespace RemoteClient {
 enum class Column : int { IP = 0, Name, OS, Count };
 }  // namespace RemoteClient
@@ -12,6 +14,9 @@ enum class Column : int {
   FileSize,
   State,
   Progress,
-  Count
+  Count,
+  Id
 };
 }
+
+enum MyRole { IdRole = Qt::UserRole };

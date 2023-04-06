@@ -39,8 +39,6 @@ QString sizeToString(qint64 size) {
 
 QString stateToString(TransferState state) {
   switch (state) {
-    case TransferState::Idle:
-      return "Idle";
     case TransferState::Waiting:
       return "Waiting";
     case TransferState::Disconnected:
@@ -79,7 +77,6 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
     Column col = (Column)index.column();
 
     auto task = m_tasks.at(index.row());
-
     if (role == Qt::DisplayRole) {
       switch (col) {
         case Column::Type:
@@ -97,11 +94,14 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
         default:
           return QVariant();
       }
+    } else if (role == MyRole::IdRole) {
+      return task.id();
+    } else {
+      return QVariant();
     }
-
+  } else {
     return QVariant();
   }
-  return QVariant();
 }
 
 QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
@@ -131,7 +131,6 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
 
 void ProgressModel::add(const TransferInfo &info) {
   QMutexLocker locker(&m_lock);
-  removeMarked();
   m_tasks.push_back(info);
   emit layoutChanged();
 }
@@ -142,8 +141,8 @@ void ProgressModel::remove(const TransferInfo &info) {
   //  [&info](const TransferInfo &s) { return s == info; });
   if (find != m_tasks.end()) {
     // qDebug() << "remove server: " << server.m_host_addr;
-    // m_tasks.erase(find);
-    m_mark_remove.push_back(info);
+    m_tasks.erase(find);
+    // m_tasks.push_back(info);
     // emit layoutChanged();
   }
 }
@@ -160,15 +159,15 @@ void ProgressModel::update(const TransferInfo &info) {
   }
 }
 
-void ProgressModel::removeMarked() {
-  for (auto &&i : m_mark_remove) {
-    auto find = std::find(m_tasks.begin(), m_tasks.end(), i);
-    //  [&info](const TransferInfo &s) { return s == info; });
-    if (find != m_tasks.end()) {
-      // qDebug() << "remove server: " << server.m_host_addr;
-      m_tasks.erase(find);
-      // emit layoutChanged();
-    }
-  }
-  m_mark_remove.clear();
-}
+// void ProgressModel::removeMarked() {
+//   for (auto &&i : m_mark_remove) {
+//     auto find = std::find(m_tasks.begin(), m_tasks.end(), i);
+//     //  [&info](const TransferInfo &s) { return s == info; });
+//     if (find != m_tasks.end()) {
+//       // qDebug() << "remove server: " << server.m_host_addr;
+//       m_tasks.erase(find);
+//       // emit layoutChanged();
+//     }
+//   }
+//   m_mark_remove.clear();
+// }

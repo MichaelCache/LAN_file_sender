@@ -11,7 +11,7 @@
 
 ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
     : QThread(parent), m_socket_descriptor(descriptor) {
-  m_status.m_type = "Download";
+  m_transinfo.m_type = "Download";
 }
 
 ReceiveTask::~ReceiveTask() {}
@@ -48,8 +48,15 @@ void ReceiveTask::onReadyRead() {
 }
 
 void ReceiveTask::onDisconnected() {
-  m_file->close();
-  quit();
+  if (m_file && m_file->isOpen()) {
+    m_file->close();
+  }
+  if (m_transinfo.m_state == TransferState::Transfering ||
+      m_transinfo.m_state == TransferState::Waiting) {
+    m_transinfo.m_state = TransferState::Disconnected;
+    emit updateProgress(m_transinfo);
+  }
+  exitDelete();
 }
 
 void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
@@ -60,9 +67,16 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
     case PackageType::Data:
       processPackageData(data);
       break;
+    case PackageType::Cancel:
+      processPackageCancel(data);
+      m_socket->disconnectFromHost();
+      exitDelete();
+      break;
+      ;
     case PackageType::Finish:
       processPackageFinish(data);
       m_socket->disconnectFromHost();
+      exitDelete();
       break;
     default:
       break;
@@ -77,22 +91,23 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
   auto file_size = obj.value("size").toInt();
   // qDebug() << "Receiver: receive head: " << obj;
-  
-  m_status.m_dest_ip = from_ip;
-  m_status.m_file_name = filename;
-  m_status.m_file_size = file_size;
-  m_status.m_state = TransferState::Waiting;
-  m_status.m_progress = 0;
-  emit addProgress(m_status);
+
+  m_transinfo.m_dest_ip = from_ip;
+  m_transinfo.m_file_name = filename;
+  m_transinfo.m_file_size = file_size;
+  m_transinfo.m_state = TransferState::Waiting;
+  m_transinfo.m_progress = 0;
+  emit addProgress(m_transinfo);
 }
 
 void ReceiveTask::processPackageData(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->write(data);
     m_byte_read += data.size();
-    auto progress = m_byte_read * 100 / m_status.m_file_size;
-    m_status.m_progress = progress;
-    emit updateProgress(m_status);
+    auto progress = m_byte_read * 100 / m_transinfo.m_file_size;
+    m_transinfo.m_state = TransferState::Transfering;
+    m_transinfo.m_progress = progress;
+    emit updateProgress(m_transinfo);
     // qDebug() << "Receiver: receive data " << data.size();
   }
 }
@@ -100,8 +115,21 @@ void ReceiveTask::processPackageData(QByteArray& data) {
 void ReceiveTask::processPackageFinish(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->close();
-    m_status.m_state = TransferState::Finish;
-    m_status.m_progress = 100;
-    emit updateProgress(m_status);
   }
+  m_transinfo.m_state = TransferState::Finish;
+  m_transinfo.m_progress = 100;
+  emit updateProgress(m_transinfo);
+}
+
+void ReceiveTask::processPackageCancel(QByteArray& data) {
+  if (m_file && m_file->isOpen()) {
+    m_file->close();
+  }
+  m_transinfo.m_state = TransferState::Cancelled;
+  emit updateProgress(m_transinfo);
+}
+
+void ReceiveTask::exitDelete() {
+  quit();
+  deleteLater();
 }

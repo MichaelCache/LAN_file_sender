@@ -3,17 +3,31 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMutexLocker>
 
 #include "setting.h"
 
 SendTask::SendTask(const QHostAddress& host, const QString& filename,
                    QObject* parent)
     : QThread(parent), m_dst(host), m_filename(filename) {
-  m_status.m_type = "Upload";
-  m_status.m_dest_ip = host;
+  m_send_file = new QFile(m_filename, static_cast<QThread*>(this));
+  bool ok = m_send_file->open(QIODevice::ReadOnly);
+  qint64 file_size = m_send_file->size();
+  m_byte_remain = file_size;
+  auto fileinfo = QFileInfo(m_send_file->fileName());
+  auto bare_filename = fileinfo.fileName();
+
+  m_transinfo.m_type = "Upload";
+  m_transinfo.m_dest_ip = host;
+  m_transinfo.m_state = TransferState::Waiting;
+  m_transinfo.m_file_name = bare_filename;
+  m_transinfo.m_file_size = file_size;
+  m_transinfo.m_state = TransferState::Waiting;
+  m_transinfo.m_progress = 0;
+  // emit addProgress(m_transinfo);
 }
 
-SendTask::~SendTask() { qDebug() << "Sender thread deconstruct"; }
+SendTask::~SendTask() {}
 
 void SendTask::run() {
   m_socket = new QTcpSocket(this);
@@ -24,50 +38,57 @@ void SendTask::run() {
   m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
 }
 
+qintptr SendTask::taskId() const { return m_transinfo.id(); }
+
+const TransferInfo SendTask::task() const { return m_transinfo; }
+
+void SendTask::onCancelSend() {
+  m_transinfo.m_state = TransferState::Cancelled;
+}
+
 void SendTask::onBytesWritten(qint64 byte) {
   Q_UNUSED(byte);
   // send file data
   if (!m_socket->bytesToWrite()) {
-    sendFileData();
-    if (!m_byte_remain) {
-      sendFinish();
+    if (m_transinfo.m_state == TransferState::Waiting ||
+        m_transinfo.m_state == TransferState::Transfering) {
+      sendFileData();
+      if (!m_byte_remain) {
+        sendFinish();
+        m_socket->disconnectFromHost();
+        // m_socket->waitForDisconnected();
+        exitDelete();
+      }
+    } else if (m_transinfo.m_state == TransferState::Cancelled) {
+      sendCancelled();
       m_socket->disconnectFromHost();
-      m_socket->waitForDisconnected();
+      // m_socket->waitForDisconnected();
+      exitDelete();
     }
   }
 }
 void SendTask::onConnected() { sendHeader(); }
-void SendTask::onDisconnected() { quit(); }
+
+void SendTask::onDisconnected() {
+  if (m_transinfo.m_state == TransferState::Transfering ||
+      m_transinfo.m_state == TransferState::Waiting) {
+    m_transinfo.m_state = TransferState::Disconnected;
+    emit updateProgress(m_transinfo);
+  }
+  exitDelete();
+}
 
 void SendTask::sendHeader() {
-  // open file
-  m_send_file = new QFile(m_filename, static_cast<QThread*>(this));
-  bool ok = m_send_file->open(QIODevice::ReadOnly);
-  qint64 file_size;
-  if (ok) {
-    file_size = m_send_file->size();
-    m_byte_remain = file_size;
-  } else {
-    qDebug() << "Open File failed " << m_filename;
-    return;
-  }
-  // send file header
-  auto filename = QFileInfo(m_send_file->fileName());
-  auto pare_filename = filename.fileName();
-
+  // TODO: do not use json
   QJsonObject obj(QJsonObject::fromVariantMap(
-      {{"name", pare_filename}, {"size", file_size}}));
+      {{"name", m_transinfo.m_file_name}, {"size", m_transinfo.m_file_size}}));
 
   QByteArray header_data(QJsonDocument(obj).toJson());
 
   QByteArray send_data = preparePackage(PackageType::Header, header_data);
   m_socket->write(send_data);
   // qDebug() << "Sender: send header " << obj;
-  m_status.m_file_name = pare_filename;
-  m_status.m_file_size = file_size;
-  m_status.m_state = TransferState::Waiting;
-  m_status.m_progress = 0;
-  emit addProgress(m_status);
+  // emit addProgress(m_transinfo);
 }
 
 void SendTask::sendFileData() {
@@ -90,11 +111,11 @@ void SendTask::sendFileData() {
   auto data = preparePackage(PackageType::Data, file_buffer);
   m_socket->write(data);
   // qDebug() << "Sender: send data ";
-  m_status.m_state = TransferState::Transfering;
+  m_transinfo.m_state = TransferState::Transfering;
   auto progress =
-      (m_status.m_file_size - m_byte_remain) * 100 / m_status.m_file_size;
-  m_status.m_progress = progress;
-  emit updateProgress(m_status);
+      (m_transinfo.m_file_size - m_byte_remain) * 100 / m_transinfo.m_file_size;
+  m_transinfo.m_progress = progress;
+  emit updateProgress(m_transinfo);
 }
 
 void SendTask::sendFinish() {
@@ -102,7 +123,24 @@ void SendTask::sendFinish() {
   auto data = preparePackage(PackageType::Finish);
   m_socket->write(data);
   // qDebug() << "Sender: send finish ";
-  m_status.m_state = TransferState::Finish;
-  m_status.m_progress = 100;
-  emit updateProgress(m_status);
+  m_transinfo.m_state = TransferState::Finish;
+  m_transinfo.m_progress = 100;
+  emit updateProgress(m_transinfo);
+  emit taskFinish(m_transinfo.id());
+}
+
+void SendTask::sendCancelled() {
+  m_send_file->close();
+  auto data = preparePackage(PackageType::Cancel);
+  m_socket->write(data);
+  // qDebug() << "Sender: send finish ";
+  m_transinfo.m_state = TransferState::Cancelled;
+  // m_transinfo.m_progress = 100;
+  emit updateProgress(m_transinfo);
+  emit taskFinish(m_transinfo.id());
+}
+
+void SendTask::exitDelete() {
+  quit();
+  deleteLater();
 }

@@ -18,5 +18,7 @@ static const QString APP_NAME("LAN_file_sender");
 #define DefaultTransferPort 17116
 #define DefaultFileBufferSize 96 * 1024  // 96 KB
 #define MaxFileBufferSize 1024 * 1024    // 1 MB
+#define DefaultMaxSendThread 5
+#define DefaultMaxReceiveThread 5
 
 static const QString BroadCastMagic{"7463921"};

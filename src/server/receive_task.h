@@ -32,11 +32,14 @@ class ReceiveTask : public QThread {
   void processPackageHeader(QByteArray& data);
   void processPackageData(QByteArray& data);
   void processPackageFinish(QByteArray& data);
+  void processPackageCancel(QByteArray& data);
+
+  void exitDelete();
 
   QTcpSocket* m_socket;
   quint64 m_byte_read{0};
   qintptr m_socket_descriptor{0};
   QByteArray m_buff;
   QFile* m_file;
-  TransferInfo m_status;
+  TransferInfo m_transinfo;
 };

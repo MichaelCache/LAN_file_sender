@@ -26,7 +26,7 @@ class ProgressModel : public QAbstractTableModel {
   void update(const TransferInfo &);
 
  private:
-  void removeMarked();
+  // void removeMarked();
 
   QVector<TransferInfo> m_tasks;
   QVector<TransferInfo> m_mark_remove;

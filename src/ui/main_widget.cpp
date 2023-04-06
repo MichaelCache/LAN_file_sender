@@ -15,11 +15,15 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_host_detector->broadcast(MsgType::New);
 
   connect(m_receiver_view, &ReceiverListView::sendFile, m_file_transfer,
-          &TransferServer::sendFile);
+          &TransferServer::onSendFile);
+
   m_file_transfer->listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
 
   m_progress_view = new ProgressListView(this);
   m_progress_view->setModel(m_file_transfer->progressModel());
+
+  connect(m_progress_view, &ProgressListView::cancelSendTask, m_file_transfer,
+          &TransferServer::onCancelSend);
 
   m_receiver_progress_layout = new QHBoxLayout();
   m_receiver_progress_layout->addWidget(m_receiver_view, 3);
