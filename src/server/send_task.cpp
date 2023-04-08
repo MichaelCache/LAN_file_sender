@@ -56,15 +56,11 @@ void SendTask::onBytesWritten(qint64 byte) {
       sendFileData();
       if (!m_byte_remain) {
         sendFinish();
-        m_socket->disconnectFromHost();
-        // m_socket->waitForDisconnected();
-        exitDelete();
+        // wait rececive socket disconnect;
       }
     } else if (m_transinfo.m_state == TransferState::Cancelled) {
       sendCancelled();
-      m_socket->disconnectFromHost();
-      // m_socket->waitForDisconnected();
-      exitDelete();
+      // wait rececive socket disconnect;
     }
   }
 }

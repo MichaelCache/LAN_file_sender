@@ -12,8 +12,6 @@
 #include "setting.h"
 
 HostDetector::HostDetector(QObject *parent) : QObject(parent) {
-  // TODO: start dhcp if LAN no dhcp server
-
   m_receiver_model = new ReceiverModel(this);
   connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
   connect(this, &HostDetector::removeHost, m_receiver_model,
@@ -21,15 +19,17 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
 
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
-
-  if (m_local_host_ip.empty()) {
+// TODO: start dhcp if LAN no dhcp server
+#if 0
+    if (m_local_host_ip.empty()) {
 #ifdef Q_OS_WIN
-    dhcpServerStart();
+      dhcpServerStart();
 #else
 #endif
-    m_local_host_ip = getLocalAddressFromInterfaces();
-    m_broadcast_ip = getBroadcastAddressFromInterfaces();
-  }
+      m_local_host_ip = getLocalAddressFromInterfaces();
+      m_broadcast_ip = getBroadcastAddressFromInterfaces();
+    }
+#endif
 
   qDebug() << "Local host";
   for (auto &&i : m_local_host_ip) {
@@ -89,6 +89,7 @@ void HostDetector::onUpdateSettings() { broadcast(MsgType::Update); }
 
 void HostDetector::receiveBroadcast() {
   // receive broadcast info from other server
+  // TODO: package stickness
   while (m_broadcast_udp->hasPendingDatagrams()) {
     QByteArray data;
 

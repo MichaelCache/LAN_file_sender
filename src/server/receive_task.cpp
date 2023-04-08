@@ -6,6 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTcpSocket>
+#include <QDir>
 
 #include "package_type.h"
 #include "setting.h"
@@ -91,8 +92,7 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
     stream >> name_byte_len;
   }
   QByteArray filename_data = data.mid(sizeof(int), name_byte_len);
-  QString filename;
-  filename.fromUtf8(filename_data);
+  QString filename = QString::fromUtf8(filename_data);
   data.remove(0, name_byte_len);
   quint64 file_size = 0;
   {
@@ -101,7 +101,8 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   }
   // QJsonObject obj = QJsonDocument::fromJson(data).object();
   // auto filename = obj.value("name").toString();
-  m_file = new QFile(filename);
+  auto full_name = QDir(Setting::ins().m_download_dir).filePath(filename);
+  m_file = new QFile(full_name);
   m_file->open(QIODevice::Append);
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
   // auto file_size = obj.value("size").toInt();
