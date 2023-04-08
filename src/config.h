@@ -12,6 +12,7 @@
 
 #include <QString>
 
+static const QString ORG_NAME("MichaelCache");
 static const QString APP_NAME("LAN_file_sender");
 
 #define DefaultBroadcastPort 56780
@@ -21,4 +22,15 @@ static const QString APP_NAME("LAN_file_sender");
 #define DefaultMaxSendThread 5
 #define DefaultMaxReceiveThread 5
 
-static const QString BroadCastMagic{"7463921"};
+static const QString BROAD_MSG_MAGIC{"7463921"};
+
+static const QString SETTINGS_FILE{"LANsenderconfig"};
+
+static const QString HOST_NAME{"HostName"};
+static const QString FILE_BUFFER{"FileBufferSize"};
+static const QString SEND_THREAD{"SendMaxThread"};
+static const QString RECE_THREAD{"ReceiveMaxThread"};
+static const QString DOWN_DIR{"DownloadDir"};
+static const QString SEND_PORT{"SendPort"};
+static const QString REPLACE{"ReplaceExistingFile"};
+

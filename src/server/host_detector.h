@@ -20,15 +20,15 @@ class HostDetector : public QObject {
 
   ReceiverModel* receiverModel();
 
-  const QString& hostName();
   const QVector<QHostAddress>& hostIp();
+  void broadcast(MsgType type);
 
  Q_SIGNALS:
   void addHost(const RemoteHostInfo&);
   void removeHost(const RemoteHostInfo&);
 
  public Q_SLOTS:
-  void broadcast(MsgType type);
+  void onUpdateSettings();
 
  private Q_SLOTS:
   void receiveBroadcast();
@@ -44,6 +44,5 @@ class HostDetector : public QObject {
 
   QVector<QHostAddress> m_local_host_ip;
   QVector<QHostAddress> m_broadcast_ip;
-  QString m_localhost_name;
   QUdpSocket* m_broadcast_udp;
 };

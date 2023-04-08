@@ -71,7 +71,7 @@ void TransferServer::removeThread(qintptr taskid) {
 }
 
 void TransferServer::appendSend(SendTask* sender) {
-  if (m_senders.size() < Setting::ins().m_max_send_thread) {
+  if ((quint32)m_senders.size() < Setting::ins().m_max_send_thread) {
     m_senders.insert(sender->taskId(), sender);
     sender->run();
   } else {

@@ -21,6 +21,9 @@ class MainWidget : public QWidget {
  public Q_SLOTS:
   void onClose();
 
+ private Q_SLOTS:
+  void onUpdateSettings();
+
  private:
   QVBoxLayout *m_main_layout;
   QHBoxLayout *m_receiver_progress_layout;

@@ -11,6 +11,9 @@ class Setting : public QSettings {
   ~Setting();
   static Setting &ins();
 
+  void saveSettings();
+  void reset();
+
   quint32 m_file_buffer_size{DefaultFileBufferSize};
   QString m_download_dir;
   QString m_hostname{""};
@@ -19,7 +22,12 @@ class Setting : public QSettings {
   quint32 m_max_receive_thread{DefaultMaxReceiveThread};
   quint32 m_file_trans_port{DefaultTransferPort};
 
+ Q_SIGNALS:
+  void updateSettings();
+
  private:
-  Setting(const QString &organization = QString(), QObject *parent = nullptr);
+  Setting(QObject *parent = nullptr);
   QString getDefaultDownloadPath();
+  void loadSettingFile();
+  
 };

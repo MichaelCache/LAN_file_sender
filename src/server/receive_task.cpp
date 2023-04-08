@@ -1,5 +1,6 @@
 #include "receive_task.h"
 
+#include <QDataStream>
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
@@ -84,12 +85,26 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
 }
 
 void ReceiveTask::processPackageHeader(QByteArray& data) {
-  QJsonObject obj = QJsonDocument::fromJson(data).object();
-  auto filename = obj.value("name").toString();
+  int name_byte_len = 0;
+  {
+    QDataStream stream(data);
+    stream >> name_byte_len;
+  }
+  QByteArray filename_data = data.mid(sizeof(int), name_byte_len);
+  QString filename;
+  filename.fromUtf8(filename_data);
+  data.remove(0, name_byte_len);
+  quint64 file_size = 0;
+  {
+    QDataStream stream(data);
+    stream >> file_size;
+  }
+  // QJsonObject obj = QJsonDocument::fromJson(data).object();
+  // auto filename = obj.value("name").toString();
   m_file = new QFile(filename);
   m_file->open(QIODevice::Append);
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
-  auto file_size = obj.value("size").toInt();
+  // auto file_size = obj.value("size").toInt();
   // qDebug() << "Receiver: receive head: " << obj;
 
   m_transinfo.m_dest_ip = from_ip;

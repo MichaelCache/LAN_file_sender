@@ -12,14 +12,12 @@
 #include "setting.h"
 
 HostDetector::HostDetector(QObject *parent) : QObject(parent) {
-  // TODO:
+  // TODO: start dhcp if LAN no dhcp server
 
   m_receiver_model = new ReceiverModel(this);
   connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
   connect(this, &HostDetector::removeHost, m_receiver_model,
           &ReceiverModel::remove);
-
-  m_localhost_name = QHostInfo::localHostName();
 
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
@@ -54,13 +52,12 @@ HostDetector::~HostDetector() {}
 
 ReceiverModel *HostDetector::receiverModel() { return m_receiver_model; }
 
-const QString &HostDetector::hostName() { return m_localhost_name; }
 const QVector<QHostAddress> &HostDetector::hostIp() { return m_local_host_ip; }
 
 void HostDetector::broadcast(MsgType type) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
-  QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
+  QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BROAD_MSG_MAGIC},
                                                {"name", setting.m_hostname},
                                                {"os", OS_NAME},
                                                {"type", (int)type}}));
@@ -88,6 +85,8 @@ QVector<QHostAddress> HostDetector::getBroadcastAddressFromInterfaces() {
   return addresses;
 }
 
+void HostDetector::onUpdateSettings() { broadcast(MsgType::Update); }
+
 void HostDetector::receiveBroadcast() {
   // receive broadcast info from other server
   while (m_broadcast_udp->hasPendingDatagrams()) {
@@ -106,7 +105,7 @@ void HostDetector::receiveBroadcast() {
     sender = QHostAddress(sender.toIPv4Address());
 
     QJsonObject obj = QJsonDocument::fromJson(data).object();
-    if (obj.value("magic").toString() == BroadCastMagic) {
+    if (obj.value("magic").toString() == BROAD_MSG_MAGIC) {
       // filter out loopback and localhost ip
       if (sender.isLoopback() || isLocalHost(sender)) {
         continue;
@@ -134,7 +133,7 @@ void HostDetector::receiveBroadcast() {
 void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
-  QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BroadCastMagic},
+  QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BROAD_MSG_MAGIC},
                                                {"name", setting.m_hostname},
                                                {"os", OS_NAME},
                                                {"type", (int)t}}));

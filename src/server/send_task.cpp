@@ -1,5 +1,6 @@
 #include "send_task.h"
 
+#include <QDataStream>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -79,13 +80,23 @@ void SendTask::onDisconnected() {
 }
 
 void SendTask::sendHeader() {
-  // TODO: do not use json
-  QJsonObject obj(QJsonObject::fromVariantMap(
-      {{"name", m_transinfo.m_file_name}, {"size", m_transinfo.m_file_size}}));
+  QByteArray header_buffer;
+  auto name_data = m_transinfo.m_file_name.toUtf8();
+  {
+    QDataStream stream(&header_buffer, QIODevice::Append);
+    stream << name_data.size();
+  }
+  header_buffer.append(name_data);
+  {
+    QDataStream stream(&header_buffer, QIODevice::Append);
+    stream << m_transinfo.m_file_size;
+  }
+  // QJsonObject obj(QJsonObject::fromVariantMap(
+  // {{"name", m_transinfo.m_file_name}, {"size", m_transinfo.m_file_size}}));
 
-  QByteArray header_data(QJsonDocument(obj).toJson());
+  // QByteArray header_data(QJsonDocument(obj).toJson());
 
-  QByteArray send_data = preparePackage(PackageType::Header, header_data);
+  QByteArray send_data = preparePackage(PackageType::Header, header_buffer);
   m_socket->write(send_data);
   // qDebug() << "Sender: send header " << obj;
   // emit addProgress(m_transinfo);

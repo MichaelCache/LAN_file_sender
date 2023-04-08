@@ -5,6 +5,7 @@
 #include <QMessageBox>
 
 #include "main_widget.h"
+#include "setting_dialog.h"
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -23,4 +24,5 @@ class MainWindow : public QMainWindow {
   QMenuBar *m_menubar;
   QAction *m_setting;
   QMessageBox *m_close_msg;
+  SettingDialog *m_setting_dialog;
 };
