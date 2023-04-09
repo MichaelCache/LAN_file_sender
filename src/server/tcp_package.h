@@ -1,16 +1,27 @@
 #pragma once
 
 #include <QByteArray>
+#include <QPair>
 
-#include "package_type.h"
+enum class PackageType : char {
+  None = 0x00,
+  Header,
+  Data,
+  Finish,
+  Cancel,
+  Pause,
+  Resume
+};
 
-class TcpPackage {
- private:
-  /* data */
+using PackageSize = int;
+
+struct TcpPackage {
  public:
-  TcpPackage(/* args */);
-  ~TcpPackage();
+  static QByteArray packData(PackageType type,
+                             const QByteArray& data = QByteArray());
+  static TcpPackage unpackData(const QByteArray& data);
 
- protected:
-  QByteArray preparePackage(PackageType type, QByteArray data = QByteArray());
+  PackageType m_type;
+  PackageSize m_size;
+  QByteArray m_data;
 };

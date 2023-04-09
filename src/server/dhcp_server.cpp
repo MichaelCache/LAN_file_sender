@@ -1,3 +1,6 @@
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || \
+    defined(__NT__) || defined(_WIN64)
+
 #include "dhcp_server.h"
 
 #include <Windows.h>
@@ -88,3 +91,4 @@ void dhcpServerStop() {
     qDebug() << QString("Error deleting DHCP server: %1").arg(dwError);
   }
 }
+#endif

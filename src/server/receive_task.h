@@ -6,7 +6,7 @@
 #include <QThread>
 
 #include "model/transfer_info.h"
-#include "package_type.h"
+#include "tcp_package.h"
 
 class ReceiveTask : public QThread {
   Q_OBJECT

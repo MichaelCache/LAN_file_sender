@@ -6,10 +6,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTcpSocket>
-#include <QDir>
 
-#include "package_type.h"
 #include "setting.h"
+#include "tcp_package.h"
 
 ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
     : QThread(parent), m_socket_descriptor(descriptor) {
@@ -30,22 +29,14 @@ void ReceiveTask::run() {
 void ReceiveTask::onReadyRead() {
   m_buff.append(m_socket->readAll());
   while (m_buff.size()) {
-    PackageSize size{0};
-    memcpy(&size, m_buff.data(), sizeof(PackageSize));
-
-    if (size > m_buff.size()) {
-      // buff not cotains completely package, wait for more data
+    auto tcp_pack = TcpPackage::unpackData(m_buff);
+    // not valid tcp package, wait receive more data package
+    if (tcp_pack.m_type == PackageType::None) {
       break;
     }
 
-    auto data = m_buff.mid(0, size);
-    data.remove(0, sizeof(PackageSize));
-    PackageType type;
-    memcpy(&type, data.data(), sizeof(PackageType));
-    data.remove(0, sizeof(PackageType));
-
-    processPackage(type, data);
-    m_buff.remove(0, size);
+    processPackage(tcp_pack.m_type, tcp_pack.m_data);
+    m_buff.remove(0, tcp_pack.m_size);
   }
 }
 
@@ -99,14 +90,10 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
     QDataStream stream(data);
     stream >> file_size;
   }
-  // QJsonObject obj = QJsonDocument::fromJson(data).object();
-  // auto filename = obj.value("name").toString();
   auto full_name = QDir(Setting::ins().m_download_dir).filePath(filename);
   m_file = new QFile(full_name);
   m_file->open(QIODevice::Append);
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
-  // auto file_size = obj.value("size").toInt();
-  // qDebug() << "Receiver: receive head: " << obj;
 
   m_transinfo.m_dest_ip = from_ip;
   m_transinfo.m_file_name = filename;

@@ -92,7 +92,8 @@ void SendTask::sendHeader() {
 
   // QByteArray header_data(QJsonDocument(obj).toJson());
 
-  QByteArray send_data = preparePackage(PackageType::Header, header_buffer);
+  QByteArray send_data =
+      TcpPackage::packData(PackageType::Header, header_buffer);
   m_socket->write(send_data);
   // qDebug() << "Sender: send header " << obj;
   // emit addProgress(m_transinfo);
@@ -115,7 +116,7 @@ void SendTask::sendFileData() {
   m_byte_remain -= bytes_read;
   if (m_byte_remain < 0) m_byte_remain = 0;
 
-  auto data = preparePackage(PackageType::Data, file_buffer);
+  auto data = TcpPackage::packData(PackageType::Data, file_buffer);
   m_socket->write(data);
   // qDebug() << "Sender: send data ";
   m_transinfo.m_state = TransferState::Transfering;
@@ -127,7 +128,7 @@ void SendTask::sendFileData() {
 
 void SendTask::sendFinish() {
   m_send_file->close();
-  auto data = preparePackage(PackageType::Finish);
+  auto data = TcpPackage::packData(PackageType::Finish);
   m_socket->write(data);
   // qDebug() << "Sender: send finish ";
   m_transinfo.m_state = TransferState::Finish;
@@ -138,7 +139,7 @@ void SendTask::sendFinish() {
 
 void SendTask::sendCancelled() {
   m_send_file->close();
-  auto data = preparePackage(PackageType::Cancel);
+  auto data = TcpPackage::packData(PackageType::Cancel);
   m_socket->write(data);
   // qDebug() << "Sender: send finish ";
   m_transinfo.m_state = TransferState::Cancelled;

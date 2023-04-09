@@ -10,7 +10,6 @@
 #include "model/progress_model.h"
 #include "model/receiver_model.h"
 #include "model/transfer_info.h"
-#include "package_type.h"
 #include "receive_task.h"
 #include "send_task.h"
 

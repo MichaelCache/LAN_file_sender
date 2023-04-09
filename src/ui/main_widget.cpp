@@ -6,10 +6,10 @@
 #include "setting.h"
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
-  m_host_detector = new HostDetector(this);
+  m_host_detector = new HostBroadcaster(this);
   m_host_detector->broadcast(MsgType::New);
   connect(&Setting::ins(), &Setting::updateSettings, m_host_detector,
-          &HostDetector::onUpdateSettings);
+          &HostBroadcaster::onUpdateSettings);
 
   m_file_transfer = new TransferServer(this);
   // connect send file

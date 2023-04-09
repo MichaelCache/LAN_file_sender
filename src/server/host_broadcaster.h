@@ -2,21 +2,24 @@
 
 #include <QAtomicInt>
 #include <QHostAddress>
+#include <QMutex>
+#include <QSignalMapper>
 #include <QTcpServer>
 #include <QTcpSocket>
-#include <QTimer>
+#include <QSet>
 #include <QUdpSocket>
+#include <QTimer>
 
 #include "model/host_info.h"
 #include "model/receiver_model.h"
 
 enum class MsgType : int { None = 0, New, Update, Reply, Delete };
 
-class HostDetector : public QObject {
+class HostBroadcaster : public QObject {
   Q_OBJECT
  public:
-  HostDetector(QObject* parent = nullptr);
-  ~HostDetector();
+  HostBroadcaster(QObject* parent = nullptr);
+  ~HostBroadcaster();
 
   ReceiverModel* receiverModel();
 
@@ -31,6 +34,7 @@ class HostDetector : public QObject {
   void onUpdateSettings();
 
  private Q_SLOTS:
+  void consistBroadcast();
   void receiveBroadcast();
 
  private:
@@ -45,4 +49,6 @@ class HostDetector : public QObject {
   QVector<QHostAddress> m_local_host_ip;
   QVector<QHostAddress> m_broadcast_ip;
   QUdpSocket* m_broadcast_udp;
+  QTimer* m_timer;
+  QSet<QHostAddress> m_added_host;
 };

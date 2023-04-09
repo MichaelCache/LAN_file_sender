@@ -8,6 +8,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpacerItem>
+#include <QSpinBox>
 
 class SettingDialog : public QDialog {
   Q_OBJECT
@@ -26,6 +27,9 @@ class SettingDialog : public QDialog {
   QLabel* m_download_dir_label;
   QLineEdit* m_download_dir_edit;
   QPushButton* m_select_dir_bt;
+  QLabel* m_broad_interval_label;
+  QLabel* m_broad_interval_unit;
+  QSpinBox* m_broad_interval_edit;
 
   QHBoxLayout* m_buttons_layout;
   QPushButton* m_reset_bt;

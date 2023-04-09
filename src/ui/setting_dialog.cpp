@@ -18,8 +18,10 @@ SettingDialog::SettingDialog(QWidget* parent) : QDialog(parent) {
   m_group_box = new QGroupBox(this);
   m_group_box->setTitle("Profile");
 
+  // hostname
   m_hostname_label = new QLabel("HostName", m_group_box);
   m_hostname_edit = new QLineEdit(Setting::ins().m_hostname, m_group_box);
+  // download dir
   m_download_dir_label = new QLabel("Download", m_group_box);
   m_download_dir_edit =
       new QLineEdit(Setting::ins().m_download_dir, m_group_box);
@@ -31,11 +33,22 @@ SettingDialog::SettingDialog(QWidget* parent) : QDialog(parent) {
   m_dir_layout->addWidget(m_download_dir_edit);
   m_dir_layout->addWidget(m_select_dir_bt);
 
+  // broadcast interval
+  m_broad_interval_label = new QLabel("Broadcast Interval", m_group_box);
+  m_broad_interval_edit = new QSpinBox(m_group_box);
+  m_broad_interval_edit->setRange(0, 9999);
+  m_broad_interval_edit->setValue(Setting::ins().m_boradcast_interval);
+  m_broad_interval_unit = new QLabel("ms", m_group_box);
+
+  // content layout
   m_content_layout = new QGridLayout(m_group_box);
   m_content_layout->addWidget(m_hostname_label, 0, 0, 1, 1);
   m_content_layout->addWidget(m_hostname_edit, 0, 1, 1, 3);
   m_content_layout->addWidget(m_download_dir_label, 1, 0, 1, 1);
   m_content_layout->addLayout(m_dir_layout, 1, 1);
+  // m_content_layout->addWidget(m_broad_interval_label, 2, 0, 1, 1);
+  // m_content_layout->addWidget(m_broad_interval_edit, 2, 1, 1, 1);
+  // m_content_layout->addWidget(m_broad_interval_unit, 2, 2, 1, 1);
 
   // button of bottom
   m_reset_bt = new QPushButton("Reset", this);
@@ -67,12 +80,14 @@ void SettingDialog::onUpdataSettings() {
   auto& s = Setting::ins();
   m_hostname_edit->setText(s.m_hostname);
   m_download_dir_edit->setText(s.m_download_dir);
+  m_broad_interval_edit->setValue(s.m_boradcast_interval);
 }
 
 void SettingDialog::saveSetting() {
   auto& s = Setting::ins();
   s.m_download_dir = m_download_dir_edit->text();
   s.m_hostname = m_hostname_edit->text();
+  s.m_boradcast_interval = m_broad_interval_edit->value();
   s.saveSettings();
   accept();
 }

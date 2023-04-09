@@ -15,6 +15,7 @@
 static const QString ORG_NAME("MichaelCache");
 static const QString APP_NAME("LAN_file_sender");
 
+#define DefaultBroadcastInterval 5000 // 5s
 #define DefaultBroadcastPort 56780
 #define DefaultTransferPort 17116
 #define DefaultFileBufferSize 96 * 1024  // 96 KB
@@ -33,4 +34,5 @@ static const QString RECE_THREAD{"ReceiveMaxThread"};
 static const QString DOWN_DIR{"DownloadDir"};
 static const QString SEND_PORT{"SendPort"};
 static const QString REPLACE{"ReplaceExistingFile"};
+static const QString BROAD_INTER{"BroadcastInterval"};
 

@@ -1,4 +1,4 @@
-#include "host_detector.h"
+#include "host_broadcaster.h"
 
 #include <QHostInfo>
 #include <QJsonDocument>
@@ -11,14 +11,17 @@
 #include "dhcp_server.h"
 #include "setting.h"
 
-HostDetector::HostDetector(QObject *parent) : QObject(parent) {
+HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   m_receiver_model = new ReceiverModel(this);
-  connect(this, &HostDetector::addHost, m_receiver_model, &ReceiverModel::add);
-  connect(this, &HostDetector::removeHost, m_receiver_model,
+  connect(this, &HostBroadcaster::addHost, m_receiver_model,
+          &ReceiverModel::add);
+  connect(this, &HostBroadcaster::removeHost, m_receiver_model,
           &ReceiverModel::remove);
 
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
+
+  m_timer = new QTimer(this);
 // TODO: start dhcp if LAN no dhcp server
 #if 0
     if (m_local_host_ip.empty()) {
@@ -45,16 +48,20 @@ HostDetector::HostDetector(QObject *parent) : QObject(parent) {
   m_broadcast_udp = new QUdpSocket(this);
   m_broadcast_udp->bind(DefaultBroadcastPort, QUdpSocket::ShareAddress);
   connect(m_broadcast_udp, &QUdpSocket::readyRead, this,
-          &HostDetector::receiveBroadcast);
+          &HostBroadcaster::receiveBroadcast);
+  connect(m_timer, &QTimer::timeout, this, &HostBroadcaster::consistBroadcast);
+  m_timer->start(Setting::ins().m_boradcast_interval);
 }
 
-HostDetector::~HostDetector() {}
+HostBroadcaster::~HostBroadcaster() {}
 
-ReceiverModel *HostDetector::receiverModel() { return m_receiver_model; }
+ReceiverModel *HostBroadcaster::receiverModel() { return m_receiver_model; }
 
-const QVector<QHostAddress> &HostDetector::hostIp() { return m_local_host_ip; }
+const QVector<QHostAddress> &HostBroadcaster::hostIp() {
+  return m_local_host_ip;
+}
 
-void HostDetector::broadcast(MsgType type) {
+void HostBroadcaster::broadcast(MsgType type) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BROAD_MSG_MAGIC},
@@ -68,7 +75,7 @@ void HostDetector::broadcast(MsgType type) {
   }
 }
 
-QVector<QHostAddress> HostDetector::getBroadcastAddressFromInterfaces() {
+QVector<QHostAddress> HostBroadcaster::getBroadcastAddressFromInterfaces() {
   QVector<QHostAddress> addresses;
   for (auto &&iface : QNetworkInterface::allInterfaces()) {
     auto flag = iface.flags();
@@ -85,9 +92,11 @@ QVector<QHostAddress> HostDetector::getBroadcastAddressFromInterfaces() {
   return addresses;
 }
 
-void HostDetector::onUpdateSettings() { broadcast(MsgType::Update); }
+void HostBroadcaster::onUpdateSettings() { broadcast(MsgType::Update); }
 
-void HostDetector::receiveBroadcast() {
+void HostBroadcaster::consistBroadcast() { broadcast(MsgType::New); }
+
+void HostBroadcaster::receiveBroadcast() {
   // receive broadcast info from other server
   // TODO: package stickness
   while (m_broadcast_udp->hasPendingDatagrams()) {
@@ -116,22 +125,28 @@ void HostDetector::receiveBroadcast() {
                                    obj.value("os").toString()};
 
       auto msg_type = (MsgType)(obj.value("type").toInt());
-      if (msg_type == MsgType::New || msg_type == MsgType::Update ||
-          msg_type == MsgType::Reply) {
+      if (msg_type == MsgType::New) {
+        if (!m_added_host.contains(sender)) {
+          emit addHost(remote_server);
+        }
+
+      } else if (msg_type == MsgType::Update || msg_type == MsgType::Reply) {
         emit addHost(remote_server);
       } else if (msg_type == MsgType::Delete) {
         emit removeHost(remote_server);
+        m_added_host.remove(sender);
       }
 
-      if (msg_type == MsgType::New) {
+      if (msg_type == MsgType::New && !m_added_host.contains(sender)) {
         // send back new remote server this host info
         sendHostInfo(sender, MsgType::Reply);
+        m_added_host.insert(sender);
       }
     }
   }
 }
 
-void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
+void HostBroadcaster::sendHostInfo(QHostAddress dst, MsgType t) {
   auto &setting = Setting::ins();
   int port = DefaultBroadcastPort;
   QJsonObject obj(QJsonObject::fromVariantMap({{"magic", BROAD_MSG_MAGIC},
@@ -143,7 +158,7 @@ void HostDetector::sendHostInfo(QHostAddress dst, MsgType t) {
   m_broadcast_udp->writeDatagram(data, dst, port);
 }
 
-QVector<QHostAddress> HostDetector::getLocalAddressFromInterfaces() {
+QVector<QHostAddress> HostBroadcaster::getLocalAddressFromInterfaces() {
   QVector<QHostAddress> addresses;
   for (auto &&iface : QNetworkInterface::allInterfaces()) {
     auto flag = iface.flags();
@@ -166,7 +181,7 @@ QVector<QHostAddress> HostDetector::getLocalAddressFromInterfaces() {
   return addresses;
 }
 
-bool HostDetector::isLocalHost(const QHostAddress &addr) const {
+bool HostBroadcaster::isLocalHost(const QHostAddress &addr) const {
   auto find = std::find(m_local_host_ip.begin(), m_local_host_ip.end(), addr);
   if (find != m_local_host_ip.end()) {
     return true;

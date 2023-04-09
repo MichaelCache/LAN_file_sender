@@ -21,6 +21,7 @@ class Setting : public QSettings {
   quint32 m_max_send_thread{DefaultMaxSendThread};
   quint32 m_max_receive_thread{DefaultMaxReceiveThread};
   quint32 m_file_trans_port{DefaultTransferPort};
+  quint32 m_boradcast_interval{DefaultBroadcastInterval};
 
  Q_SIGNALS:
   void updateSettings();
