@@ -78,25 +78,14 @@ void SendTask::onDisconnected() {
 void SendTask::sendHeader() {
   QByteArray header_buffer;
   auto name_data = m_transinfo.m_file_name.toUtf8();
-  {
-    QDataStream stream(&header_buffer, QIODevice::Append);
-    stream << name_data.size();
-  }
+  int name_size = name_data.size();
+  header_buffer.append((char*)&name_size, sizeof(int));
   header_buffer.append(name_data);
-  {
-    QDataStream stream(&header_buffer, QIODevice::Append);
-    stream << m_transinfo.m_file_size;
-  }
-  // QJsonObject obj(QJsonObject::fromVariantMap(
-  // {{"name", m_transinfo.m_file_name}, {"size", m_transinfo.m_file_size}}));
-
-  // QByteArray header_data(QJsonDocument(obj).toJson());
+  header_buffer.append((char*)&m_transinfo.m_file_size, sizeof(quint64));
 
   QByteArray send_data =
       TcpPackage::packData(PackageType::Header, header_buffer);
   m_socket->write(send_data);
-  // qDebug() << "Sender: send header " << obj;
-  // emit addProgress(m_transinfo);
 }
 
 void SendTask::sendFileData() {

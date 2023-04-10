@@ -78,18 +78,14 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
 
 void ReceiveTask::processPackageHeader(QByteArray& data) {
   int name_byte_len = 0;
-  {
-    QDataStream stream(data);
-    stream >> name_byte_len;
-  }
-  QByteArray filename_data = data.mid(sizeof(int), name_byte_len);
+  memcpy(&name_byte_len, data.data(), sizeof(int));
+  data.remove(0, sizeof(int));
+  QByteArray filename_data = data.left(name_byte_len);
   QString filename = QString::fromUtf8(filename_data);
   data.remove(0, name_byte_len);
   quint64 file_size = 0;
-  {
-    QDataStream stream(data);
-    stream >> file_size;
-  }
+  memcpy(&file_size, data.data(), sizeof(quint64));
+
   auto full_name = QDir(Setting::ins().m_download_dir).filePath(filename);
   m_file = new QFile(full_name);
   m_file->open(QIODevice::Append);
