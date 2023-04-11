@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QHostAddress>
+#include <QMutex>
 #include <QTcpSocket>
 #include <QThread>
 
@@ -17,10 +18,15 @@ class SendTask : public QThread, public TcpPackage {
 
   virtual void run() override;
 
+  qintptr taskId() const;
+  const TransferInfo task() const;
+
  Q_SIGNALS:
-  void addProgress(const TransferInfo&);
-  void removeProgress(const TransferInfo&);
   void updateProgress(const TransferInfo&);
+  void taskFinish(qintptr);
+
+ public Q_SLOTS:
+  void onCancelSend();
 
  private Q_SLOTS:
   void onBytesWritten(qint64 byte);
@@ -31,11 +37,15 @@ class SendTask : public QThread, public TcpPackage {
   void sendHeader();
   void sendFileData();
   void sendFinish();
+  void sendCancelled();
 
+  void exitDelete();
+
+  QMutex m_lock;
   QFile* m_send_file{nullptr};
   QString m_filename;
   QTcpSocket* m_socket;
-  quint64 m_file_size{0};
   quint64 m_byte_remain{0};
   QHostAddress m_dst;
+  TransferInfo m_transinfo;
 };

@@ -6,27 +6,35 @@
 #include "setting.h"
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
-  m_host_detector = new HostDetector(this);
-  m_file_transfer = new TransferServer(this);
+  m_host_detector = new HostBroadcaster(this);
+  m_host_detector->broadcast(MsgType::New);
+  connect(&Setting::ins(), &Setting::updateSettings, m_host_detector,
+          &HostBroadcaster::onUpdateSettings);
 
+  m_file_transfer = new TransferServer(this);
+  // connect send file
   m_receiver_view = new ReceiverListView(this);
   m_receiver_view->setModel(m_host_detector->receiverModel());
-
-  m_host_detector->broadcast(MsgType::New);
-
   connect(m_receiver_view, &ReceiverListView::sendFile, m_file_transfer,
-          &TransferServer::sendFile);
+          &TransferServer::onSendFile);
+
   m_file_transfer->listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
 
   m_progress_view = new ProgressListView(this);
   m_progress_view->setModel(m_file_transfer->progressModel());
+
+  // connect cancel send
+  connect(m_progress_view, &ProgressListView::cancelSendTask, m_file_transfer,
+          &TransferServer::onCancelSend);
 
   m_receiver_progress_layout = new QHBoxLayout();
   m_receiver_progress_layout->addWidget(m_receiver_view, 3);
   m_receiver_progress_layout->addWidget(m_progress_view, 6);
 
   m_localhostname = new QLabel(this);
-  m_localhostname->setText("Host Name: " + m_host_detector->hostName());
+  m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
+  connect(&Setting::ins(), &Setting::updateSettings, this,
+          &MainWidget::onUpdateSettings);
 
   m_localhostip = new QLabel(this);
   QString local_ips = "Host IP: ";
@@ -53,3 +61,7 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 MainWidget::~MainWidget() {}
 
 void MainWidget::onClose() { m_host_detector->broadcast(MsgType::Delete); }
+
+void MainWidget::onUpdateSettings() {
+  m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
+}

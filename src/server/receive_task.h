@@ -6,7 +6,7 @@
 #include <QThread>
 
 #include "model/transfer_info.h"
-#include "package_type.h"
+#include "tcp_package.h"
 
 class ReceiveTask : public QThread {
   Q_OBJECT
@@ -32,13 +32,14 @@ class ReceiveTask : public QThread {
   void processPackageHeader(QByteArray& data);
   void processPackageData(QByteArray& data);
   void processPackageFinish(QByteArray& data);
+  void processPackageCancel(QByteArray& data);
+
+  void exitDelete();
 
   QTcpSocket* m_socket;
-  QHostAddress m_from;
-  QString m_filename;
-  quint64 m_file_size{0};
   quint64 m_byte_read{0};
   qintptr m_socket_descriptor{0};
   QByteArray m_buff;
   QFile* m_file;
+  TransferInfo m_transinfo;
 };

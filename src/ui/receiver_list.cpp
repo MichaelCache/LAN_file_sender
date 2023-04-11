@@ -5,7 +5,6 @@
 
 #include "model/column.h"
 
-
 ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
   setSelectionMode(QAbstractItemView::MultiSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -17,6 +16,10 @@ ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
   horizontalHeader()->setHighlightSections(false);
   verticalHeader()->setVisible(false);
 
+  // set column width
+  setColumnWidth(3, 20);
+
+  // right click menu
   setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
   connect(this, &ReceiverListView::customContextMenuRequested, this,
           &ReceiverListView::onReceiverContextMenuRequested);
@@ -27,8 +30,8 @@ ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
 
   m_right_menu = new QMenu(this);
   m_send_ac = new QAction("Send", this);
-  connect(m_send_ac, &QAction::triggered, m_file_dialog, &QFileDialog::show);
   m_right_menu->addAction(m_send_ac);
+  connect(m_send_ac, &QAction::triggered, m_file_dialog, &QFileDialog::show);
 }
 
 ReceiverListView::~ReceiverListView() {}

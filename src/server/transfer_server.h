@@ -10,10 +10,8 @@
 #include "model/progress_model.h"
 #include "model/receiver_model.h"
 #include "model/transfer_info.h"
-#include "package_type.h"
 #include "receive_task.h"
 #include "send_task.h"
-
 
 class TransferServer : public QTcpServer {
   Q_OBJECT
@@ -24,15 +22,28 @@ class TransferServer : public QTcpServer {
   ProgressModel* progressModel();
 
  public Q_SLOTS:
-  void sendFile(const QString& filename, const QHostAddress& dst);
+  void onSendFile(const QString& filename, const QHostAddress& dst);
+  void onCancelSend(qintptr);
+
+ Q_SIGNALS:
+  // void cancelSend(const TransferInfo&);
   // void onReceiveFile();
+ private Q_SLOTS:
+  // void finishSend();
+  // void finishReceive();
+  void removeThread(qintptr);
 
  protected:
   void incomingConnection(qintptr socketDescriptor);
 
  private:
-  ProgressModel* m_progress_model;
+  void appendSend(SendTask*);
 
-  QVector<SendTask*> m_senders;
-  QVector<ReceiveTask*> m_receivers;
+  ProgressModel* m_progress_model;
+  QMutex m_lock;
+
+  QMap<qintptr, SendTask*> m_senders;
+  QMap<qintptr, ReceiveTask*> m_receivers;
+  QVector<SendTask*> m_sender_wait_queue;
+  QVector<ReceiveTask*> m_receiver_wait_queue;
 };

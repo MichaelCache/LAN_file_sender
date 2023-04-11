@@ -9,7 +9,7 @@
 #include "model/receiver_model.h"
 #include "progress_list.h"
 #include "receiver_list.h"
-#include "server/host_detector.h"
+#include "server/host_broadcaster.h"
 #include "server/transfer_server.h"
 
 class MainWidget : public QWidget {
@@ -20,6 +20,9 @@ class MainWidget : public QWidget {
 
  public Q_SLOTS:
   void onClose();
+
+ private Q_SLOTS:
+  void onUpdateSettings();
 
  private:
   QVBoxLayout *m_main_layout;
@@ -32,6 +35,6 @@ class MainWidget : public QWidget {
   QLabel *m_localhostip;
 
   // servers;
-  HostDetector *m_host_detector;
+  HostBroadcaster *m_host_detector;
   TransferServer *m_file_transfer;
 };

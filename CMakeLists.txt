@@ -29,3 +29,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_executable(lanshare ${src})
 target_link_libraries(lanshare PRIVATE Qt5::Core Qt5::Widgets Qt5::Network)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # Do something for Linux
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  target_link_libraries(lanshare PRIVATE iphlpapi wsock32)
+endif()

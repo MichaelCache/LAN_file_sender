@@ -1,6 +1,7 @@
 #include "receiver_model.h"
 
 #include <QHostAddress>
+#include <QMutexLocker>
 
 #include "column.h"
 
@@ -15,6 +16,7 @@ bool ReceiverModel::contains(QHostAddress addr) {
 }
 
 void ReceiverModel::add(const RemoteHostInfo &server) {
+  // QMutexLocker locker(&m_lock);
   if (contains(server.m_host_addr)) {
     int row = 0;
     // find remote server in same ip, name or os may changed
