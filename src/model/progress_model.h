@@ -24,11 +24,11 @@ class ProgressModel : public QAbstractTableModel {
   void add(const TransferInfo &);
   void remove(const TransferInfo &);
   void update(const TransferInfo &);
+  void clear();
 
  private:
   // void removeMarked();
 
   QVector<TransferInfo> m_tasks;
-  QVector<TransferInfo> m_mark_remove;
   QMutex m_lock;
 };

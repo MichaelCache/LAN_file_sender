@@ -131,20 +131,17 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
 
 void ProgressModel::add(const TransferInfo &info) {
   QMutexLocker locker(&m_lock);
+  emit layoutAboutToBeChanged();
   m_tasks.push_back(info);
+
   emit layoutChanged();
 }
 
 void ProgressModel::remove(const TransferInfo &info) {
   QMutexLocker locker(&m_lock);
-  auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
-  //  [&info](const TransferInfo &s) { return s == info; });
-  if (find != m_tasks.end()) {
-    // qDebug() << "remove server: " << server.m_host_addr;
-    m_tasks.erase(find);
-    // m_tasks.push_back(info);
-    // emit layoutChanged();
-  }
+  emit layoutAboutToBeChanged();
+  m_tasks.removeAll(info);
+  emit layoutChanged();
 }
 
 void ProgressModel::update(const TransferInfo &info) {
@@ -152,22 +149,30 @@ void ProgressModel::update(const TransferInfo &info) {
   auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
   if (find != m_tasks.end()) {
     *find = info;
-    int row = m_tasks.indexOf(*find);
+    int row = std::distance(m_tasks.begin(), find);
+    // int row = m_tasks.indexOf(*find);
 
-    emit dataChanged(index(row, (int)Column::Count - 2),
-                     index(row, (int)Column::Count - 1));
+    // qDebug() << "update ------";
+    // qDebug() << info.id() << " " << row << " " << info.m_file_name << " "
+    //          << info.m_progress;
+
+    emit dataChanged(index(0, (int)0), index(row, (int)Column::Count));
   }
 }
 
-// void ProgressModel::removeMarked() {
-//   for (auto &&i : m_mark_remove) {
-//     auto find = std::find(m_tasks.begin(), m_tasks.end(), i);
-//     //  [&info](const TransferInfo &s) { return s == info; });
-//     if (find != m_tasks.end()) {
-//       // qDebug() << "remove server: " << server.m_host_addr;
-//       m_tasks.erase(find);
-//       // emit layoutChanged();
-//     }
-//   }
-//   m_mark_remove.clear();
-// }
+void ProgressModel::clear() {
+  QMutexLocker locker(&m_lock);
+  emit layoutAboutToBeChanged();
+  QVector<TransferInfo> marked_remove;
+  for (auto &&i : m_tasks) {
+    if (i.m_state == TransferState::Cancelled ||
+        i.m_state == TransferState::Disconnected ||
+        i.m_state == TransferState::Finish) {
+      marked_remove.push_back(i);
+    }
+  }
+  for (auto &i : marked_remove) {
+    m_tasks.removeAll(i);
+  }
+  emit layoutChanged();
+}

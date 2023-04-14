@@ -94,6 +94,11 @@ QVector<QHostAddress> HostBroadcaster::getBroadcastAddressFromInterfaces() {
 
 void HostBroadcaster::onUpdateSettings() { broadcast(MsgType::Update); }
 
+void HostBroadcaster::stop() {
+  broadcast(MsgType::Delete);
+  m_broadcast_udp->disconnectFromHost();
+}
+
 void HostBroadcaster::consistBroadcast() { broadcast(MsgType::New); }
 
 void HostBroadcaster::receiveBroadcast() {

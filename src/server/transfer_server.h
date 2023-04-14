@@ -31,13 +31,15 @@ class TransferServer : public QTcpServer {
  private Q_SLOTS:
   // void finishSend();
   // void finishReceive();
-  void removeThread(qintptr);
+  void removeSend(qintptr);
+  void removeReceive(qintptr taskid); 
 
  protected:
   void incomingConnection(qintptr socketDescriptor);
 
  private:
   void appendSend(SendTask*);
+  void appendReceive(ReceiveTask* receiver);
 
   ProgressModel* m_progress_model;
   QMutex m_lock;

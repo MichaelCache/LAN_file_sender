@@ -44,6 +44,11 @@ qintptr SendTask::taskId() const { return m_transinfo.id(); }
 const TransferInfo SendTask::task() const { return m_transinfo; }
 
 void SendTask::onCancelSend() {
+  QMutexLocker locker(&m_lock);
+  if (m_transinfo.m_state == TransferState::Disconnected ||
+      m_transinfo.m_state == TransferState::Finish) {
+    return;
+  }
   m_transinfo.m_state = TransferState::Cancelled;
 }
 
@@ -66,6 +71,7 @@ void SendTask::onBytesWritten(qint64 byte) {
 }
 void SendTask::onConnected() { sendHeader(); }
 
+// TODO: refactor disconnect to progress model
 void SendTask::onDisconnected() {
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Waiting) {

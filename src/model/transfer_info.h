@@ -22,7 +22,7 @@ class TransferInfo {
                quint8 progress);
   ~TransferInfo();
 
-  bool operator==(const TransferInfo&);
+  bool operator==(const TransferInfo&) const;
 
   qintptr id() const;
 

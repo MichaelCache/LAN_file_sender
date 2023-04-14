@@ -17,7 +17,7 @@ TransferInfo::TransferInfo(const QString& type, const QHostAddress& dst,
 
 TransferInfo::~TransferInfo() {}
 
-bool TransferInfo::operator==(const TransferInfo& other) {
+bool TransferInfo::operator==(const TransferInfo& other) const {
   // stats and progress is variable;
   return m_id == other.m_id;
 }

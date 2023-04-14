@@ -26,6 +26,8 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   // connect cancel send
   connect(m_progress_view, &ProgressListView::cancelSendTask, m_file_transfer,
           &TransferServer::onCancelSend);
+  connect(m_progress_view, &ProgressListView::clearFinished,
+          m_file_transfer->progressModel(), &ProgressModel::clear);
 
   m_receiver_progress_layout = new QHBoxLayout();
   m_receiver_progress_layout->addWidget(m_receiver_view, 3);
@@ -60,7 +62,7 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
 MainWidget::~MainWidget() {}
 
-void MainWidget::onClose() { m_host_detector->broadcast(MsgType::Delete); }
+void MainWidget::onClose() { m_host_detector->stop(); }
 
 void MainWidget::onUpdateSettings() {
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);

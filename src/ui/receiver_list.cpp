@@ -25,7 +25,8 @@ ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
           &ReceiverListView::onReceiverContextMenuRequested);
 
   m_file_dialog = new QFileDialog(this);
-  connect(m_file_dialog, &QFileDialog::fileSelected, this,
+  m_file_dialog->setFileMode(QFileDialog::ExistingFiles);
+  connect(m_file_dialog, &QFileDialog::filesSelected, this,
           &ReceiverListView::onSendFile);
 
   m_right_menu = new QMenu(this);
@@ -42,12 +43,16 @@ void ReceiverListView::onReceiverContextMenuRequested(const QPoint &pos) {
     QPoint glob_pos = mapToGlobal(pos);
     m_right_menu->exec(glob_pos);
   }
+  // clear history
+  m_file_dialog->setHistory(QStringList());
 }
 
-void ReceiverListView::onSendFile(const QString &filename) {
+void ReceiverListView::onSendFile(const QStringList &filenames) {
   QModelIndex curr_index = currentIndex();
   QModelIndex ip_index =
       model()->index(curr_index.row(), (int)RemoteClient::Column::IP);
   auto dst = QHostAddress(model()->data(ip_index).toString());
-  emit sendFile(filename, dst);
+  for (auto &&f : filenames) {
+    emit sendFile(f, dst);
+  }
 }

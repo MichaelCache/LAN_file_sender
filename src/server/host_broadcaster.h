@@ -32,6 +32,7 @@ class HostBroadcaster : public QObject {
 
  public Q_SLOTS:
   void onUpdateSettings();
+  void stop();
 
  private Q_SLOTS:
   void consistBroadcast();
