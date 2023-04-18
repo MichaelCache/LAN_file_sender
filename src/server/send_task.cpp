@@ -25,7 +25,6 @@ SendTask::SendTask(const QHostAddress& host, const QString& filename,
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_progress = 0;
-  // emit addProgress(m_transinfo);
 }
 
 SendTask::~SendTask() {}
@@ -39,7 +38,7 @@ void SendTask::run() {
   m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
 }
 
-qintptr SendTask::taskId() const { return m_transinfo.id(); }
+QUuid SendTask::taskId() const { return m_transinfo.id(); }
 
 const TransferInfo SendTask::task() const { return m_transinfo; }
 

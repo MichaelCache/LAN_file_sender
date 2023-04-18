@@ -133,7 +133,6 @@ void ProgressModel::add(const TransferInfo &info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
   m_tasks.push_back(info);
-
   emit layoutChanged();
 }
 
@@ -149,14 +148,9 @@ void ProgressModel::update(const TransferInfo &info) {
   auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
   if (find != m_tasks.end()) {
     *find = info;
-    int row = std::distance(m_tasks.begin(), find);
-    // int row = m_tasks.indexOf(*find);
-
-    // qDebug() << "update ------";
-    // qDebug() << info.id() << " " << row << " " << info.m_file_name << " "
-    //          << info.m_progress;
-
-    emit dataChanged(index(0, (int)0), index(row, (int)Column::Count));
+    int row = m_tasks.indexOf(*find);
+    emit dataChanged(index(row, (int)Column::State),
+                     index(row, (int)Column::Progress));
   }
 }
 

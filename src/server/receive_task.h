@@ -18,13 +18,13 @@ class ReceiveTask : public QThread {
 
   virtual void run() override;
 
-  qintptr taskId() const;
+  QUuid taskId() const;
 
  Q_SIGNALS:
   void addProgress(const TransferInfo&);
   // void removeProgress(const TransferInfo&);
   void updateProgress(const TransferInfo&);
-  void taskFinish(qintptr);
+  void taskFinish(QUuid);
 
  private Q_SLOTS:
   void onReadyRead();

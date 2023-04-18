@@ -27,7 +27,7 @@ void ReceiveTask::run() {
   m_socket->setSocketDescriptor(m_socket_descriptor);
 }
 
-qintptr ReceiveTask::taskId() const { return m_transinfo.id(); }
+QUuid ReceiveTask::taskId() const { return m_transinfo.id(); }
 
 void ReceiveTask::onReadyRead() {
   m_buff.append(m_socket->readAll());

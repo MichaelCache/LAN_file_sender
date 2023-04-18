@@ -31,8 +31,8 @@ class TransferServer : public QTcpServer {
  private Q_SLOTS:
   // void finishSend();
   // void finishReceive();
-  void removeSend(qintptr);
-  void removeReceive(qintptr taskid); 
+  void removeSend(QUuid);
+  void removeReceive(QUuid taskid); 
 
  protected:
   void incomingConnection(qintptr socketDescriptor);
@@ -44,8 +44,8 @@ class TransferServer : public QTcpServer {
   ProgressModel* m_progress_model;
   QMutex m_lock;
 
-  QMap<qintptr, SendTask*> m_senders;
-  QMap<qintptr, ReceiveTask*> m_receivers;
+  QMap<QUuid, SendTask*> m_senders;
+  QMap<QUuid, ReceiveTask*> m_receivers;
   QVector<SendTask*> m_sender_wait_queue;
   QVector<ReceiveTask*> m_receiver_wait_queue;
 };

@@ -2,6 +2,7 @@
 
 #include <QHostAddress>
 #include <QString>
+#include <QUuid>
 
 enum class TransferState {
   Waiting,
@@ -24,7 +25,7 @@ class TransferInfo {
 
   bool operator==(const TransferInfo&) const;
 
-  qintptr id() const;
+  QUuid id() const;
 
   QString m_type;
   QHostAddress m_dest_ip;
@@ -34,5 +35,5 @@ class TransferInfo {
   quint8 m_progress{0};
 
  private:
-  qintptr m_id;
+  QUuid m_id;
 };
