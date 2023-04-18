@@ -49,6 +49,7 @@ void SendTask::onCancelSend() {
     return;
   }
   m_transinfo.m_state = TransferState::Cancelled;
+  emit updateProgress(m_transinfo);
 }
 
 void SendTask::onBytesWritten(qint64 byte) {

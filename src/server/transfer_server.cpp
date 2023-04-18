@@ -43,11 +43,11 @@ void TransferServer::onSendFile(const QString& filename,
 }
 
 // TODO: implement this function
-void TransferServer::onCancelSend(qintptr taskid) {
-  // auto sender = m_senders.value(taskid);
-  // if (sender) {
-  //   sender->onCancelSend();
-  // }
+void TransferServer::onCancelSend(QUuid taskid) {
+  auto sender = m_senders.value(taskid);
+  if (sender) {
+    sender->onCancelSend();
+  }
 }
 
 void TransferServer::removeSend(QUuid taskid) {

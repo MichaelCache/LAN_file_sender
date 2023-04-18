@@ -3,6 +3,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QTableView>
+#include <QUuid>
 
 #include "progress_bar.h"
 
@@ -15,7 +16,7 @@ class ProgressListView : public QTableView {
   ~ProgressListView();
 
  Q_SIGNALS:
-  void cancelSendTask(qintptr);
+  void cancelSendTask(QUuid);
   void clearFinished();
 
  private Q_SLOTS:
@@ -30,5 +31,5 @@ class ProgressListView : public QTableView {
   QAction* m_cancel_ac;
   QAction* m_open_dir_ac;
   QAction* m_clear_ac;
-  qintptr m_selected_task{-1};
+  QUuid m_selected_task;
 };

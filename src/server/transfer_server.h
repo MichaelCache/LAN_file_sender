@@ -23,7 +23,7 @@ class TransferServer : public QTcpServer {
 
  public Q_SLOTS:
   void onSendFile(const QString& filename, const QHostAddress& dst);
-  void onCancelSend(qintptr);
+  void onCancelSend(QUuid);
 
  Q_SIGNALS:
   // void cancelSend(const TransferInfo&);

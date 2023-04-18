@@ -54,11 +54,11 @@ void ProgressListView::onReceiverContextMenuRequested(const QPoint &pos) {
     auto m = model();
     auto data = m->data(index, MyRole::IdRole);
     if (!data.isNull()) {
-      m_selected_task = static_cast<qintptr>(data.toLongLong());
+      m_selected_task = data.toUuid();
     }
     m_right_menu->exec(glob_pos);
   } else {
-    m_selected_task = -1;
+    m_selected_task = QUuid();
   }
 }
 
