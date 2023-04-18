@@ -18,12 +18,12 @@ class SendTask : public QThread, public TcpPackage {
 
   virtual void run() override;
 
-  qintptr taskId() const;
+  QUuid taskId() const;
   const TransferInfo task() const;
 
  Q_SIGNALS:
   void updateProgress(const TransferInfo&);
-  void taskFinish(qintptr);
+  void taskFinish(QUuid);
 
  public Q_SLOTS:
   void onCancelSend();

@@ -25,7 +25,6 @@ SendTask::SendTask(const QHostAddress& host, const QString& filename,
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_progress = 0;
-  // emit addProgress(m_transinfo);
 }
 
 SendTask::~SendTask() {}
@@ -39,12 +38,18 @@ void SendTask::run() {
   m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
 }
 
-qintptr SendTask::taskId() const { return m_transinfo.id(); }
+QUuid SendTask::taskId() const { return m_transinfo.id(); }
 
 const TransferInfo SendTask::task() const { return m_transinfo; }
 
 void SendTask::onCancelSend() {
+  QMutexLocker locker(&m_lock);
+  if (m_transinfo.m_state == TransferState::Disconnected ||
+      m_transinfo.m_state == TransferState::Finish) {
+    return;
+  }
   m_transinfo.m_state = TransferState::Cancelled;
+  emit updateProgress(m_transinfo);
 }
 
 void SendTask::onBytesWritten(qint64 byte) {
@@ -66,6 +71,7 @@ void SendTask::onBytesWritten(qint64 byte) {
 }
 void SendTask::onConnected() { sendHeader(); }
 
+// TODO: refactor disconnect to progress model
 void SendTask::onDisconnected() {
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Waiting) {

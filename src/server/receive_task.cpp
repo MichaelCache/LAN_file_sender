@@ -13,18 +13,21 @@
 ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
     : QThread(parent), m_socket_descriptor(descriptor) {
   m_transinfo.m_type = "Download";
+  m_socket = new QTcpSocket(this);
+  // if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
+  connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
+  connect(m_socket, &QTcpSocket::disconnected, this,
+          &ReceiveTask::onDisconnected);
+  // }
 }
 
 ReceiveTask::~ReceiveTask() {}
 
 void ReceiveTask::run() {
-  m_socket = new QTcpSocket(this);
-  if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
-    connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
-    connect(m_socket, &QTcpSocket::disconnected, this,
-            &ReceiveTask::onDisconnected);
-  }
+  m_socket->setSocketDescriptor(m_socket_descriptor);
 }
+
+QUuid ReceiveTask::taskId() const { return m_transinfo.id(); }
 
 void ReceiveTask::onReadyRead() {
   m_buff.append(m_socket->readAll());
@@ -63,15 +66,14 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
     case PackageType::Cancel:
       processPackageCancel(data);
       m_socket->disconnectFromHost();
-      exitDelete();
       break;
       ;
     case PackageType::Finish:
       processPackageFinish(data);
       m_socket->disconnectFromHost();
-      exitDelete();
       break;
     default:
+      qDebug() << "error type";
       break;
   }
 }
@@ -96,6 +98,7 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_progress = 0;
+  qDebug() << "receive " << filename << " of " << m_socket_descriptor;
   emit addProgress(m_transinfo);
 }
 
@@ -118,6 +121,7 @@ void ReceiveTask::processPackageFinish(QByteArray& data) {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
+  emit taskFinish(m_transinfo.id());
 }
 
 void ReceiveTask::processPackageCancel(QByteArray& data) {
@@ -126,6 +130,7 @@ void ReceiveTask::processPackageCancel(QByteArray& data) {
   }
   m_transinfo.m_state = TransferState::Cancelled;
   emit updateProgress(m_transinfo);
+  emit taskFinish(m_transinfo.id());
 }
 
 void ReceiveTask::exitDelete() {

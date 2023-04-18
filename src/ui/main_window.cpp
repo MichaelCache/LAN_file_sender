@@ -9,7 +9,6 @@
 #include "setting.h"
 #include "setting_dialog.h"
 
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_central_widget = new MainWidget(this);
   setCentralWidget(m_central_widget);
@@ -42,12 +41,13 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   auto ret = m_close_msg->exec();
   if (ret != QMessageBox::Yes) {
     event->ignore();
-#ifdef Q_OS_WIN
-    dhcpServerStop();
-#else
-#endif
+
   } else {
     m_central_widget->onClose();
+// #ifdef Q_OS_WIN
+//     dhcpServerStop();
+// #else
+// #endif
     event->accept();
   }
 }
