@@ -23,9 +23,7 @@ ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
 
 ReceiveTask::~ReceiveTask() {}
 
-void ReceiveTask::run() {
-  m_socket->setSocketDescriptor(m_socket_descriptor);
-}
+void ReceiveTask::run() { m_socket->setSocketDescriptor(m_socket_descriptor); }
 
 QUuid ReceiveTask::taskId() const { return m_transinfo.id(); }
 
@@ -110,7 +108,6 @@ void ReceiveTask::processPackageData(QByteArray& data) {
     m_transinfo.m_state = TransferState::Transfering;
     m_transinfo.m_progress = progress;
     emit updateProgress(m_transinfo);
-    // qDebug() << "Receiver: receive data " << data.size();
   }
 }
 

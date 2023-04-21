@@ -24,15 +24,10 @@ ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
   connect(this, &ReceiverListView::customContextMenuRequested, this,
           &ReceiverListView::onReceiverContextMenuRequested);
 
-  m_file_dialog = new QFileDialog(this);
-  m_file_dialog->setFileMode(QFileDialog::ExistingFiles);
-  connect(m_file_dialog, &QFileDialog::filesSelected, this,
-          &ReceiverListView::onSendFile);
-
   m_right_menu = new QMenu(this);
   m_send_ac = new QAction("Send", this);
   m_right_menu->addAction(m_send_ac);
-  connect(m_send_ac, &QAction::triggered, m_file_dialog, &QFileDialog::show);
+  resetFileDialog();
 }
 
 ReceiverListView::~ReceiverListView() {}
@@ -43,8 +38,6 @@ void ReceiverListView::onReceiverContextMenuRequested(const QPoint &pos) {
     QPoint glob_pos = mapToGlobal(pos);
     m_right_menu->exec(glob_pos);
   }
-  // clear history
-  m_file_dialog->setHistory(QStringList());
 }
 
 void ReceiverListView::onSendFile(const QStringList &filenames) {
@@ -54,5 +47,18 @@ void ReceiverListView::onSendFile(const QStringList &filenames) {
   auto dst = QHostAddress(model()->data(ip_index).toString());
   for (auto &&f : filenames) {
     emit sendFile(f, dst);
+  }
+  // clear history
+  resetFileDialog();
+}
+
+void ReceiverListView::resetFileDialog() {
+  m_file_dialog = new QFileDialog(this);
+  m_file_dialog->setFileMode(QFileDialog::ExistingFiles);
+  m_file_dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+  connect(m_file_dialog, &QFileDialog::filesSelected, this,
+          &ReceiverListView::onSendFile);
+  if (m_send_ac) {
+    connect(m_send_ac, &QAction::triggered, m_file_dialog, &QFileDialog::show);
   }
 }
