@@ -74,5 +74,15 @@ void ProgressListView::cancelTask() {
 }
 
 void ProgressListView::openDir() {
-  QDesktopServices::openUrl(QUrl::fromLocalFile(m_selected_file_path));
+#if defined(Q_OS_WIN)
+  // use windows file explorer show file
+  const QString explorer = "explorer";
+  QStringList param;
+  if (!QFileInfo(m_selected_file_path).isDir())
+    param << QLatin1String("/select,");
+  param << QDir::toNativeSeparators(m_selected_file_path);
+  QProcess::startDetached(explorer, param);
+#else
+  QDesktopServices::openUrl(QUrl::frmLocalFile(m_selected_file_path.path()));
+#endif
 }
