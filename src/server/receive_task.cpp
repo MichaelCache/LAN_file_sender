@@ -92,6 +92,7 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
 
   m_transinfo.m_dest_ip = from_ip;
+  m_transinfo.m_file_path = Setting::ins().m_download_dir;
   m_transinfo.m_file_name = filename;
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;

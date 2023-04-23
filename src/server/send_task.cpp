@@ -21,6 +21,7 @@ SendTask::SendTask(const QHostAddress& host, const QString& filename,
   m_transinfo.m_type = "Upload";
   m_transinfo.m_dest_ip = host;
   m_transinfo.m_state = TransferState::Waiting;
+  m_transinfo.m_file_path = fileinfo.path();
   m_transinfo.m_file_name = bare_filename;
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;

@@ -32,4 +32,5 @@ class ProgressListView : public QTableView {
   QAction* m_open_dir_ac;
   QAction* m_clear_ac;
   QUuid m_selected_task;
+  QString m_selected_file_path;
 };

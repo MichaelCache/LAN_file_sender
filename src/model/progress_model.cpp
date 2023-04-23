@@ -96,6 +96,8 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
       }
     } else if (role == MyRole::IdRole) {
       return task.id();
+    } else if (role == MyRole::PathRole) {
+      return task.m_file_path;
     } else {
       return QVariant();
     }
