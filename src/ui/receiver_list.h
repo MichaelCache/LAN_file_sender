@@ -22,6 +22,7 @@ class ReceiverListView : public QTableView {
   void onSendFile(const QStringList&);
 
  private:
+  void resetFileDialog();
   QFileDialog* m_file_dialog;
 
   QMenu* m_right_menu;

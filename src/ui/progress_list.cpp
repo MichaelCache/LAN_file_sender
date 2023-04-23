@@ -52,10 +52,16 @@ void ProgressListView::onReceiverContextMenuRequested(const QPoint &pos) {
   if (index.isValid()) {
     QPoint glob_pos = mapToGlobal(pos);
     auto m = model();
-    auto data = m->data(index, MyRole::IdRole);
-    if (!data.isNull()) {
-      m_selected_task = data.toUuid();
+    auto id_data = m->data(index, MyRole::IdRole);
+    if (!id_data.isNull()) {
+      m_selected_task = id_data.toUuid();
     }
+
+    auto path_data = m->data(index, MyRole::PathRole);
+    if (!path_data.isNull()) {
+      m_selected_file_path = path_data.toString();
+    }
+    // show right mouse menu
     m_right_menu->exec(glob_pos);
   } else {
     m_selected_task = QUuid();
@@ -68,5 +74,15 @@ void ProgressListView::cancelTask() {
 }
 
 void ProgressListView::openDir() {
-  QDesktopServices::openUrl(QUrl::fromLocalFile(Setting::ins().m_download_dir));
+#if defined(Q_OS_WIN)
+  // use windows file explorer show file
+  const QString explorer = "explorer";
+  QStringList param;
+  if (!QFileInfo(m_selected_file_path).isDir())
+    param << QLatin1String("/select,");
+  param << QDir::toNativeSeparators(m_selected_file_path);
+  QProcess::startDetached(explorer, param);
+#else
+  QDesktopServices::openUrl(QUrl::frmLocalFile(m_selected_file_path.path()));
+#endif
 }

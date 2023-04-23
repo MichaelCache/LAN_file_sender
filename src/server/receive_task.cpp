@@ -23,9 +23,7 @@ ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
 
 ReceiveTask::~ReceiveTask() {}
 
-void ReceiveTask::run() {
-  m_socket->setSocketDescriptor(m_socket_descriptor);
-}
+void ReceiveTask::run() { m_socket->setSocketDescriptor(m_socket_descriptor); }
 
 QUuid ReceiveTask::taskId() const { return m_transinfo.id(); }
 
@@ -94,6 +92,7 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
 
   m_transinfo.m_dest_ip = from_ip;
+  m_transinfo.m_file_path = full_name;
   m_transinfo.m_file_name = filename;
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;
@@ -110,7 +109,6 @@ void ReceiveTask::processPackageData(QByteArray& data) {
     m_transinfo.m_state = TransferState::Transfering;
     m_transinfo.m_progress = progress;
     emit updateProgress(m_transinfo);
-    // qDebug() << "Receiver: receive data " << data.size();
   }
 }
 
