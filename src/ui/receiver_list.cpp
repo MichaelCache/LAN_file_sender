@@ -48,16 +48,21 @@ void ReceiverListView::onSendFile(const QStringList &filenames) {
   for (auto &&f : filenames) {
     emit sendFile(f, dst);
   }
-  // clear history
-  resetFileDialog();
 }
 
 void ReceiverListView::resetFileDialog() {
+  if (m_file_dialog) {
+    delete m_file_dialog;
+    m_file_dialog = nullptr;
+  }
   m_file_dialog = new QFileDialog(this);
   m_file_dialog->setFileMode(QFileDialog::ExistingFiles);
   m_file_dialog->setAttribute(Qt::WA_DeleteOnClose, true);
   connect(m_file_dialog, &QFileDialog::filesSelected, this,
           &ReceiverListView::onSendFile);
+  // clear history
+  connect(m_file_dialog, &QFileDialog::finished, this,
+          &ReceiverListView::resetFileDialog);
   if (m_send_ac) {
     connect(m_send_ac, &QAction::triggered, m_file_dialog, &QFileDialog::show);
   }
