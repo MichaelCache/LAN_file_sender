@@ -25,12 +25,7 @@ class TransferServer : public QTcpServer {
   void onSendFile(const QString& filename, const QHostAddress& dst);
   void onCancelSend(QUuid);
 
- Q_SIGNALS:
-  // void cancelSend(const TransferInfo&);
-  // void onReceiveFile();
  private Q_SLOTS:
-  // void finishSend();
-  // void finishReceive();
   void removeSend(QUuid);
   void removeReceive(QUuid taskid); 
 
