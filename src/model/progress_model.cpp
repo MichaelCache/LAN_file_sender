@@ -80,7 +80,7 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
     if (role == Qt::DisplayRole) {
       switch (col) {
         case Column::Type:
-          return task.m_type;
+          return transferTypeToString(task.m_type);
         case Column::DestIP:
           return task.m_dest_ip.toString();
         case Column::FileName:

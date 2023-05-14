@@ -18,7 +18,7 @@ SendTask::SendTask(const QHostAddress& host, const QString& filename,
   auto fileinfo = QFileInfo(m_send_file->fileName());
   auto bare_filename = fileinfo.fileName();
 
-  m_transinfo.m_type = "Upload";
+  m_transinfo.m_type = TransferType::Upload;
   m_transinfo.m_dest_ip = host;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_file_path = m_send_file->fileName();
@@ -72,7 +72,6 @@ void SendTask::onBytesWritten(qint64 byte) {
 }
 void SendTask::onConnected() { sendHeader(); }
 
-// TODO: refactor disconnect to progress model
 void SendTask::onDisconnected() {
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Waiting) {

@@ -5,9 +5,11 @@
 
 #include "transfer_info.h"
 
+/**
+ * @brief Model hold data for transfer task
+ *
+ */
 class ProgressModel : public QAbstractTableModel {
- private:
-  /* data */
  public:
   ProgressModel(QObject *parent = nullptr);
   ~ProgressModel();
@@ -27,8 +29,6 @@ class ProgressModel : public QAbstractTableModel {
   void clear();
 
  private:
-  // void removeMarked();
-
   QVector<TransferInfo> m_tasks;
   QMutex m_lock;
 };

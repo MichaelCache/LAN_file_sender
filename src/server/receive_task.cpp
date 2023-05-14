@@ -12,7 +12,7 @@
 
 ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
     : QThread(parent), m_socket_descriptor(descriptor) {
-  m_transinfo.m_type = "Download";
+  m_transinfo.m_type = TransferType::Download;
   m_socket = new QTcpSocket(this);
   // if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
   connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);

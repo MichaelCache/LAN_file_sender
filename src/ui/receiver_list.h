@@ -4,8 +4,9 @@
 #include <QFileDialog>
 #include <QHostAddress>
 #include <QMenu>
-#include <QTableView>
 #include <QStringList>
+#include <QTableView>
+
 
 class ReceiverListView : public QTableView {
   Q_OBJECT
@@ -20,11 +21,9 @@ class ReceiverListView : public QTableView {
  private Q_SLOTS:
   void onReceiverContextMenuRequested(const QPoint&);
   void onSendFile(const QStringList&);
+  void openFileDialog();
 
  private:
-  void resetFileDialog();
-  QFileDialog* m_file_dialog;
-
   QMenu* m_right_menu;
   QAction* m_send_ac;
 };

@@ -30,5 +30,4 @@ class ReceiverModel : public QAbstractTableModel {
   
   QSet<QString> m_remote_servers_addrs;
   QVector<RemoteHostInfo> m_remote_servers;
-  // QMutex m_lock;  
 };

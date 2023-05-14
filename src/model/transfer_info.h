@@ -13,6 +13,10 @@ enum class TransferState {
   Finish
 };
 
+enum class TransferType { Upload, Download };
+
+QString transferTypeToString(TransferType type);
+
 class TransferInfo {
  private:
   /* data */
@@ -24,11 +28,11 @@ class TransferInfo {
 
   QUuid id() const;
 
-  QString m_type;
+  TransferType m_type;  // TransferState in string
   QHostAddress m_dest_ip;
   QString m_file_path;
   QString m_file_name;
-  quint64 m_file_size{0};
+  quint64 m_file_size{0};  // in byte
   TransferState m_state{TransferState::Waiting};
   quint8 m_progress{0};
 

@@ -83,6 +83,9 @@ void ProgressListView::openDir() {
   param << QDir::toNativeSeparators(m_selected_file_path);
   QProcess::startDetached(explorer, param);
 #else
-  QDesktopServices::openUrl(QUrl::frmLocalFile(m_selected_file_path.path()));
+  auto file_path = QUrl::fromLocalFile(m_selected_file_path);
+  auto dir = file_path.path();
+  dir.truncate(file_path.path().size()- file_path.fileName().size());
+  QDesktopServices::openUrl(dir);
 #endif
 }

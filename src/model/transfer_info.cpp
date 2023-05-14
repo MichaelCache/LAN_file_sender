@@ -1,5 +1,19 @@
 #include "transfer_info.h"
 
+QString transferTypeToString(TransferType type) {
+  switch (type) {
+    case TransferType::Upload:
+      return "Upload";
+      break;
+    case TransferType::Download:
+      return "Download";
+      break;
+    default:
+      return "";
+      break;
+  }
+}
+
 TransferInfo::TransferInfo(/* args */) {}
 
 TransferInfo::~TransferInfo() {}

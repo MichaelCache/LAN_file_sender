@@ -4,7 +4,7 @@
 
 namespace RemoteClient {
 enum class Column : int { IP = 0, Name, OS, Count };
-}  // namespace RemoteClient
+}
 
 namespace TransferProgress {
 enum class Column : int {
@@ -15,6 +15,7 @@ enum class Column : int {
   State,
   Progress,
   Count,
+  // id won't be shown in ui
   Id
 };
 }

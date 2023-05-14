@@ -8,7 +8,6 @@
 #include <QStandardPaths>
 
 #include "config.h"
-#include "dhcp_server.h"
 #include "setting.h"
 
 HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
@@ -22,17 +21,6 @@ HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
 
   m_timer = new QTimer(this);
-// TODO: start dhcp if LAN no dhcp server
-#if 0
-    if (m_local_host_ip.empty()) {
-#ifdef Q_OS_WIN
-      dhcpServerStart();
-#else
-#endif
-      m_local_host_ip = getLocalAddressFromInterfaces();
-      m_broadcast_ip = getBroadcastAddressFromInterfaces();
-    }
-#endif
 
   qDebug() << "Local host";
   for (auto &&i : m_local_host_ip) {
@@ -103,7 +91,6 @@ void HostBroadcaster::consistBroadcast() { broadcast(MsgType::New); }
 
 void HostBroadcaster::receiveBroadcast() {
   // receive broadcast info from other server
-  // TODO: package stickness
   while (m_broadcast_udp->hasPendingDatagrams()) {
     QByteArray data;
 

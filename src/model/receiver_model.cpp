@@ -16,10 +16,9 @@ bool ReceiverModel::contains(QHostAddress addr) {
 }
 
 void ReceiverModel::add(const RemoteHostInfo &server) {
-  // QMutexLocker locker(&m_lock);
   if (contains(server.m_host_addr)) {
     int row = 0;
-    // find remote server in same ip, name or os may changed
+    // find remote server in same ip, remote name or os may changed but ip not
     auto find = std::find_if(m_remote_servers.begin(), m_remote_servers.end(),
                              [&server, &row](const RemoteHostInfo &s) {
                                row++;

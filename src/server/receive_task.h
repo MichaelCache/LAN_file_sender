@@ -22,7 +22,6 @@ class ReceiveTask : public QThread {
 
  Q_SIGNALS:
   void addProgress(const TransferInfo&);
-  // void removeProgress(const TransferInfo&);
   void updateProgress(const TransferInfo&);
   void taskFinish(QUuid);
 
