@@ -21,11 +21,9 @@ class ReceiverListView : public QTableView {
  private Q_SLOTS:
   void onReceiverContextMenuRequested(const QPoint&);
   void onSendFile(const QStringList&);
-  void resetFileDialog();
+  void openFileDialog();
 
  private:
-  QFileDialog* m_file_dialog{nullptr};
-
   QMenu* m_right_menu;
   QAction* m_send_ac;
 };
