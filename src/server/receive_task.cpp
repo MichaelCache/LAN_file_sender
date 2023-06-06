@@ -119,6 +119,7 @@ void ReceiveTask::processPackageFinish(QByteArray& data) {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
+  m_socket->disconnectFromHost();
   emit taskFinish(m_transinfo.id());
 }
 

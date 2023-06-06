@@ -11,6 +11,7 @@
 #include "receiver_list.h"
 #include "server/host_broadcaster.h"
 #include "server/transfer_server.h"
+#include "server/control_server.h"
 
 class MainWidget : public QWidget {
   Q_OBJECT
