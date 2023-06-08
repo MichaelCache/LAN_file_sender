@@ -9,22 +9,23 @@
 
 ControlServer::ControlServer(QObject* parent) : QTcpServer(parent) {
   m_transfer_server = new TransferServer(parent);
+  listen(QHostAddress::Any, Setting::ins().m_file_info_port);
 }
 
 ControlServer::~ControlServer() {}
 
 void ControlServer::onSendFile(const QStringList& filenames,
                                const QHostAddress& dst) {
-  QTcpSocket* info_socket = getSender(dst);
-  auto buffer = packFileInfoPackage(ControlSignal::SendInfo, filenames);
-  info_socket->write(buffer);
+  QTcpSocket* info_socket = getSender(filenames, dst);
+//  auto buffer = packFileInfoPackage(ControlSignal::SendInfo, filenames);
+//  info_socket->write(buffer);
 }
 
 void ControlServer::onCancelSend(const QStringList& filenames,
                                  const QHostAddress& dst) {
-  QTcpSocket* info_socket = getSender(dst);
-  auto buffer = packFileInfoPackage(ControlSignal::CancelSend, filenames);
-  info_socket->write(buffer);
+  QTcpSocket* info_socket = getSender(filenames, dst);
+//  auto buffer = packFileInfoPackage(ControlSignal::CancelSend, filenames);
+//  info_socket->write(buffer);
 }
 
 void ControlServer::incomingConnection(qintptr socket_descriptor) {
@@ -50,7 +51,7 @@ void ControlServer::incomingConnection(qintptr socket_descriptor) {
           });
 }
 
-QByteArray&& ControlServer::packFileInfoPackage(ControlSignal control,
+QByteArray ControlServer::packFileInfoPackage(ControlSignal control,
                                                 const QStringList& filenames) {
   QByteArray buffer;
   QDataStream stream(&buffer, QIODevice::WriteOnly);
@@ -77,7 +78,7 @@ ControlServer::unpackFileInfoPackage(const QByteArray& data) {
   return std::move(std::tuple<ControlSignal, QVector<FileInfo>>{signal, files});
 }
 
-QVector<FileInfo>&& ControlServer::fileListToFileInfo(
+QVector<FileInfo> ControlServer::fileListToFileInfo(
     const QStringList& filenames) {
   QVector<FileInfo> infos;
   for (auto&& i : filenames) {
@@ -88,7 +89,7 @@ QVector<FileInfo>&& ControlServer::fileListToFileInfo(
   return std::move(infos);
 }
 
-QTcpSocket* ControlServer::getSender(const QHostAddress& address) {
+QTcpSocket* ControlServer::getSender(const QStringList& filenames, const QHostAddress& address) {
   QTcpSocket* info_socket;
   if (m_info_sender.contains(address)) {
     info_socket = m_info_sender.value(address);
@@ -99,7 +100,13 @@ QTcpSocket* ControlServer::getSender(const QHostAddress& address) {
     connect(info_socket, &QTcpSocket::disconnected, info_socket,
             &QTcpServer::deleteLater);
     connect(info_socket, &QTcpSocket::disconnected, info_socket,
-            [&address, this]() { this->m_info_sender.remove(address); });
+            [&address, this]() {
+        this->m_info_sender.remove(address);
+    });
+    connect(info_socket, &QTcpSocket::connected, [&info_socket, &filenames, this](){
+        auto buffer = this->packFileInfoPackage(ControlSignal::SendInfo, filenames);
+        info_socket->write(buffer);
+    });
   }
   return info_socket;
 }

@@ -31,13 +31,13 @@ class ControlServer : public QTcpServer {
   void incomingConnection(qintptr socket_descriptor);
 
  private:
-  QByteArray&& packFileInfoPackage(ControlSignal, const QStringList&);
+  QByteArray packFileInfoPackage(ControlSignal, const QStringList&);
   std::tuple<ControlSignal, QVector<FileInfo>>&& unpackFileInfoPackage(
       const QByteArray&);
 
-  QVector<FileInfo>&& fileListToFileInfo(const QStringList&);
+  QVector<FileInfo> fileListToFileInfo(const QStringList&);
 
-  QTcpSocket* getSender(const QHostAddress& address);
+  QTcpSocket* getSender(const QStringList& filenames, const QHostAddress& address);
   QTcpSocket* getReciever(const qintptr& descriptor);
 
   // data

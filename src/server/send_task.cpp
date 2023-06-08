@@ -10,7 +10,7 @@
 
 SendTask::SendTask(const QHostAddress& host, const QString& filename,
                    QObject* parent)
-    : QThread(parent), m_dst(host), m_filename(filename) {
+    : QThread(parent), m_filename(filename), m_dst(host) {
   m_send_file = new QFile(m_filename, static_cast<QThread*>(this));
   bool ok = m_send_file->open(QIODevice::ReadOnly);
   qint64 file_size = m_send_file->size();
