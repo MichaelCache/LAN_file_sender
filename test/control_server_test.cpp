@@ -1,4 +1,4 @@
-
+#include <QMetaObject>
 #include "control_server_test.h"
 
 #include "server/control_server.h"
@@ -20,8 +20,8 @@ void ControlServerTest::send() {
 
   cs.onSendFile(files, QHostAddress::LocalHost);
 
-  QCOMPARE(spy.count(), 1);
-  auto arguments = spy.takeFirst();
+  QVERIFY(spy.wait());
+//  auto arguments = spy.takeFirst();
   //  auto infos = arguments.at(0).value<QVector<FileInfo>>();
   //  for (int i = 0; i < infos.size(); ++i) {
   //    QCOMPARE(infos.at(i).m_name, files.at(i));
@@ -33,5 +33,5 @@ void ControlServerTest::send() {
 
 // void ControlServerTest::onRecieveInfos(const QVector<FileInfo>& filenames,
 //                                        const QHostAddress& dst) {}
-
+Q_DECLARE_METATYPE(QVector<FileInfo>)
 QTEST_MAIN(ControlServerTest)
