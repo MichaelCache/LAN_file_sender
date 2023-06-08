@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 find_package(
   Qt5
-  COMPONENTS Widgets Network Core
+  COMPONENTS Test
   REQUIRED)
 
 file(GLOB_RECURSE src *.cpp)
@@ -17,5 +17,5 @@ file(GLOB_RECURSE src *.cpp)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(test ${src})
-target_link_libraries(test PRIVATE share)
 target_include_directories(test PRIVATE share)
+target_link_libraries(test PRIVATE share Qt5::Test)
