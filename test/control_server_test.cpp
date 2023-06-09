@@ -1,15 +1,23 @@
-#include <QMetaObject>
 #include "control_server_test.h"
+
+#include <QMetaObject>
 
 #include "server/control_server.h"
 
-void ControlServerTest::send() {
-  ControlServer cs;
-  QSignalSpy spy(&cs, &ControlServer::recieveFileInfo);
+Q_DECLARE_METATYPE(QVector<FileInfo>)
+Q_DECLARE_METATYPE(QHostAddress)
 
-  QStringList files{"test.txt", "test2"};
+void ControlServerTest::sendTest() {
+  qRegisterMetaType<QVector<FileInfo>>();
+  qRegisterMetaType<QHostAddress>();
 
-  for (auto&& i : files) {
+  ControlServer* cs = new ControlServer(this);
+  QSignalSpy spy(cs, &ControlServer::recieveFileInfo);
+
+  QStringList files_1{"test.txt", "test2"};
+  QStringList files_2{"t.d", "t2"};
+
+  for (auto&& i : files_1) {
     QFile file(i);
     if (!file.exists()) {
       if (file.open(QIODevice::ReadWrite)) {
@@ -18,20 +26,36 @@ void ControlServerTest::send() {
     }
   }
 
-  cs.onSendFile(files, QHostAddress::LocalHost);
+  for (auto&& i : files_2) {
+    QFile file(i);
+    if (!file.exists()) {
+      if (file.open(QIODevice::ReadWrite)) {
+        file.close();
+      }
+    }
+  }
 
+  cs->onSendFile(files_1, QHostAddress::LocalHost);
   QVERIFY(spy.wait());
-//  auto arguments = spy.takeFirst();
-  //  auto infos = arguments.at(0).value<QVector<FileInfo>>();
-  //  for (int i = 0; i < infos.size(); ++i) {
-  //    QCOMPARE(infos.at(i).m_name, files.at(i));
-  //    QCOMPARE(infos.at(i).m_byte, 0);
-  //  }
+  QCOMPARE(spy.count(), 1);
 
-  //  QVERIFY(true);
+  auto arguments = spy.takeFirst();
+  auto infos = arguments.at(0).value<QVector<FileInfo>>();
+  for (int i = 0; i < infos.size(); ++i) {
+    QCOMPARE(infos.at(i).m_name, files_1.at(i));
+    QCOMPARE(infos.at(i).m_byte, 0);
+  }
+
+  cs->onSendFile(files_2, QHostAddress::LocalHost);
+  QVERIFY(spy.wait());
+  QCOMPARE(spy.count(), 1);
+
+  arguments = spy.takeFirst();
+  infos = arguments.at(0).value<QVector<FileInfo>>();
+  for (int i = 0; i < infos.size(); ++i) {
+    QCOMPARE(infos.at(i).m_name, files_2.at(i));
+    QCOMPARE(infos.at(i).m_byte, 0);
+  }
 }
 
-// void ControlServerTest::onRecieveInfos(const QVector<FileInfo>& filenames,
-//                                        const QHostAddress& dst) {}
-Q_DECLARE_METATYPE(QVector<FileInfo>)
 QTEST_MAIN(ControlServerTest)

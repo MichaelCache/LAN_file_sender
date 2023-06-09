@@ -42,9 +42,8 @@ class ControlServer : public QTcpServer {
 
   QVector<FileInfo> fileListToFileInfo(const QStringList&);
 
-  QTcpSocket* getSender(const QStringList& filenames,
-                        const QHostAddress& address);
-  QTcpSocket* getReciever(const qintptr& descriptor);
+  void send(const QStringList& filenames, const QHostAddress& address,
+            const ControlSignal& signal);
 
   // data
   QHash<QHostAddress, QTcpSocket*> m_info_sender;
