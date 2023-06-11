@@ -10,6 +10,8 @@ class ControlServerTest : public QObject {
   void initTestCase();
   void sendTest();
   void cancelTest();
+  void accpetTest();
+  void denyTest();
 
  private:
   ControlServer* m_cs;

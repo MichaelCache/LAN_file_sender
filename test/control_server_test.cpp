@@ -7,105 +7,120 @@
 Q_DECLARE_METATYPE(QVector<FileInfo>)
 Q_DECLARE_METATYPE(QHostAddress)
 
-void ControlServerTest::initTestCase() { m_cs = new ControlServer(this); }
-
-void ControlServerTest::sendTest() {
+void ControlServerTest::initTestCase() {
   qRegisterMetaType<QVector<FileInfo>>();
   qRegisterMetaType<QHostAddress>();
+  m_cs = new ControlServer(this);
+}
 
-  QSignalSpy spy(m_cs, &ControlServer::recieveFileInfo);
+void ControlServerTest::sendTest() {
+  QSignalSpy spy(m_cs, &ControlServer::recieveFile);
 
-  QStringList files_1{"test.txt", "test2"};
-  QStringList files_2{"t.d", "t2"};
+  QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
+  QVector<FileInfo> info_2{FileInfo{"test2", 60}, FileInfo{"t2", 15}};
 
-  for (auto&& i : files_1) {
-    QFile file(i);
-    if (!file.exists()) {
-      if (file.open(QIODevice::ReadWrite)) {
-        file.close();
-      }
-    }
-  }
-
-  for (auto&& i : files_2) {
-    QFile file(i);
-    if (!file.exists()) {
-      if (file.open(QIODevice::ReadWrite)) {
-        file.close();
-      }
-    }
-  }
-
-  m_cs->onSendFile(files_1, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_1, QHostAddress::LocalHost);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
   auto arguments = spy.takeFirst();
   auto infos = arguments.at(0).value<QVector<FileInfo>>();
   for (int i = 0; i < infos.size(); ++i) {
-    QCOMPARE(infos.at(i).m_name, files_1.at(i));
-    QCOMPARE(infos.at(i).m_byte, 0);
+    auto& send_info = info_1.at(i);
+    auto& recv_info = infos.at(i);
+    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_byte, send_info.m_byte);
+    QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 
-  m_cs->onSendFile(files_2, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_2, QHostAddress::LocalHost);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
   arguments = spy.takeFirst();
   infos = arguments.at(0).value<QVector<FileInfo>>();
   for (int i = 0; i < infos.size(); ++i) {
-    QCOMPARE(infos.at(i).m_name, files_2.at(i));
-    QCOMPARE(infos.at(i).m_byte, 0);
+    auto& send_info = info_2.at(i);
+    auto& recv_info = infos.at(i);
+    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_byte, send_info.m_byte);
+    QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 }
 
 void ControlServerTest::cancelTest() {
-  qRegisterMetaType<QVector<FileInfo>>();
-  qRegisterMetaType<QHostAddress>();
+  QSignalSpy spy(m_cs, &ControlServer::cancelFile);
 
-  QSignalSpy spy(m_cs, &ControlServer::cancelFileInfo);
+  QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
+  QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
 
-  QStringList files_1{"test.txt", "test2"};
-  QStringList files_2{"t.d", "t2"};
-
-  for (auto&& i : files_1) {
-    QFile file(i);
-    if (!file.exists()) {
-      if (file.open(QIODevice::ReadWrite)) {
-        file.close();
-      }
-    }
-  }
-
-  for (auto&& i : files_2) {
-    QFile file(i);
-    if (!file.exists()) {
-      if (file.open(QIODevice::ReadWrite)) {
-        file.close();
-      }
-    }
-  }
-
-  m_cs->onCancelSend(files_1, QHostAddress::LocalHost);
+  m_cs->cancelFileInfo(info_1, QHostAddress::LocalHost);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
   auto arguments = spy.takeFirst();
   auto infos = arguments.at(0).value<QVector<FileInfo>>();
   for (int i = 0; i < infos.size(); ++i) {
-    QCOMPARE(infos.at(i).m_name, files_1.at(i));
-    QCOMPARE(infos.at(i).m_byte, 0);
+    auto& send_info = info_1.at(i);
+    auto& recv_info = infos.at(i);
+    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_byte, send_info.m_byte);
+    QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 
-  m_cs->onCancelSend(files_2, QHostAddress::LocalHost);
+  m_cs->cancelFileInfo(info_2, QHostAddress::LocalHost);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
   arguments = spy.takeFirst();
   infos = arguments.at(0).value<QVector<FileInfo>>();
   for (int i = 0; i < infos.size(); ++i) {
-    QCOMPARE(infos.at(i).m_name, files_2.at(i));
-    QCOMPARE(infos.at(i).m_byte, 0);
+    auto& send_info = info_2.at(i);
+    auto& recv_info = infos.at(i);
+    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_byte, send_info.m_byte);
+    QCOMPARE(recv_info.m_id, send_info.m_id);
+  }
+}
+
+void ControlServerTest::accpetTest() {
+  QSignalSpy spy(m_cs, &ControlServer::acceptFile);
+
+  QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
+  //    QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
+
+  m_cs->acceptFileInfo(info_1, QHostAddress::LocalHost);
+  QVERIFY(spy.wait());
+  QCOMPARE(spy.count(), 1);
+
+  auto arguments = spy.takeFirst();
+  auto infos = arguments.at(0).value<QVector<FileInfo>>();
+  for (int i = 0; i < infos.size(); ++i) {
+    auto& send_info = info_1.at(i);
+    auto& recv_info = infos.at(i);
+    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_byte, send_info.m_byte);
+    QCOMPARE(recv_info.m_id, send_info.m_id);
+  }
+}
+void ControlServerTest::denyTest() {
+  QSignalSpy spy(m_cs, &ControlServer::denyFile);
+
+  QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
+  //    QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
+
+  m_cs->denyFileInfo(info_1, QHostAddress::LocalHost);
+  QVERIFY(spy.wait());
+  QCOMPARE(spy.count(), 1);
+
+  auto arguments = spy.takeFirst();
+  auto infos = arguments.at(0).value<QVector<FileInfo>>();
+  for (int i = 0; i < infos.size(); ++i) {
+    auto& send_info = info_1.at(i);
+    auto& recv_info = infos.at(i);
+    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_byte, send_info.m_byte);
+    QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 }
 

@@ -8,46 +8,42 @@
 #include <tuple>
 
 #include "control_state.h"
+#include "setting.h"
 #include "transfer_server.h"
 
 class ControlServer : public QTcpServer {
   Q_OBJECT
  public:
-  ControlServer(QObject* parent = nullptr);
+  ControlServer(QObject* parent = nullptr,
+                quint32 file_info_port = Setting::ins().m_file_info_port);
   ~ControlServer();
 
  public Q_SLOTS:
-  void onSendFile(const QStringList& filenames, const QHostAddress& dst);
-  void onCancelSend(const QStringList& filenames, const QHostAddress& dst);
-  // void onAcceptSend(const QVector<FileInfo>& filenames, const QHostAddress&
-  // src);
+  void sendFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst);
+  void cancelFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst);
+  void acceptFileInfo(const QVector<FileInfo>& info, const QHostAddress& src);
+  void denyFileInfo(const QVector<FileInfo>& info, const QHostAddress& src);
 
  Q_SIGNALS:
-  void acceptSendFile(const QVector<FileInfo>& filenames,
-                      const QHostAddress& dst);
-  void denySendFile(const QVector<FileInfo>& filenames,
-                    const QHostAddress& dst);
-  void recieveFileInfo(const QVector<FileInfo>& filenames,
-                       const QHostAddress& dst);
-  void cancelFileInfo(const QVector<FileInfo>& filenames,
-                      const QHostAddress& dst);
+  void acceptFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
+  void denyFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
+  void recieveFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
+  void cancelFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
 
  protected:
   void incomingConnection(qintptr socket_descriptor);
 
  private:
-  QByteArray packFileInfoPackage(ControlSignal, const QStringList&);
+  QByteArray packFileInfoPackage(ControlSignal, const QVector<FileInfo>&);
   std::tuple<ControlSignal, QVector<FileInfo>> unpackFileInfoPackage(
       QByteArray&);
 
-  QVector<FileInfo> fileListToFileInfo(const QStringList&);
-
-  void send(const QStringList& filenames, const QHostAddress& address,
+  void send(const QVector<FileInfo>& info, const QHostAddress& address,
             const ControlSignal& signal);
 
   // data
   QHash<QHostAddress, QTcpSocket*> m_info_sender;
   QMap<qintptr, QTcpSocket*> m_info_reciever;
   QMap<qintptr, QByteArray> m_info_recieve_cache;
-  TransferServer* m_transfer_server;
+  quint32 m_file_info_port;
 };

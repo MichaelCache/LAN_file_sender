@@ -1,12 +1,24 @@
 #include "control_state.h"
 
+#include <QFileInfo>
+
+QVector<FileInfo> fileListToFileInfo(const QStringList &filenames) {
+  QVector<FileInfo> infos;
+  for (auto &&i : filenames) {
+    QFileInfo fileinfo(i);
+    FileInfo info{i, fileinfo.size()};
+    infos.push_back(info);
+  }
+  return infos;
+}
+
 QDataStream &operator<<(QDataStream &out, const FileInfo &info) {
-  out << info.m_name << info.m_byte;
+  out << info.m_name << info.m_byte << info.m_id;
   return out;
 }
 
 QDataStream &operator>>(QDataStream &in, FileInfo &info) {
-  in >> info.m_name >> info.m_byte;
+  in >> info.m_name >> info.m_byte >> info.m_id;
   return in;
 }
 

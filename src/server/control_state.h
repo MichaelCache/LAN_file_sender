@@ -2,19 +2,24 @@
 
 #include <QDataStream>
 #include <QString>
+#include <QUuid>
 #include <QVector>
 
 enum class ControlSignal : int {
   None = 0,
-  SendInfo,
+  InfoSend,
   CancelSend,
-  Finish,
+  AcceptSend,
+  DenySend,
 };
 
 struct FileInfo {
   QString m_name;
   qint64 m_byte;
+  QUuid m_id{QUuid::createUuid()};
 };
+
+QVector<FileInfo> fileListToFileInfo(const QStringList &);
 
 QDataStream &operator<<(QDataStream &out, const FileInfo &info);
 
