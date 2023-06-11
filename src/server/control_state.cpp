@@ -2,6 +2,11 @@
 
 #include <QFileInfo>
 
+FileInfo::FileInfo() {}
+
+FileInfo::FileInfo(const QString &filename, qint64 size)
+    : m_name(filename), m_byte(size) {}
+
 QVector<FileInfo> fileListToFileInfo(const QStringList &filenames) {
   QVector<FileInfo> infos;
   for (auto &&i : filenames) {

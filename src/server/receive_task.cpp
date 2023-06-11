@@ -44,6 +44,7 @@ void ReceiveTask::onReadyRead() {
 void ReceiveTask::onDisconnected() {
   if (m_file && m_file->isOpen()) {
     m_file->close();
+    m_file = nullptr;
   }
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Waiting) {
