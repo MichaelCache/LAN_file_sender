@@ -7,7 +7,6 @@
 #include <QStringList>
 #include <QTableView>
 
-
 class ReceiverListView : public QTableView {
   Q_OBJECT
 

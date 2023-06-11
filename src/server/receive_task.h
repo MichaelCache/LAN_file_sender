@@ -42,6 +42,6 @@ class ReceiveTask : public QThread {
   quint64 m_byte_read{0};
   qintptr m_socket_descriptor{0};
   QByteArray m_buff;
-  QFile* m_file;
+  QFile* m_file{nullptr};
   TransferInfo m_transinfo;
 };

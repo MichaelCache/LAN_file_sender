@@ -44,6 +44,7 @@ void ReceiveTask::onReadyRead() {
 void ReceiveTask::onDisconnected() {
   if (m_file && m_file->isOpen()) {
     m_file->close();
+    m_file = nullptr;
   }
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Waiting) {
@@ -119,6 +120,7 @@ void ReceiveTask::processPackageFinish(QByteArray& data) {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
+  m_socket->disconnectFromHost();
   emit taskFinish(m_transinfo.id());
 }
 
