@@ -14,8 +14,7 @@ enum class ControlSignal : int {
 };
 
 struct FileInfo {
-  FileInfo();
-  FileInfo(const QString &filename, qint64 size);
+  FileInfo(const QString &filename = "", qint64 size = 0);
   QString m_name;
   qint64 m_byte;
   QUuid m_id{QUuid::createUuid()};

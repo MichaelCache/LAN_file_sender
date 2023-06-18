@@ -41,12 +41,11 @@ void ControlServer::incomingConnection(qintptr descriptor) {
     // do nothing
   } else {
     // create new socket to recieve package
-    auto info_socket = new QTcpSocket(this);
+    auto info_socket = new QTcpSocket();
     info_socket->setSocketDescriptor(descriptor);
     m_info_reciever.insert(descriptor, info_socket);
-    //    connect(info_socket, &QTcpSocket::disconnected, info_socket,
-    //            [descriptor, this]() {
-    //            this->m_info_reciever.remove(descriptor); });
+    connect(info_socket, &QTcpSocket::disconnected, info_socket,
+            [descriptor, this]() { this->m_info_reciever.remove(descriptor); });
     connect(info_socket, &QTcpSocket::disconnected, info_socket,
             &QTcpServer::deleteLater);
     connect(info_socket, &QTcpSocket::readyRead,
@@ -120,11 +119,11 @@ void ControlServer::send(const QVector<FileInfo>& info,
     info_socket->write(buffer);
   } else {
     // create new socket
-    auto info_socket = new QTcpSocket(this);
+    auto info_socket = new QTcpSocket();
     info_socket->connectToHost(address, m_file_info_port);
     m_info_sender.insert(address, info_socket);
-    //    connect(info_socket, &QTcpSocket::disconnected, info_socket,
-    //            [address, this]() { this->m_info_sender.remove(address); });
+    connect(info_socket, &QTcpSocket::disconnected, info_socket,
+            [address, this]() { this->m_info_sender.remove(address); });
     connect(info_socket, &QTcpSocket::disconnected, info_socket,
             &QTcpServer::deleteLater);
     connect(info_socket, &QTcpSocket::connected,
