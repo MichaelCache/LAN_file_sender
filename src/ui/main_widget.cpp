@@ -24,10 +24,11 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_progress_view->setModel(m_file_transfer->progressModel());
 
   // connect cancel send
-  connect(m_progress_view, &ProgressListView::cancelSendTask, m_file_transfer,
-          &TransferServer::onCancelSend);
-  connect(m_progress_view, &ProgressListView::clearFinished,
-          m_file_transfer->progressModel(), &ProgressModel::clear);
+  //  connect(m_progress_view, &ProgressListView::cancelSendTask,
+  //  m_file_transfer,
+  //          &TransferServer::onCancelSend);
+  //  connect(m_progress_view, &ProgressListView::clearFinished,
+  //          m_file_transfer->progressModel(), &ProgressModel::clear);
 
   m_receiver_progress_layout = new QHBoxLayout();
   m_receiver_progress_layout->addWidget(m_receiver_view, 3);

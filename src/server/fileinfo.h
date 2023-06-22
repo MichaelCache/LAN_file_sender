@@ -5,17 +5,9 @@
 #include <QUuid>
 #include <QVector>
 
-enum class ControlSignal : int {
-  None = 0,
-  InfoSend,
-  CancelSend,
-  AcceptSend,
-  DenySend,
-};
-
 struct FileInfo {
   FileInfo(const QString &filename = "", qint64 size = 0);
-  QString m_name;
+  QString m_fullname;
   qint64 m_byte;
   QUuid m_id{QUuid::createUuid()};
 };

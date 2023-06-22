@@ -5,14 +5,16 @@
 #include <QMutex>
 #include <QTcpSocket>
 #include <QThread>
+#include <QTimer>
 
+#include "fileinfo.h"
 #include "model/transfer_info.h"
 #include "tcp_package.h"
 
 class SendTask : public QThread, public TcpPackage {
   Q_OBJECT
  public:
-  SendTask(const QHostAddress& host, const QString& filename,
+  SendTask(const QHostAddress& host, const FileInfo& info,
            QObject* parent = nullptr);
   ~SendTask();
 
@@ -41,11 +43,11 @@ class SendTask : public QThread, public TcpPackage {
 
   void exitDelete();
 
-  QMutex m_lock;
   QFile* m_send_file{nullptr};
-  QString m_filename;
+  FileInfo m_info;
   QTcpSocket* m_socket;
   quint64 m_byte_remain{0};
   QHostAddress m_dst;
   TransferInfo m_transinfo;
+  QTimer* m_timer;
 };

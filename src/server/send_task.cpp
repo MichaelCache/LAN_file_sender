@@ -8,35 +8,39 @@
 
 #include "setting.h"
 
-SendTask::SendTask(const QHostAddress& host, const QString& filename,
+SendTask::SendTask(const QHostAddress& host, const FileInfo& info,
                    QObject* parent)
-    : QThread(parent), m_filename(filename), m_dst(host) {
-  m_send_file = new QFile(m_filename, static_cast<QThread*>(this));
-  bool ok = m_send_file->open(QIODevice::ReadOnly);
-  qint64 file_size = m_send_file->size();
-  m_byte_remain = file_size;
-  auto fileinfo = QFileInfo(m_send_file->fileName());
+    : QThread(parent), m_info(info), m_dst(host) {
+  m_byte_remain = info.m_byte;
+  auto fileinfo = QFileInfo(info.m_fullname);
   auto bare_filename = fileinfo.fileName();
 
   m_transinfo.m_type = TransferType::Upload;
   m_transinfo.m_dest_ip = host;
   m_transinfo.m_state = TransferState::Waiting;
-  m_transinfo.m_file_path = m_send_file->fileName();
+  m_transinfo.m_file_path = info.m_fullname;
   m_transinfo.m_file_name = bare_filename;
-  m_transinfo.m_file_size = file_size;
+  m_transinfo.m_file_size = info.m_byte;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_progress = 0;
+  m_transinfo.m_id = info.m_id;
+
+  m_timer = new QTimer(this);
+  connect(m_timer, &QTimer::timeout, this,
+          [this]() { this->updateProgress(m_transinfo); });
 }
 
 SendTask::~SendTask() {}
 
 void SendTask::run() {
   m_socket = new QTcpSocket(this);
-
+  m_send_file = new QFile(m_info.m_fullname, static_cast<QThread*>(this));
   connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
   connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
   connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
   m_socket->connectToHost(m_dst, Setting::ins().m_file_trans_port);
+  // very 0.1 sec report transfer progress
+  m_timer->start(100);
 }
 
 QUuid SendTask::taskId() const { return m_transinfo.id(); }
@@ -44,7 +48,7 @@ QUuid SendTask::taskId() const { return m_transinfo.id(); }
 const TransferInfo SendTask::task() const { return m_transinfo; }
 
 void SendTask::onCancelSend() {
-  QMutexLocker locker(&m_lock);
+  //  QMutexLocker locker(&m_lock);
   if (m_transinfo.m_state == TransferState::Disconnected ||
       m_transinfo.m_state == TransferState::Finish) {
     return;
@@ -130,6 +134,7 @@ void SendTask::sendFinish() {
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
   emit taskFinish(m_transinfo.id());
+  exitDelete();
 }
 
 void SendTask::sendCancelled() {
@@ -141,6 +146,7 @@ void SendTask::sendCancelled() {
   // m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
   emit taskFinish(m_transinfo.id());
+  exitDelete();
 }
 
 void SendTask::exitDelete() {

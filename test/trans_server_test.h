@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QtTest/QtTest>
+#include <QTest>
 
-#include "server/control_server.h"
+#include "server/transfer_server.h"
 
-class ControlServerTest : public QObject {
+class TransServerTest : public QObject {
   Q_OBJECT
  private slots:
   void initTestCase();
@@ -15,5 +15,5 @@ class ControlServerTest : public QObject {
   void cleanupTestCase();
 
  private:
-  ControlServer* m_cs;
+  TransferServer* m_ts;
 };

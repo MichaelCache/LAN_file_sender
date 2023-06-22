@@ -10,7 +10,7 @@ Q_DECLARE_METATYPE(QHostAddress)
 void ControlServerTest::initTestCase() {
   qRegisterMetaType<QVector<FileInfo>>();
   qRegisterMetaType<QHostAddress>();
-  m_cs = new ControlServer(this);
+  m_cs = new ControlServer();
 }
 
 void ControlServerTest::sendTest() {
@@ -28,7 +28,7 @@ void ControlServerTest::sendTest() {
   for (int i = 0; i < infos.size(); ++i) {
     auto& send_info = info_1.at(i);
     auto& recv_info = infos.at(i);
-    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_fullname, send_info.m_fullname);
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
@@ -42,7 +42,7 @@ void ControlServerTest::sendTest() {
   for (int i = 0; i < infos.size(); ++i) {
     auto& send_info = info_2.at(i);
     auto& recv_info = infos.at(i);
-    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_fullname, send_info.m_fullname);
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
@@ -63,7 +63,7 @@ void ControlServerTest::cancelTest() {
   for (int i = 0; i < infos.size(); ++i) {
     auto& send_info = info_1.at(i);
     auto& recv_info = infos.at(i);
-    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_fullname, send_info.m_fullname);
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
@@ -77,7 +77,7 @@ void ControlServerTest::cancelTest() {
   for (int i = 0; i < infos.size(); ++i) {
     auto& send_info = info_2.at(i);
     auto& recv_info = infos.at(i);
-    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_fullname, send_info.m_fullname);
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
@@ -98,11 +98,12 @@ void ControlServerTest::accpetTest() {
   for (int i = 0; i < infos.size(); ++i) {
     auto& send_info = info_1.at(i);
     auto& recv_info = infos.at(i);
-    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_fullname, send_info.m_fullname);
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 }
+
 void ControlServerTest::denyTest() {
   QSignalSpy spy(m_cs, &ControlServer::denyFile);
 
@@ -118,10 +119,12 @@ void ControlServerTest::denyTest() {
   for (int i = 0; i < infos.size(); ++i) {
     auto& send_info = info_1.at(i);
     auto& recv_info = infos.at(i);
-    QCOMPARE(recv_info.m_name, send_info.m_name);
+    QCOMPARE(recv_info.m_fullname, send_info.m_fullname);
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 }
+
+void ControlServerTest::cleanupTestCase() { m_cs->deleteLater(); }
 
 QTEST_MAIN(ControlServerTest)

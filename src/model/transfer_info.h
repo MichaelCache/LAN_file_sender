@@ -35,7 +35,5 @@ class TransferInfo {
   quint64 m_file_size{0};  // in byte
   TransferState m_state{TransferState::Waiting};
   quint8 m_progress{0};
-
- private:
-  QUuid m_id{QUuid::createUuid()};
+  QUuid m_id;
 };

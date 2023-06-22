@@ -30,9 +30,8 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
   appendReceive(receiver);
 }
 
-void TransferServer::onSendFile(const QString& filename,
-                                const QHostAddress& dst) {
-  auto sender = new SendTask(dst, filename, this);
+void TransferServer::onSendFile(const FileInfo& info, const QHostAddress& dst) {
+  auto sender = new SendTask(dst, info.m_fullname);
   auto& task = sender->task();
   m_progress_model->add(task);
   connect(sender, &SendTask::taskFinish, this, &TransferServer::removeSend);
@@ -42,8 +41,8 @@ void TransferServer::onSendFile(const QString& filename,
   appendSend(sender);
 }
 
-void TransferServer::onCancelSend(QUuid taskid) {
-  auto sender = m_senders.value(taskid);
+void TransferServer::onCancelSend(const FileInfo& info) {
+  auto sender = m_senders.value(info.m_id);
   if (sender) {
     sender->onCancelSend();
   }

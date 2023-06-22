@@ -7,6 +7,7 @@
 #include <QTcpServer>
 #include <QThreadPool>
 
+#include "fileinfo.h"
 #include "model/progress_model.h"
 #include "model/receiver_model.h"
 #include "model/transfer_info.h"
@@ -22,12 +23,12 @@ class TransferServer : public QTcpServer {
   ProgressModel* progressModel();
 
  public Q_SLOTS:
-  void onSendFile(const QString& filename, const QHostAddress& dst);
-  void onCancelSend(QUuid);
+  void onSendFile(const FileInfo& info, const QHostAddress& dst);
+  void onCancelSend(const FileInfo& info);
 
  private Q_SLOTS:
   void removeSend(QUuid);
-  void removeReceive(QUuid taskid); 
+  void removeReceive(QUuid taskid);
 
  protected:
   void incomingConnection(qintptr socketDescriptor);

@@ -7,9 +7,17 @@
 #include <QVector>
 #include <tuple>
 
-#include "control_state.h"
+#include "fileinfo.h"
 #include "setting.h"
 #include "transfer_server.h"
+
+enum class ControlSignal : int {
+  None = 0,
+  InfoSend,
+  CancelSend,
+  AcceptSend,
+  DenySend,
+};
 
 class ControlServer : public QTcpServer {
   Q_OBJECT
