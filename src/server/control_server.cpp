@@ -89,7 +89,7 @@ ControlServer::unpackFileInfoPackage(QByteArray& data) {
   QDataStream stream(data);
   int size = 0;
   stream >> size;
-  // tcp package is sliced, wait for more packages
+  // tcp package is sliced, wait for more data
   if (data.size() < size) {
     return {};
   }
@@ -110,7 +110,7 @@ void ControlServer::send(const QVector<FileInfo>& info,
     // socket had created
     auto info_socket = m_info_sender.value(address);
     if (info_socket->state() != QAbstractSocket::ConnectedState) {
-      // if not connected, try reconnecte
+      // if not disconnected, try reconnecte
       info_socket->connectToHost(address, m_file_info_port);
     }
     auto buffer = this->packFileInfoPackage(signal, info);

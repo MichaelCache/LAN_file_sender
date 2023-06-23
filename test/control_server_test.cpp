@@ -10,7 +10,7 @@ Q_DECLARE_METATYPE(QHostAddress)
 void ControlServerTest::initTestCase() {
   qRegisterMetaType<QVector<FileInfo>>();
   qRegisterMetaType<QHostAddress>();
-  m_cs = new ControlServer();
+  m_cs = new ControlServer(this);
 }
 
 void ControlServerTest::sendTest() {
@@ -125,6 +125,6 @@ void ControlServerTest::denyTest() {
   }
 }
 
-void ControlServerTest::cleanupTestCase() { m_cs->deleteLater(); }
+void ControlServerTest::cleanupTestCase() {}
 
 QTEST_MAIN(ControlServerTest)
