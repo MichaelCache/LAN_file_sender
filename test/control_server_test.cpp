@@ -11,6 +11,7 @@ void ControlServerTest::initTestCase() {
   qRegisterMetaType<QVector<FileInfo>>();
   qRegisterMetaType<QHostAddress>();
   m_cs = new ControlServer(this);
+  m_cs->listen(QHostAddress::Any, Setting::ins().m_file_info_port);
 }
 
 void ControlServerTest::sendTest() {
@@ -19,7 +20,7 @@ void ControlServerTest::sendTest() {
   QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
   QVector<FileInfo> info_2{FileInfo{"test2", 60}, FileInfo{"t2", 15}};
 
-  m_cs->sendFileInfo(info_1, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_1, QHostAddress::LocalHost, ControlSignal::InfoSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -33,7 +34,7 @@ void ControlServerTest::sendTest() {
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 
-  m_cs->sendFileInfo(info_2, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_2, QHostAddress::LocalHost, ControlSignal::InfoSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -50,11 +51,11 @@ void ControlServerTest::sendTest() {
 
 void ControlServerTest::cancelTest() {
   QSignalSpy spy(m_cs, &ControlServer::cancelFile);
-
   QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
   QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
 
-  m_cs->cancelFileInfo(info_1, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_1, QHostAddress::LocalHost,
+                     ControlSignal::CancelSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -68,7 +69,8 @@ void ControlServerTest::cancelTest() {
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
 
-  m_cs->cancelFileInfo(info_2, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_2, QHostAddress::LocalHost,
+                     ControlSignal::CancelSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -89,7 +91,8 @@ void ControlServerTest::accpetTest() {
   QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
   //    QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
 
-  m_cs->acceptFileInfo(info_1, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_1, QHostAddress::LocalHost,
+                     ControlSignal::AcceptSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -106,11 +109,10 @@ void ControlServerTest::accpetTest() {
 
 void ControlServerTest::denyTest() {
   QSignalSpy spy(m_cs, &ControlServer::denyFile);
-
   QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
-  //    QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
 
-  m_cs->denyFileInfo(info_1, QHostAddress::LocalHost);
+  m_cs->sendFileInfo(info_1, QHostAddress::LocalHost,
+                     ControlSignal::AcceptSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -123,6 +125,40 @@ void ControlServerTest::denyTest() {
     QCOMPARE(recv_info.m_byte, send_info.m_byte);
     QCOMPARE(recv_info.m_id, send_info.m_id);
   }
+}
+
+void ControlServerTest::reconnectSendTest() {
+  auto sender = new ControlServer();
+  auto reciver = new ControlServer();
+  qint32 port = 11715;
+
+  reciver->listen(QHostAddress::Any, port);
+  QSignalSpy spy(reciver, &ControlServer::acceptFile);
+
+  QVector<FileInfo> info_1{FileInfo{"test.txt", 60}, FileInfo{"test2", 1}};
+
+  sender->sendFileInfo(info_1, QHostAddress::LocalHost,
+                       ControlSignal::AcceptSend, port);
+
+  QVERIFY(spy.wait());
+  QCOMPARE(spy.count(), 1);
+
+  delete reciver;
+
+  // wait reciver socket be disconnected for scoket change state async;
+  QTestEventLoop loop;
+  loop.enterLoop(3);
+
+  auto reciver2 = new ControlServer();
+  QSignalSpy spy1(reciver2, &ControlServer::acceptFile);
+
+  reciver2->listen(QHostAddress::Any, port);
+  QVector<FileInfo> info_2{FileInfo{"test.drf", 160}, FileInfo{"t3", 14}};
+  sender->sendFileInfo(info_2, QHostAddress::LocalHost,
+                       ControlSignal::AcceptSend, port);
+
+  QVERIFY(spy1.wait());
+  QCOMPARE(spy1.count(), 1);
 }
 
 void ControlServerTest::cleanupTestCase() {}

@@ -6,68 +6,76 @@
 
 #include "setting.h"
 
-ControlServer::ControlServer(QObject* parent, quint32 file_info_port)
-    : QTcpServer(parent), m_file_info_port(file_info_port) {
-  listen(QHostAddress::Any, m_file_info_port);
-}
+ControlServer::ControlServer(QObject* parent) : QTcpServer(parent) {}
 
-ControlServer::~ControlServer() {}
+ControlServer::~ControlServer() {
+  for (auto&& s : m_info_sender) {
+    s->disconnectFromHost();
+  }
+  for (auto&& r : m_info_reciever) {
+    r->disconnectFromHost();
+  }
+}
 
 void ControlServer::sendFileInfo(const QVector<FileInfo>& info,
-                                 const QHostAddress& dst) {
-  send(info, dst, ControlSignal::InfoSend);
-}
-
-void ControlServer::cancelFileInfo(const QVector<FileInfo>& info,
-                                   const QHostAddress& dst) {
-  send(info, dst, ControlSignal::CancelSend);
-}
-
-void ControlServer::acceptFileInfo(const QVector<FileInfo>& info,
-                                   const QHostAddress& dst) {
-  send(info, dst, ControlSignal::AcceptSend);
-}
-
-void ControlServer::denyFileInfo(const QVector<FileInfo>& info,
-                                 const QHostAddress& dst) {
-  send(info, dst, ControlSignal::DenySend);
+                                 const QHostAddress& address,
+                                 const ControlSignal& signal,
+                                 qint32 send_port) {
+  if (m_info_sender.contains(address)) {
+    // socket had created, just reuse it
+    auto info_socket = m_info_sender.value(address);
+    auto state = info_socket->state();
+    if (info_socket->state() != QAbstractSocket::ConnectedState) {
+      // try reconnecte
+      info_socket->connectToHost(address, send_port);
+    }
+    auto buffer = this->packFileInfoPackage(signal, info);
+    info_socket->write(buffer);
+  } else {
+    // create new socket
+    auto info_socket = new QTcpSocket(this);
+    m_info_sender.insert(address, info_socket);
+    connect(info_socket, &QTcpSocket::connected,
+            [info_socket, signal, info, this]() {
+              auto buffer = this->packFileInfoPackage(signal, info);
+              info_socket->write(buffer);
+            });
+    info_socket->connectToHost(address, send_port);
+  }
 }
 
 void ControlServer::incomingConnection(qintptr descriptor) {
-  if (m_info_reciever.contains(descriptor)) {
-    auto info_socket = m_info_reciever.value(descriptor);
-    if (info_socket->state() != QAbstractSocket::ConnectedState) {
-      info_socket->setSocketDescriptor(descriptor);
-    }
-  } else {
-    // create new socket to recieve package
-    auto info_socket = new QTcpSocket();
-    m_info_reciever.insert(descriptor, info_socket);
-    connect(info_socket, &QTcpSocket::readyRead,
-            [info_socket, descriptor, this]() {
-              QByteArray& data = this->m_info_recieve_cache[descriptor];
-              data.append(info_socket->readAll());
-              auto&& infos = this->unpackFileInfoPackage(data);
-              auto& signal = std::get<0>(infos);
-              auto& files = std::get<1>(infos);
-              auto from_ip =
-                  QHostAddress(info_socket->peerAddress().toIPv4Address());
-              switch (signal) {
-                case ControlSignal::InfoSend:
-                  emit this->recieveFile(files, from_ip);
-                  break;
-                case ControlSignal::CancelSend:
-                  emit this->cancelFile(files, from_ip);
-                case ControlSignal::AcceptSend:
-                  emit this->acceptFile(files, from_ip);
-                case ControlSignal::DenySend:
-                  emit this->denyFile(files, from_ip);
-                default:
-                  break;
-              }
-            });
-    info_socket->setSocketDescriptor(descriptor);
-  }
+  // try clear disconnected socket
+  clearDisconnectedReciver();
+  // create new socket to recieve package
+  auto info_socket = new QTcpSocket(this);
+  m_info_reciever.insert(descriptor, info_socket);
+  connect(
+      info_socket, &QTcpSocket::readyRead, [info_socket, descriptor, this]() {
+        QByteArray& data = this->m_info_recieve_cache[descriptor];
+        data.append(info_socket->readAll());
+        auto&& infos = this->unpackFileInfoPackage(data);
+        auto& signal = std::get<0>(infos);
+        auto& files = std::get<1>(infos);
+        auto from_ip = QHostAddress(info_socket->peerAddress().toIPv4Address());
+        switch (signal) {
+          case ControlSignal::InfoSend:
+            emit this->recieveFile(files, from_ip);
+            break;
+          case ControlSignal::CancelSend:
+            emit this->cancelFile(files, from_ip);
+            break;
+          case ControlSignal::AcceptSend:
+            emit this->acceptFile(files, from_ip);
+            break;
+          case ControlSignal::DenySend:
+            emit this->denyFile(files, from_ip);
+            break;
+          default:
+            break;
+        }
+      });
+  info_socket->setSocketDescriptor(descriptor);
 }
 
 QByteArray ControlServer::packFileInfoPackage(ControlSignal control,
@@ -103,27 +111,17 @@ ControlServer::unpackFileInfoPackage(QByteArray& data) {
   return std::tuple<ControlSignal, QVector<FileInfo>>{signal, files};
 }
 
-void ControlServer::send(const QVector<FileInfo>& info,
-                         const QHostAddress& address,
-                         const ControlSignal& signal) {
-  if (m_info_sender.contains(address)) {
-    // socket had created
-    auto info_socket = m_info_sender.value(address);
-    if (info_socket->state() != QAbstractSocket::ConnectedState) {
-      // if not disconnected, try reconnecte
-      info_socket->connectToHost(address, m_file_info_port);
+void ControlServer::clearDisconnectedReciver() {
+  QVector<qint32> remove_cache;
+  for (auto&& k : m_info_reciever.keys()) {
+    auto r = m_info_reciever.value(k);
+    if (r->state() != QAbstractSocket::ConnectedState) {
+      remove_cache.push_back(k);
     }
-    auto buffer = this->packFileInfoPackage(signal, info);
-    info_socket->write(buffer);
-  } else {
-    // create new socket
-    auto info_socket = new QTcpSocket(this);
-    m_info_sender.insert(address, info_socket);
-    connect(info_socket, &QTcpSocket::connected,
-            [info_socket, signal, info, this]() {
-              auto buffer = this->packFileInfoPackage(signal, info);
-              info_socket->write(buffer);
-            });
-    info_socket->connectToHost(address, m_file_info_port);
+  }
+
+  for (auto&& s : remove_cache) {
+    m_info_reciever.remove(s);
+    m_info_recieve_cache.remove(s);
   }
 }

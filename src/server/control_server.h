@@ -22,15 +22,13 @@ enum class ControlSignal : int {
 class ControlServer : public QTcpServer {
   Q_OBJECT
  public:
-  ControlServer(QObject* parent = nullptr,
-                quint32 file_info_port = Setting::ins().m_file_info_port);
+  ControlServer(QObject* parent = nullptr);
   ~ControlServer();
 
  public Q_SLOTS:
-  void sendFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst);
-  void cancelFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst);
-  void acceptFileInfo(const QVector<FileInfo>& info, const QHostAddress& src);
-  void denyFileInfo(const QVector<FileInfo>& info, const QHostAddress& src);
+  void sendFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst,
+                    const ControlSignal& signal,
+                    qint32 send_port = Setting::ins().m_file_info_port);
 
  Q_SIGNALS:
   void acceptFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
@@ -46,12 +44,10 @@ class ControlServer : public QTcpServer {
   std::tuple<ControlSignal, QVector<FileInfo>> unpackFileInfoPackage(
       QByteArray&);
 
-  void send(const QVector<FileInfo>& info, const QHostAddress& address,
-            const ControlSignal& signal);
+  void clearDisconnectedReciver();
 
   // data
   QHash<QHostAddress, QTcpSocket*> m_info_sender;
   QMap<qintptr, QTcpSocket*> m_info_reciever;
   QMap<qintptr, QByteArray> m_info_recieve_cache;
-  quint32 m_file_info_port;
 };

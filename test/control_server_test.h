@@ -12,6 +12,7 @@ class ControlServerTest : public QObject {
   void cancelTest();
   void accpetTest();
   void denyTest();
+  void reconnectSendTest();
   void cleanupTestCase();
 
  private:
