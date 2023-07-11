@@ -7,15 +7,13 @@
 #include <QThread>
 #include <QTimer>
 
-#include "fileinfo.h"
-#include "model/transfer_info.h"
 #include "tcp_package.h"
+#include "transfer_info.h"
 
 class SendTask : public QThread, public TcpPackage {
   Q_OBJECT
  public:
-  SendTask(const QHostAddress& host, const FileInfo& info,
-           QObject* parent = nullptr);
+  SendTask(const TransferInfo& info, QObject* parent = nullptr);
   ~SendTask();
 
   virtual void run() override;
@@ -44,10 +42,8 @@ class SendTask : public QThread, public TcpPackage {
   void exitDelete();
 
   QFile* m_send_file{nullptr};
-  FileInfo m_info;
   QTcpSocket* m_socket;
   quint64 m_byte_remain{0};
-  QHostAddress m_dst;
   TransferInfo m_transinfo;
   QTimer* m_timer;
 };

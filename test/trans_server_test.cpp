@@ -1,6 +1,6 @@
 #include "trans_server_test.h"
 
-void TransServerTest::initTestCase() { m_ts = new TransferServer(); }
+void TransServerTest::initTestCase() { m_ts = new TransferServer(this); }
 
 void TransServerTest::sendTest() {}
 

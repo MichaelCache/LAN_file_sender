@@ -10,9 +10,10 @@
 #include "fileinfo.h"
 #include "model/progress_model.h"
 #include "model/receiver_model.h"
-#include "model/transfer_info.h"
+#include "model/progress_interface.h"
 #include "receive_task.h"
 #include "send_task.h"
+#include "transfer_info.h"
 
 class TransferServer : public QTcpServer {
   Q_OBJECT
@@ -20,28 +21,35 @@ class TransferServer : public QTcpServer {
   TransferServer(QObject* parent = nullptr);
   ~TransferServer();
 
-  ProgressModel* progressModel();
-
  public Q_SLOTS:
-  void onSendFile(const FileInfo& info, const QHostAddress& dst);
-  void onCancelSend(const FileInfo& info);
+  void onSendFile(const QVector<TransferInfo>& info);
+  void onCancelSend(const QVector<TransferInfo>& info);
 
  private Q_SLOTS:
-  void removeSend(QUuid);
-  void removeReceive(QUuid taskid);
+  void removeSend(const QUuid& task_id);
+  void removeReceive(const QUuid& task_id);
+
+ Q_SIGNALS:
+  void updateSendProgress(const TransferInfo&);
+  void updateReceiveProgress(const TransferInfo&);
+  void newReceiveTaskCreated(ReceiveTask*);
+  void newSendTaskCreated(SendTask*);
 
  protected:
   void incomingConnection(qintptr socketDescriptor);
 
  private:
-  void appendSend(SendTask*);
-  void appendReceive(ReceiveTask* receiver);
+  using TaskId = typename TransferInfo::TaskId;
 
-  ProgressModel* m_progress_model;
+  void appendSend(const TaskId&, SendTask*);
+  void appendReceive(const TaskId&, ReceiveTask* receiver);
+  void bumpSendQueue();
+  void bumpReceiveQueue();
+
   QMutex m_lock;
 
-  QMap<QUuid, SendTask*> m_senders;
-  QMap<QUuid, ReceiveTask*> m_receivers;
-  QVector<SendTask*> m_sender_wait_queue;
-  QVector<ReceiveTask*> m_receiver_wait_queue;
+  QMap<TaskId, SendTask*> m_senders;
+  QMap<TaskId, ReceiveTask*> m_receivers;
+  QVector<QPair<TaskId, SendTask*>> m_sender_wait_queue;
+  QVector<QPair<TaskId, ReceiveTask*>> m_receiver_wait_queue;
 };

@@ -12,9 +12,9 @@
 
 HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   m_receiver_model = new ReceiverModel(this);
-  connect(this, &HostBroadcaster::addHost, m_receiver_model,
+  connect(this, &HostBroadcaster::detectNewHost, m_receiver_model,
           &ReceiverModel::add);
-  connect(this, &HostBroadcaster::removeHost, m_receiver_model,
+  connect(this, &HostBroadcaster::detectHostOffline, m_receiver_model,
           &ReceiverModel::remove);
 
   m_local_host_ip = getLocalAddressFromInterfaces();
@@ -80,7 +80,7 @@ QVector<QHostAddress> HostBroadcaster::getBroadcastAddressFromInterfaces() {
   return addresses;
 }
 
-void HostBroadcaster::onUpdateSettings() { broadcast(MsgType::Update); }
+void HostBroadcaster::onUpdateHostInfo() { broadcast(MsgType::Update); }
 
 void HostBroadcaster::stop() {
   broadcast(MsgType::Delete);
@@ -119,13 +119,13 @@ void HostBroadcaster::receiveBroadcast() {
       auto msg_type = (MsgType)(obj.value("type").toInt());
       if (msg_type == MsgType::New) {
         if (!m_added_host.contains(sender)) {
-          emit addHost(remote_server);
+          emit detectNewHost(remote_server);
         }
 
       } else if (msg_type == MsgType::Update || msg_type == MsgType::Reply) {
-        emit addHost(remote_server);
+        emit detectNewHost(remote_server);
       } else if (msg_type == MsgType::Delete) {
-        emit removeHost(remote_server);
+        emit detectHostOffline(remote_server);
         m_added_host.remove(sender);
       }
 

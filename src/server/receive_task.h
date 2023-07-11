@@ -4,9 +4,10 @@
 #include <QFile>
 #include <QTcpSocket>
 #include <QThread>
+#include <QTimer>
 
-#include "model/transfer_info.h"
 #include "tcp_package.h"
+#include "transfer_info.h"
 
 class ReceiveTask : public QThread {
   Q_OBJECT
@@ -44,4 +45,5 @@ class ReceiveTask : public QThread {
   QByteArray m_buff;
   QFile* m_file{nullptr};
   TransferInfo m_transinfo;
+  QTimer* m_timer;
 };

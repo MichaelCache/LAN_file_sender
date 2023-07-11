@@ -7,6 +7,8 @@
 #include <QStringList>
 #include <QTableView>
 
+#include "server/transfer_info.h"
+
 class ReceiverListView : public QTableView {
   Q_OBJECT
 
@@ -15,7 +17,7 @@ class ReceiverListView : public QTableView {
   ~ReceiverListView();
 
  Q_SIGNALS:
-  void sendFile(const QString& filename, const QHostAddress& dst);
+  void sendFile(const QVector<TransferInfo>& info);
 
  private Q_SLOTS:
   void onReceiverContextMenuRequested(const QPoint&);

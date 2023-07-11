@@ -6,22 +6,17 @@
 #include "setting.h"
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
-  m_host_detector = new HostBroadcaster(this);
-  m_host_detector->broadcast(MsgType::New);
-  connect(&Setting::ins(), &Setting::updateSettings, m_host_detector,
-          &HostBroadcaster::onUpdateSettings);
-
-  m_file_transfer = new TransferServer(this);
+  m_server = new MainServer(this);
   // connect send file
   m_receiver_view = new ReceiverListView(this);
   m_receiver_view->setModel(m_host_detector->receiverModel());
-  connect(m_receiver_view, &ReceiverListView::sendFile, m_file_transfer,
-          &TransferServer::onSendFile);
 
-  m_file_transfer->listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
+  connect(m_receiver_view, &ReceiverListView::sendFile, m_server,
+          &MainServer::onSendFileInfos);
 
   m_progress_view = new ProgressListView(this);
-  m_progress_view->setModel(m_file_transfer->progressModel());
+  // m_progress_view->setModel(
+  //     dynamic_cast<QAbstractItemModel*>(m_file_transfer->progressModel()));
 
   // connect cancel send
   //  connect(m_progress_view, &ProgressListView::cancelSendTask,

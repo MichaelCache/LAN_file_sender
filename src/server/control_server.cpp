@@ -17,10 +17,16 @@ ControlServer::~ControlServer() {
   }
 }
 
-void ControlServer::sendFileInfo(const QVector<FileInfo>& info,
+void ControlServer::sendFileInfo(const QVector<TransferInfo>& info,
                                  const QHostAddress& address,
                                  const ControlSignal& signal,
                                  qint32 send_port) {
+  // use FileInfo to send tcp package for save network load
+  QVector<FileInfo> file_infos;
+  for (auto&& i : info) {
+    file_infos.push_back(FileInfo{i.m_file_name, i.m_file_size, i.id()});
+  }
+
   if (m_info_sender.contains(address)) {
     // socket had created, just reuse it
     auto info_socket = m_info_sender.value(address);
@@ -29,22 +35,23 @@ void ControlServer::sendFileInfo(const QVector<FileInfo>& info,
       // try reconnecte
       info_socket->connectToHost(address, send_port);
     }
-    auto buffer = this->packFileInfoPackage(signal, info);
+
+    auto buffer = this->packFileInfoPackage(signal, file_infos);
     info_socket->write(buffer);
   } else {
     // create new socket
     auto info_socket = new QTcpSocket(this);
     m_info_sender.insert(address, info_socket);
     connect(info_socket, &QTcpSocket::connected,
-            [info_socket, signal, info, this]() {
-              auto buffer = this->packFileInfoPackage(signal, info);
+            [info_socket, signal, file_infos, this]() {
+              auto buffer = this->packFileInfoPackage(signal, file_infos);
               info_socket->write(buffer);
             });
     info_socket->connectToHost(address, send_port);
   }
 }
 
-void ControlServer::incomingConnection(qintptr descriptor) {
+void ControlServer::incomingConnection(descriptor descriptor) {
   // try clear disconnected socket
   clearDisconnectedReciver();
   // create new socket to recieve package
@@ -58,18 +65,26 @@ void ControlServer::incomingConnection(qintptr descriptor) {
         auto& signal = std::get<0>(infos);
         auto& files = std::get<1>(infos);
         auto from_ip = QHostAddress(info_socket->peerAddress().toIPv4Address());
+
+        QVector<TransferInfo> trans_infos;
+        for (auto&& i : files) {
+          TransferInfo trans_info(i);
+          trans_info.m_from_ip = from_ip;
+          trans_infos.push_back(trans_info);
+        }
+
         switch (signal) {
           case ControlSignal::InfoSend:
-            emit this->recieveFile(files, from_ip);
+            emit this->recieveFileInfo(trans_infos);
             break;
           case ControlSignal::CancelSend:
-            emit this->cancelFile(files, from_ip);
+            emit this->cancelFile(trans_infos);
             break;
           case ControlSignal::AcceptSend:
-            emit this->acceptFile(files, from_ip);
+            emit this->acceptFile(trans_infos);
             break;
           case ControlSignal::DenySend:
-            emit this->denyFile(files, from_ip);
+            emit this->denyFile(trans_infos);
             break;
           default:
             break;

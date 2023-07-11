@@ -12,13 +12,10 @@
 
 ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
     : QThread(parent), m_socket_descriptor(descriptor) {
-  m_transinfo.m_type = TransferType::Download;
   m_socket = new QTcpSocket(this);
-  // if (m_socket->setSocketDescriptor(m_socket_descriptor)) {
   connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
   connect(m_socket, &QTcpSocket::disconnected, this,
           &ReceiveTask::onDisconnected);
-  // }
 }
 
 ReceiveTask::~ReceiveTask() {}
@@ -98,7 +95,6 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_progress = 0;
-  qDebug() << "receive " << filename << " of " << m_socket_descriptor;
   emit addProgress(m_transinfo);
 }
 
@@ -134,6 +130,8 @@ void ReceiveTask::processPackageCancel(QByteArray& data) {
 }
 
 void ReceiveTask::exitDelete() {
-  quit();
+  m_file->close();
+  m_socket->disconnectFromHost();
   deleteLater();
+  quit();
 }

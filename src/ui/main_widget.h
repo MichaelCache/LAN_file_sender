@@ -10,8 +10,7 @@
 #include "progress_list.h"
 #include "receiver_list.h"
 #include "server/host_broadcaster.h"
-#include "server/transfer_server.h"
-#include "server/control_server.h"
+#include "server/main_server.h"
 
 class MainWidget : public QWidget {
   Q_OBJECT
@@ -36,6 +35,6 @@ class MainWidget : public QWidget {
   QLabel *m_localhostip;
 
   // servers;
-  HostBroadcaster *m_host_detector;
-  TransferServer *m_file_transfer;
+
+  MainServer *m_server;
 };

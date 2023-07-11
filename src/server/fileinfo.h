@@ -5,11 +5,16 @@
 #include <QUuid>
 #include <QVector>
 
+/**
+ * @brief short info message for TransferInfo
+ *
+ */
 struct FileInfo {
-  FileInfo(const QString &filename = "", qint64 size = 0);
-  QString m_fullname;
-  qint64 m_byte;
-  QUuid m_id{QUuid::createUuid()};
+  FileInfo(const QString &filename = "", quint64 size = 0,
+           QUuid id = QUuid::createUuid());
+  QString m_filename;
+  quint64 m_byte;
+  QUuid m_id;
 };
 
 QVector<FileInfo> fileListToFileInfo(const QStringList &);

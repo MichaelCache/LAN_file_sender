@@ -58,7 +58,7 @@ QString stateToString(TransferState state) {
 
 }  // namespace
 
-ProgressModel::ProgressModel(QObject *parent) : QAbstractTableModel(parent) {}
+ProgressModel::ProgressModel(QObject *parent) : ProgressInterface(parent) {}
 
 ProgressModel::~ProgressModel() {}
 
@@ -79,8 +79,8 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
     auto task = m_tasks.at(index.row());
     if (role == Qt::DisplayRole) {
       switch (col) {
-        case Column::Type:
-          return transferTypeToString(task.m_type);
+        // case Column::Type:
+        //   return transferTypeToString(task.m_type);
         case Column::DestIP:
           return task.m_dest_ip.toString();
         case Column::FileName:
@@ -131,29 +131,29 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   return QVariant();
 }
 
-void ProgressModel::add(const TransferInfo &info) {
+void ProgressModel::add(const QVector<TransferInfo> &info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
-  m_tasks.push_back(info);
+  // m_tasks.push_back(info);
   emit layoutChanged();
 }
 
-void ProgressModel::remove(const TransferInfo &info) {
+void ProgressModel::remove(const QVector<TransferInfo> &info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
-  m_tasks.removeAll(info);
+  // m_tasks.removeAll(info);
   emit layoutChanged();
 }
 
-void ProgressModel::update(const TransferInfo &info) {
+void ProgressModel::update(const QVector<TransferInfo> &info) {
   QMutexLocker locker(&m_lock);
-  auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
-  if (find != m_tasks.end()) {
-    *find = info;
-    int row = m_tasks.indexOf(*find);
-    emit dataChanged(index(row, (int)Column::State),
-                     index(row, (int)Column::Progress));
-  }
+  // auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
+  // if (find != m_tasks.end()) {
+  //   *find = info;
+  //   int row = m_tasks.indexOf(*find);
+  //   emit dataChanged(index(row, (int)Column::State),
+  //                    index(row, (int)Column::Progress));
+  // }
 }
 
 void ProgressModel::clear() {

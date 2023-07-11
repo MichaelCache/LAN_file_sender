@@ -17,4 +17,6 @@ class ControlServerTest : public QObject {
 
  private:
   ControlServer* m_cs;
+  QVector<TransferInfo> m_info_1;
+  QVector<TransferInfo> m_info_2;
 };

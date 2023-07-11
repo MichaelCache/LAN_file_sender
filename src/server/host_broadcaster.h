@@ -27,11 +27,11 @@ class HostBroadcaster : public QObject {
   void broadcast(MsgType type);
 
  Q_SIGNALS:
-  void addHost(const RemoteHostInfo&);
-  void removeHost(const RemoteHostInfo&);
+  void detectNewHost(const RemoteHostInfo&);
+  void detectHostOffline(const RemoteHostInfo&);
 
  public Q_SLOTS:
-  void onUpdateSettings();
+  void onUpdateHostInfo();
   void stop();
 
  private Q_SLOTS:

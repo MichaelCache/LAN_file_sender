@@ -4,6 +4,7 @@
 #include <QHeaderView>
 
 #include "model/column.h"
+#include "server/transfer_info.h"
 
 ReceiverListView::ReceiverListView(QWidget *parent) : QTableView(parent) {
   setSelectionMode(QAbstractItemView::MultiSelection);
@@ -46,9 +47,16 @@ void ReceiverListView::onSendFile(const QStringList &filenames) {
   QModelIndex ip_index =
       model()->index(curr_index.row(), (int)RemoteClient::Column::IP);
   auto dst = QHostAddress(model()->data(ip_index).toString());
+  QVector<TransferInfo> infos;
   for (auto &&f : filenames) {
-    emit sendFile(f, dst);
+    TransferInfo info;
+    info.m_dest_ip = dst;
+    info.m_file_path = f;
+    info.m_file_name = f;
+    info.m_file_size = 0;
+    infos.append(info);
   }
+  emit sendFile(inofs);
 }
 
 void ReceiverListView::openFileDialog() {

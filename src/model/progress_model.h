@@ -3,13 +3,14 @@
 #include <QAbstractTableModel>
 #include <QMutex>
 
-#include "transfer_info.h"
+#include "progress_interface.h"
+#include "server/transfer_info.h"
 
 /**
  * @brief Model hold data for transfer task
  *
  */
-class ProgressModel : public QAbstractTableModel {
+class ProgressModel : public ProgressInterface {
  public:
   ProgressModel(QObject *parent = nullptr);
   ~ProgressModel();
@@ -23,10 +24,10 @@ class ProgressModel : public QAbstractTableModel {
                       int role = Qt::DisplayRole) const override;
 
  public Q_SLOTS:
-  void add(const TransferInfo &);
-  void remove(const TransferInfo &);
-  void update(const TransferInfo &);
-  void clear();
+  virtual void add(const QVector<TransferInfo> &) override;
+  virtual void remove(const QVector<TransferInfo> &) override;
+  virtual void update(const QVector<TransferInfo> &) override;
+  virtual void clear() override;
 
  private:
   QVector<TransferInfo> m_tasks;
