@@ -7,7 +7,7 @@
 
 using RemoteClient::Column;
 
-ReceiverModel::ReceiverModel(QObject *parent) : QAbstractTableModel(parent) {}
+ReceiverModel::ReceiverModel(QObject *parent) : HostInterface(parent) {}
 
 ReceiverModel::~ReceiverModel() {}
 
@@ -15,7 +15,7 @@ bool ReceiverModel::contains(QHostAddress addr) {
   return m_remote_servers_addrs.contains(addr.toString());
 }
 
-void ReceiverModel::add(const RemoteHostInfo &server) {
+void ReceiverModel::add(RemoteHostInfo server) {
   if (contains(server.m_host_addr)) {
     int row = 0;
     // find remote server in same ip, remote name or os may changed but ip not
@@ -48,7 +48,7 @@ void ReceiverModel::add(const RemoteHostInfo &server) {
   }
 }
 
-void ReceiverModel::remove(const RemoteHostInfo &server) {
+void ReceiverModel::remove(RemoteHostInfo server) {
   auto it = m_remote_servers_addrs.find(server.m_host_addr.toString());
   if (it != m_remote_servers_addrs.end()) {
     m_remote_servers_addrs.erase(it);

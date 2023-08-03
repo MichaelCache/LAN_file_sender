@@ -56,7 +56,7 @@ void ReceiverListView::onSendFile(const QStringList &filenames) {
     info.m_file_size = 0;
     infos.append(info);
   }
-  emit sendFile(inofs);
+  emit sendFile(infos);
 }
 
 void ReceiverListView::openFileDialog() {

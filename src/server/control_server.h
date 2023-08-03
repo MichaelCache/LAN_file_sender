@@ -26,9 +26,11 @@ class ControlServer : public QTcpServer {
   ControlServer(QObject* parent = nullptr);
   ~ControlServer();
 
+  void start();
+  void stop();
+
  public Q_SLOTS:
-  void sendFileInfo(const QVector<TransferInfo>& info, const QHostAddress& dst,
-                    const ControlSignal& signal,
+  void sendFileInfo(QVector<TransferInfo> info, ControlSignal signal,
                     qint32 send_port = Setting::ins().m_file_info_port);
 
  Q_SIGNALS:

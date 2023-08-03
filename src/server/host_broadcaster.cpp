@@ -11,26 +11,13 @@
 #include "setting.h"
 
 HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
-  m_receiver_model = new ReceiverModel(this);
-  connect(this, &HostBroadcaster::detectNewHost, m_receiver_model,
-          &ReceiverModel::add);
-  connect(this, &HostBroadcaster::detectHostOffline, m_receiver_model,
-          &ReceiverModel::remove);
-
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
 
+  connect(&Setting::ins(), &Setting::updateSettings, this,
+          &HostBroadcaster::onUpdateHostInfo);
+
   m_timer = new QTimer(this);
-
-  qDebug() << "Local host";
-  for (auto &&i : m_local_host_ip) {
-    qDebug() << i.toString();
-  }
-
-  qDebug() << "Local broadcast";
-  for (auto &&i : m_broadcast_ip) {
-    qDebug() << i.toString();
-  }
 
   // share port for broadcast and listen this port in same time
   m_broadcast_udp = new QUdpSocket(this);
@@ -38,12 +25,14 @@ HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   connect(m_broadcast_udp, &QUdpSocket::readyRead, this,
           &HostBroadcaster::receiveBroadcast);
   connect(m_timer, &QTimer::timeout, this, &HostBroadcaster::consistBroadcast);
-  m_timer->start(Setting::ins().m_boradcast_interval);
 }
 
 HostBroadcaster::~HostBroadcaster() {}
 
-ReceiverModel *HostBroadcaster::receiverModel() { return m_receiver_model; }
+void HostBroadcaster::start() {
+  broadcast(MsgType::New);
+  m_timer->start(Setting::ins().m_boradcast_interval);
+}
 
 const QVector<QHostAddress> &HostBroadcaster::hostIp() {
   return m_local_host_ip;
@@ -82,10 +71,7 @@ QVector<QHostAddress> HostBroadcaster::getBroadcastAddressFromInterfaces() {
 
 void HostBroadcaster::onUpdateHostInfo() { broadcast(MsgType::Update); }
 
-void HostBroadcaster::stop() {
-  broadcast(MsgType::Delete);
-  m_broadcast_udp->disconnectFromHost();
-}
+void HostBroadcaster::stop() { broadcast(MsgType::Delete); }
 
 void HostBroadcaster::consistBroadcast() { broadcast(MsgType::New); }
 
@@ -119,11 +105,11 @@ void HostBroadcaster::receiveBroadcast() {
       auto msg_type = (MsgType)(obj.value("type").toInt());
       if (msg_type == MsgType::New) {
         if (!m_added_host.contains(sender)) {
-          emit detectNewHost(remote_server);
+          emit detectHostOnLine(remote_server);
         }
 
       } else if (msg_type == MsgType::Update || msg_type == MsgType::Reply) {
-        emit detectNewHost(remote_server);
+        emit detectHostOnLine(remote_server);
       } else if (msg_type == MsgType::Delete) {
         emit detectHostOffline(remote_server);
         m_added_host.remove(sender);

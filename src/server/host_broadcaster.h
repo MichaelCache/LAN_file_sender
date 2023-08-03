@@ -21,18 +21,18 @@ class HostBroadcaster : public QObject {
   HostBroadcaster(QObject* parent = nullptr);
   ~HostBroadcaster();
 
-  ReceiverModel* receiverModel();
+  void start();
+  void stop();
 
   const QVector<QHostAddress>& hostIp();
   void broadcast(MsgType type);
 
  Q_SIGNALS:
-  void detectNewHost(const RemoteHostInfo&);
+  void detectHostOnLine(const RemoteHostInfo&);
   void detectHostOffline(const RemoteHostInfo&);
 
  public Q_SLOTS:
   void onUpdateHostInfo();
-  void stop();
 
  private Q_SLOTS:
   void consistBroadcast();
@@ -45,7 +45,7 @@ class HostBroadcaster : public QObject {
 
   bool isLocalHost(const QHostAddress&) const;
 
-  ReceiverModel* m_receiver_model;
+  // ReceiverModel* m_receiver_model;
 
   QVector<QHostAddress> m_local_host_ip;
   QVector<QHostAddress> m_broadcast_ip;

@@ -18,23 +18,30 @@ class MainWidget : public QWidget {
   MainWidget(QWidget *parent = nullptr);
   ~MainWidget();
 
- public Q_SLOTS:
   void onClose();
 
  private Q_SLOTS:
   void onUpdateSettings();
 
  private:
+  // ui
   QVBoxLayout *m_main_layout;
-  QHBoxLayout *m_receiver_progress_layout;
+  QHBoxLayout *m_host_progress_layout;
+  QVBoxLayout *m_progress_layout;
   QHBoxLayout *m_bottom_labels_layout;
-  ReceiverListView *m_receiver_view;
-  ProgressListView *m_progress_view;
-
   QLabel *m_localhostname;
   QLabel *m_localhostip;
 
-  // servers;
+  // data view
+  ReceiverListView *m_host_view;
+  ProgressListView *m_send_progress_view;
+  ProgressListView *m_receive_progress_view;
 
+  // servers;
   MainServer *m_server;
+
+  // data model
+  HostInterface *m_host_model;
+  ProgressInterface *m_send_task_model;
+  ProgressInterface *m_receive_task_model;
 };

@@ -15,6 +15,12 @@ TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {}
 
 TransferServer::~TransferServer() {}
 
+void TransferServer::start() {
+  listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
+}
+
+void TransferServer::stop() {}
+
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
   auto receiver = new ReceiveTask(socketDescriptor, this);
   emit newReceiveTaskCreated(receiver);
@@ -26,7 +32,7 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
   appendReceive(receiver->taskId(), receiver);
 }
 
-void TransferServer::onSendFile(const QVector<TransferInfo>& info) {
+void TransferServer::onSendFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     auto sender = new SendTask(i);
     emit newSendTaskCreated(sender);
@@ -38,7 +44,7 @@ void TransferServer::onSendFile(const QVector<TransferInfo>& info) {
   }
 }
 
-void TransferServer::onCancelSend(const QVector<TransferInfo>& info) {
+void TransferServer::onCancelSend(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   for (auto&& i : info) {
     auto task_id = i.id();

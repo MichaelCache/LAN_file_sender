@@ -98,6 +98,8 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
       return task.id();
     } else if (role == MyRole::PathRole) {
       return task.m_file_path;
+    } else if (role == MyRole::InfoRole) {
+      return QVariant().fromValue(task);
     } else {
       return QVariant();
     }
@@ -131,29 +133,31 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   return QVariant();
 }
 
-void ProgressModel::add(const QVector<TransferInfo> &info) {
+void ProgressModel::add(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
   // m_tasks.push_back(info);
   emit layoutChanged();
 }
 
-void ProgressModel::remove(const QVector<TransferInfo> &info) {
+void ProgressModel::remove(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
   // m_tasks.removeAll(info);
   emit layoutChanged();
 }
 
-void ProgressModel::update(const QVector<TransferInfo> &info) {
+void ProgressModel::update(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
-  // auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
-  // if (find != m_tasks.end()) {
-  //   *find = info;
-  //   int row = m_tasks.indexOf(*find);
-  //   emit dataChanged(index(row, (int)Column::State),
-  //                    index(row, (int)Column::Progress));
-  // }
+  for (auto &&task : info) {
+    auto find = std::find(m_tasks.begin(), m_tasks.end(), task);
+    if (find != m_tasks.end()) {
+      *find = task;
+      int row = m_tasks.indexOf(*find);
+      emit dataChanged(index(row, (int)Column::State),
+                       index(row, (int)Column::Progress));
+    }
+  }
 }
 
 void ProgressModel::clear() {

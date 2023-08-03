@@ -21,9 +21,12 @@ class TransferServer : public QTcpServer {
   TransferServer(QObject* parent = nullptr);
   ~TransferServer();
 
+  void start();
+  void stop();
+
  public Q_SLOTS:
-  void onSendFile(const QVector<TransferInfo>& info);
-  void onCancelSend(const QVector<TransferInfo>& info);
+  void onSendFile(QVector<TransferInfo> info);
+  void onCancelSend(QVector<TransferInfo> info);
 
  private Q_SLOTS:
   void removeSend(const QUuid& task_id);

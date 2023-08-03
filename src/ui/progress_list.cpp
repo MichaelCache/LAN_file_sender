@@ -29,7 +29,7 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
   // right click menu
   setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
   connect(this, &ProgressListView::customContextMenuRequested, this,
-          &ProgressListView::onReceiverContextMenuRequested);
+          &ProgressListView::onCustomRightMouseButtonPressed);
 
   m_right_menu = new QMenu(this);
   m_cancel_ac = new QAction("Cancel", this);
@@ -39,7 +39,7 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
   m_right_menu->addAction(m_open_dir_ac);
   m_right_menu->addAction(m_clear_ac);
   connect(m_cancel_ac, &QAction::triggered, this,
-          &ProgressListView::cancelTask);
+          &ProgressListView::onCancelButtonClickedk);
   connect(m_open_dir_ac, &QAction::triggered, this, &ProgressListView::openDir);
   connect(m_clear_ac, &QAction::triggered, this,
           &ProgressListView::clearFinished);
@@ -47,14 +47,15 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
 
 ProgressListView::~ProgressListView() {}
 
-void ProgressListView::onReceiverContextMenuRequested(const QPoint &pos) {
+void ProgressListView::onCustomRightMouseButtonPressed(const QPoint &pos) {
   QModelIndex index = indexAt(pos);
   if (index.isValid()) {
+    // get mouse pos
     QPoint glob_pos = mapToGlobal(pos);
     auto m = model();
     auto id_data = m->data(index, MyRole::IdRole);
     if (!id_data.isNull()) {
-      m_selected_task = id_data.toUuid();
+      // m_selected_task = id_data.toUuid();
     }
 
     auto path_data = m->data(index, MyRole::PathRole);
@@ -63,14 +64,12 @@ void ProgressListView::onReceiverContextMenuRequested(const QPoint &pos) {
     }
     // show right mouse menu
     m_right_menu->exec(glob_pos);
-  } else {
-    m_selected_task = QUuid();
   }
 }
 
-void ProgressListView::cancelTask() {
-  qDebug() << "Cancel " << m_selected_task;
+void ProgressListView::onCancelButtonClickedk() {
   emit cancelSendTask(m_selected_task);
+  m_selected_task.clear();
 }
 
 void ProgressListView::openDir() {
@@ -85,7 +84,7 @@ void ProgressListView::openDir() {
 #else
   auto file_path = QUrl::fromLocalFile(m_selected_file_path);
   auto dir = file_path.path();
-  dir.truncate(file_path.path().size()- file_path.fileName().size());
+  dir.truncate(file_path.path().size() - file_path.fileName().size());
   QDesktopServices::openUrl(dir);
 #endif
 }

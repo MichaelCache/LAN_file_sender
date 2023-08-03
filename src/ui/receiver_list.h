@@ -17,10 +17,12 @@ class ReceiverListView : public QTableView {
   ~ReceiverListView();
 
  Q_SIGNALS:
-  void sendFile(const QVector<TransferInfo>& info);
+  void sendFile(QVector<TransferInfo> info);
 
  private Q_SLOTS:
+  // slots for right mouse point click
   void onReceiverContextMenuRequested(const QPoint&);
+  
   void onSendFile(const QStringList&);
   void openFileDialog();
 

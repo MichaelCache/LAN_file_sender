@@ -24,9 +24,9 @@ class ProgressModel : public ProgressInterface {
                       int role = Qt::DisplayRole) const override;
 
  public Q_SLOTS:
-  virtual void add(const QVector<TransferInfo> &) override;
-  virtual void remove(const QVector<TransferInfo> &) override;
-  virtual void update(const QVector<TransferInfo> &) override;
+  virtual void add(QVector<TransferInfo>) override;
+  virtual void remove(QVector<TransferInfo>) override;
+  virtual void update(QVector<TransferInfo>) override;
   virtual void clear() override;
 
  private:

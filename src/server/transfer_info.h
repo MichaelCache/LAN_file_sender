@@ -42,3 +42,5 @@ class TransferInfo {
  private:
   TaskId m_id{QUuid::createUuid()};
 };
+
+Q_DECLARE_METATYPE(TransferInfo)

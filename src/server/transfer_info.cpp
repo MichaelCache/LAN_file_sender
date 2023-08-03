@@ -1,8 +1,9 @@
 #include "transfer_info.h"
 
 #include <QFileInfo>
+#include <QMetaObject>
 
-TransferInfo::TransferInfo(/* args */) {}
+TransferInfo::TransferInfo(/* args */) { qRegisterMetaType<TransferInfo>(); }
 
 TransferInfo::TransferInfo(const FileInfo& info) {
   m_file_name = info.m_filename;

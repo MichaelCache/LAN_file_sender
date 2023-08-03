@@ -20,4 +20,4 @@ enum class Column : int {
 };
 }
 
-enum MyRole { IdRole = Qt::UserRole, PathRole };
+enum MyRole { IdRole = Qt::UserRole, PathRole, InfoRole };

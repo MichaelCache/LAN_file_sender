@@ -33,8 +33,7 @@ void ControlServerTest::initTestCase() {
 void ControlServerTest::sendTest() {
   QSignalSpy spy(m_cs, &ControlServer::recieveFileInfo);
 
-  m_cs->sendFileInfo(m_info_1, QHostAddress::LocalHost,
-                     ControlSignal::InfoSend);
+  m_cs->sendFileInfo(m_info_1, ControlSignal::InfoSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -48,8 +47,7 @@ void ControlServerTest::sendTest() {
     QCOMPARE(recv_info.id(), send_info.id());
   }
 
-  m_cs->sendFileInfo(m_info_2, QHostAddress::LocalHost,
-                     ControlSignal::InfoSend);
+  m_cs->sendFileInfo(m_info_2, ControlSignal::InfoSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -67,8 +65,7 @@ void ControlServerTest::sendTest() {
 void ControlServerTest::cancelTest() {
   QSignalSpy spy(m_cs, &ControlServer::cancelFile);
 
-  m_cs->sendFileInfo(m_info_1, QHostAddress::LocalHost,
-                     ControlSignal::CancelSend);
+  m_cs->sendFileInfo(m_info_1, ControlSignal::CancelSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -82,8 +79,7 @@ void ControlServerTest::cancelTest() {
     QCOMPARE(recv_info.id(), send_info.id());
   }
 
-  m_cs->sendFileInfo(m_info_2, QHostAddress::LocalHost,
-                     ControlSignal::CancelSend);
+  m_cs->sendFileInfo(m_info_2, ControlSignal::CancelSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -101,8 +97,7 @@ void ControlServerTest::cancelTest() {
 void ControlServerTest::accpetTest() {
   QSignalSpy spy(m_cs, &ControlServer::acceptFile);
 
-  m_cs->sendFileInfo(m_info_1, QHostAddress::LocalHost,
-                     ControlSignal::AcceptSend);
+  m_cs->sendFileInfo(m_info_1, ControlSignal::AcceptSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -120,8 +115,7 @@ void ControlServerTest::accpetTest() {
 void ControlServerTest::denyTest() {
   QSignalSpy spy(m_cs, &ControlServer::denyFile);
 
-  m_cs->sendFileInfo(m_info_1, QHostAddress::LocalHost,
-                     ControlSignal::DenySend);
+  m_cs->sendFileInfo(m_info_1, ControlSignal::DenySend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -144,8 +138,7 @@ void ControlServerTest::reconnectSendTest() {
   reciver->listen(QHostAddress::Any, port);
   QSignalSpy spy(reciver, &ControlServer::acceptFile);
 
-  sender->sendFileInfo(m_info_1, QHostAddress::LocalHost,
-                       ControlSignal::AcceptSend, port);
+  sender->sendFileInfo(m_info_1, ControlSignal::AcceptSend, port);
 
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
@@ -160,8 +153,7 @@ void ControlServerTest::reconnectSendTest() {
   QSignalSpy spy1(reciver2, &ControlServer::acceptFile);
 
   reciver2->listen(QHostAddress::Any, port);
-  sender->sendFileInfo(m_info_2, QHostAddress::LocalHost,
-                       ControlSignal::AcceptSend, port);
+  sender->sendFileInfo(m_info_2, ControlSignal::AcceptSend, port);
 
   QVERIFY(spy1.wait());
   QCOMPARE(spy1.count(), 1);
