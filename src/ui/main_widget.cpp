@@ -3,18 +3,21 @@
 #include <QMessageBox>
 
 #include "config.h"
+#include "model/recieve_progress_model.h"
+#include "model/send_progress_model.h"
 #include "setting.h"
+
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_server = new MainServer(this);
 
-  m_host_model = new ReceiverModel(this);
-  m_send_task_model = new ProgressModel(this);
-  m_receive_task_model = new ProgressModel(this);
+  m_host_model = new HostModel(this);
+  m_send_task_model = new SendProgressModel(this);
+  m_receive_task_model = new RecieveProgressModel(this);
 
-  m_host_view = new ReceiverListView(this);
-  m_send_progress_view = new ProgressListView(this);
-  m_receive_progress_view = new ProgressListView(this);
+  m_host_view = new HostListView(this);
+  m_send_progress_view = new SendProgressListView(this);
+  m_receive_progress_view = new SendProgressListView(this);
 
   m_host_view->setModel(m_host_model);
   m_send_progress_view->setModel(m_send_task_model);
@@ -27,15 +30,15 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
           &HostInterface::remove);
 
   // connect send file as sender
-  connect(m_host_view, &ReceiverListView::sendFile, m_server,
+  connect(m_host_view, &HostListView::sendFile, m_server,
           &MainServer::onSendFile);
-  connect(m_host_view, &ReceiverListView::sendFile, m_send_task_model,
+  connect(m_host_view, &HostListView::sendFile, m_send_task_model,
           &ProgressInterface::add);
-//   connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
-//           &ProgressInterface::update);
+  //   connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
+  //           &ProgressInterface::update);
   connect(m_server, &MainServer::sendFileDenied, m_send_task_model,
           &ProgressInterface::update);
-  connect(m_send_progress_view, &ProgressListView::cancelSendTask, m_server,
+  connect(m_send_progress_view, &SendProgressListView::cancelSendTask, m_server,
           &MainServer::onSendCancelFile);
 
   // connect receive file as receiver

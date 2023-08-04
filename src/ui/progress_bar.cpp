@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QPainter>
 
-#include "model/column.h"
+#include "model/progress_interface.h"
 
 ProgressBar::ProgressBar(QObject *parent) : QStyledItemDelegate(parent) {}
 

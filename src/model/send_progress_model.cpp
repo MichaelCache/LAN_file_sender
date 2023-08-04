@@ -1,8 +1,6 @@
-#include "progress_model.h"
+#include "send_progress_model.h"
 
 #include <QMutexLocker>
-
-#include "column.h"
 
 using TransferProgress::Column;
 
@@ -51,6 +49,8 @@ QString stateToString(TransferState state) {
       return "Transfering";
     case TransferState::Finish:
       return "Finish";
+    case TransferState::UnKonwn:
+      return "UnKonwn";
   }
 
   return QString();
@@ -58,30 +58,29 @@ QString stateToString(TransferState state) {
 
 }  // namespace
 
-ProgressModel::ProgressModel(QObject *parent) : ProgressInterface(parent) {}
+SendProgressModel::SendProgressModel(QObject *parent)
+    : ProgressInterface(parent) {}
 
-ProgressModel::~ProgressModel() {}
+SendProgressModel::~SendProgressModel() {}
 
-int ProgressModel::rowCount(const QModelIndex &parent) const {
+int SendProgressModel::rowCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return m_tasks.size();
 }
 
-int ProgressModel::columnCount(const QModelIndex &parent) const {
+int SendProgressModel::columnCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return (int)Column::Count;
 }
 
-QVariant ProgressModel::data(const QModelIndex &index, int role) const {
+QVariant SendProgressModel::data(const QModelIndex &index, int role) const {
   if (index.isValid()) {
     Column col = (Column)index.column();
 
     auto task = m_tasks.at(index.row());
     if (role == Qt::DisplayRole) {
       switch (col) {
-        // case Column::Type:
-        //   return transferTypeToString(task.m_type);
-        case Column::DestIP:
+        case Column::IP:
           return task.m_dest_ip.toString();
         case Column::FileName:
           return task.m_file_name;
@@ -94,10 +93,6 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
         default:
           return QVariant();
       }
-    } else if (role == MyRole::IdRole) {
-      return task.id();
-    } else if (role == MyRole::PathRole) {
-      return task.m_file_path;
     } else if (role == MyRole::InfoRole) {
       return QVariant().fromValue(task);
     } else {
@@ -108,14 +103,12 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
   }
 }
 
-QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
-                                   int role) const {
+QVariant SendProgressModel::headerData(int section, Qt::Orientation orientation,
+                                       int role) const {
   if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
     Column col = (Column)section;
     switch (col) {
-      case Column::Type:
-        return "Type";
-      case Column::DestIP:
+      case Column::IP:
         return "DestIP";
       case Column::FileName:
         return "FileName";
@@ -133,21 +126,25 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   return QVariant();
 }
 
-void ProgressModel::add(QVector<TransferInfo> info) {
+void SendProgressModel::add(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
-  // m_tasks.push_back(info);
+  for (auto &&i : info) {
+    m_tasks.append(i);
+  }
   emit layoutChanged();
 }
 
-void ProgressModel::remove(QVector<TransferInfo> info) {
+void SendProgressModel::remove(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
-  // m_tasks.removeAll(info);
+  for (auto &&i : info) {
+    m_tasks.removeAll(i);
+  }
   emit layoutChanged();
 }
 
-void ProgressModel::update(QVector<TransferInfo> info) {
+void SendProgressModel::update(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   for (auto &&task : info) {
     auto find = std::find(m_tasks.begin(), m_tasks.end(), task);
@@ -160,7 +157,7 @@ void ProgressModel::update(QVector<TransferInfo> info) {
   }
 }
 
-void ProgressModel::clear() {
+void SendProgressModel::clear() {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
   QVector<TransferInfo> marked_remove;

@@ -8,8 +8,7 @@
 #include <QThreadPool>
 
 #include "fileinfo.h"
-#include "model/progress_model.h"
-#include "model/receiver_model.h"
+#include "model/host_model.h"
 #include "model/progress_interface.h"
 #include "receive_task.h"
 #include "send_task.h"

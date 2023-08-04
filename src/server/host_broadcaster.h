@@ -11,7 +11,7 @@
 #include <QTimer>
 
 #include "model/host_info.h"
-#include "model/receiver_model.h"
+#include "model/host_model.h"
 
 enum class MsgType : int { None = 0, New, Update, Reply, Delete };
 

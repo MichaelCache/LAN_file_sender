@@ -5,14 +5,15 @@
 #include <QFileDialog>
 #include <QFileSystemModel>
 #include <QHeaderView>
+#include <QProcess>
 
-#include "model/column.h"
-#include "model/progress_model.h"
+// #include "model/column.h"
+#include "model/send_progress_model.h"
 #include "setting.h"
 
 using TransferProgress::Column;
 
-ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
+SendProgressListView::SendProgressListView(QWidget *parent) : QTableView(parent) {
   setSelectionMode(QAbstractItemView::MultiSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -28,8 +29,8 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
 
   // right click menu
   setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-  connect(this, &ProgressListView::customContextMenuRequested, this,
-          &ProgressListView::onCustomRightMouseButtonPressed);
+  connect(this, &SendProgressListView::customContextMenuRequested, this,
+          &SendProgressListView::onCustomRightMouseButtonPressed);
 
   m_right_menu = new QMenu(this);
   m_cancel_ac = new QAction("Cancel", this);
@@ -39,50 +40,51 @@ ProgressListView::ProgressListView(QWidget *parent) : QTableView(parent) {
   m_right_menu->addAction(m_open_dir_ac);
   m_right_menu->addAction(m_clear_ac);
   connect(m_cancel_ac, &QAction::triggered, this,
-          &ProgressListView::onCancelButtonClickedk);
-  connect(m_open_dir_ac, &QAction::triggered, this, &ProgressListView::openDir);
+          &SendProgressListView::onCancelButtonClickedk);
+  connect(m_open_dir_ac, &QAction::triggered, this, &SendProgressListView::openDir);
   connect(m_clear_ac, &QAction::triggered, this,
-          &ProgressListView::clearFinished);
+          &SendProgressListView::clearFinished);
 }
 
-ProgressListView::~ProgressListView() {}
+SendProgressListView::~SendProgressListView() {}
 
-void ProgressListView::onCustomRightMouseButtonPressed(const QPoint &pos) {
+void SendProgressListView::onCustomRightMouseButtonPressed(const QPoint &pos) {
+  m_selected_task.clear();
+  auto m = model();
   QModelIndex index = indexAt(pos);
   if (index.isValid()) {
+    auto task = m->data(index, MyRole::InfoRole);
+    if (task.isValid()) {
+      auto info = task.value<TransferInfo>();
+      if (m_selected_task.count(info) == 0) {
+        m_selected_task.append(info);
+      }
+    }
     // get mouse pos
     QPoint glob_pos = mapToGlobal(pos);
-    auto m = model();
-    auto id_data = m->data(index, MyRole::IdRole);
-    if (!id_data.isNull()) {
-      // m_selected_task = id_data.toUuid();
-    }
 
-    auto path_data = m->data(index, MyRole::PathRole);
-    if (!path_data.isNull()) {
-      m_selected_file_path = path_data.toString();
-    }
     // show right mouse menu
     m_right_menu->exec(glob_pos);
   }
 }
 
-void ProgressListView::onCancelButtonClickedk() {
+void SendProgressListView::onCancelButtonClickedk() {
   emit cancelSendTask(m_selected_task);
   m_selected_task.clear();
 }
 
-void ProgressListView::openDir() {
+void SendProgressListView::openDir() {
+  auto selected_file_path = m_selected_task.front().m_file_path;
 #if defined(Q_OS_WIN)
   // use windows file explorer show file
   const QString explorer = "explorer";
   QStringList param;
-  if (!QFileInfo(m_selected_file_path).isDir())
+  if (!QFileInfo(selected_file_path).isDir())
     param << QLatin1String("/select,");
-  param << QDir::toNativeSeparators(m_selected_file_path);
+  param << QDir::toNativeSeparators(selected_file_path);
   QProcess::startDetached(explorer, param);
 #else
-  auto file_path = QUrl::fromLocalFile(m_selected_file_path);
+  auto file_path = QUrl::fromLocalFile(selected_file_path);
   auto dir = file_path.path();
   dir.truncate(file_path.path().size() - file_path.fileName().size());
   QDesktopServices::openUrl(dir);

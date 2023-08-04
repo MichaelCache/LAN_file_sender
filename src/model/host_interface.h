@@ -4,6 +4,10 @@
 
 #include "host_info.h"
 
+namespace RemoteClient {
+enum class Column : int { IP = 0, Name, OS, Count };
+}
+
 
 class HostInterface : public QAbstractTableModel {
   Q_OBJECT

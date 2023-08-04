@@ -9,12 +9,12 @@
 
 #include "server/transfer_info.h"
 
-class ReceiverListView : public QTableView {
+class HostListView : public QTableView {
   Q_OBJECT
 
  public:
-  ReceiverListView(QWidget* parent = nullptr);
-  ~ReceiverListView();
+  HostListView(QWidget* parent = nullptr);
+  ~HostListView();
 
  Q_SIGNALS:
   void sendFile(QVector<TransferInfo> info);

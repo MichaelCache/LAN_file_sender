@@ -2,16 +2,15 @@
 
 #include <QAbstractTableModel>
 #include <QVector>
-// #include <QMutex>
 
 #include "host_interface.h"
 
-class ReceiverModel : public HostInterface {
+class HostModel : public HostInterface {
  private:
   /* data */
  public:
-  ReceiverModel(QObject *parent = nullptr);
-  ~ReceiverModel();
+  HostModel(QObject *parent = nullptr);
+  ~HostModel();
 
   // QAbstractTableModel
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;

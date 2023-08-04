@@ -69,6 +69,7 @@ void ControlServer::incomingConnection(descriptor descriptor) {
         for (auto&& i : files) {
           TransferInfo trans_info(i);
           trans_info.m_from_ip = from_ip;
+          trans_info.m_state = TransferState::Waiting;
           trans_infos.push_back(trans_info);
         }
 

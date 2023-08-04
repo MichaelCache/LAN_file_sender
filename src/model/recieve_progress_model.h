@@ -6,14 +6,16 @@
 #include "progress_interface.h"
 #include "server/transfer_info.h"
 
+
+
 /**
  * @brief Model hold data for transfer task
  *
  */
-class ProgressModel : public ProgressInterface {
+class RecieveProgressModel : public ProgressInterface {
  public:
-  ProgressModel(QObject *parent = nullptr);
-  ~ProgressModel();
+  RecieveProgressModel(QObject *parent = nullptr);
+  ~RecieveProgressModel();
 
   // QAbstractTableModel
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
