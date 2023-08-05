@@ -21,6 +21,9 @@ class MainServer : public QObject {
   void onSendFile(QVector<TransferInfo> info);
   void onSendCancelFile(QVector<TransferInfo> info);
 
+  // slots as reciver
+  void onAcceptFile(QVector<TransferInfo> info);
+
  Q_SIGNALS:
   // signal from broadcast
   void detectHostOnLine(RemoteHostInfo);
@@ -29,12 +32,13 @@ class MainServer : public QObject {
   // signal as sender
   void recieveFileInfo(QVector<TransferInfo> info);
   void sendFileDenied(QVector<TransferInfo> trans_info);
-  void updateSendProgress(TransferInfo);
+  void updateSendProgress(QVector<TransferInfo>);
 
   // signal as reciever
-  void updateReceiveProgress(TransferInfo);
+  void updateReceiveProgress(QVector<TransferInfo> info);
 
  private:
+  QVector<TransferInfo> m_wating_task;
   HostBroadcaster* m_host_detector;
   ControlServer* m_control_server;
   TransferServer* m_transfer_server;

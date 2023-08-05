@@ -7,7 +7,6 @@
 #include "model/send_progress_model.h"
 #include "setting.h"
 
-
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_server = new MainServer(this);
 
@@ -17,7 +16,7 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
   m_host_view = new HostListView(this);
   m_send_progress_view = new SendProgressListView(this);
-  m_receive_progress_view = new SendProgressListView(this);
+  m_receive_progress_view = new RecieveProgressListView(this);
 
   m_host_view->setModel(m_host_model);
   m_send_progress_view->setModel(m_send_task_model);
@@ -34,8 +33,8 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
           &MainServer::onSendFile);
   connect(m_host_view, &HostListView::sendFile, m_send_task_model,
           &ProgressInterface::add);
-  //   connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
-  //           &ProgressInterface::update);
+  connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
+          &ProgressInterface::update);
   connect(m_server, &MainServer::sendFileDenied, m_send_task_model,
           &ProgressInterface::update);
   connect(m_send_progress_view, &SendProgressListView::cancelSendTask, m_server,
@@ -44,6 +43,13 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   // connect receive file as receiver
   connect(m_server, &MainServer::recieveFileInfo, m_receive_task_model,
           &ProgressInterface::add);
+  connect(m_server, &MainServer::updateReceiveProgress, m_receive_task_model,
+          &ProgressInterface::update);
+
+  connect(m_receive_progress_view, &RecieveProgressListView::acceptSendTask,
+          m_server, [&](QVector<TransferInfo> info) {
+            this->m_server->onAcceptFile(info);
+          });
 
   // ui
   m_progress_layout = new QVBoxLayout();

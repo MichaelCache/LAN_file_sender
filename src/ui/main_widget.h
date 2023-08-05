@@ -5,12 +5,13 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-
-#include "model/host_model.h"
-#include "progress_list.h"
 #include "host_list.h"
+#include "model/host_model.h"
+#include "recieve_progress_list.h"
+#include "send_progress_list.h"
 #include "server/host_broadcaster.h"
 #include "server/main_server.h"
+
 
 class MainWidget : public QWidget {
   Q_OBJECT
@@ -35,7 +36,7 @@ class MainWidget : public QWidget {
   // data view
   HostListView *m_host_view;
   SendProgressListView *m_send_progress_view;
-  SendProgressListView *m_receive_progress_view;
+  RecieveProgressListView *m_receive_progress_view;
 
   // servers;
   MainServer *m_server;

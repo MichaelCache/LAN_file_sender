@@ -1,4 +1,4 @@
-#include "progress_list.h"
+#include "send_progress_list.h"
 
 #include <QDebug>
 #include <QDesktopServices>

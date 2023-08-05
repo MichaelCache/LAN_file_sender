@@ -15,8 +15,10 @@ SendTask::SendTask(const TransferInfo& info, QObject* parent)
   m_transinfo.m_progress = 0;
 
   m_timer = new QTimer(this);
-  connect(m_timer, &QTimer::timeout, this,
-          [this]() { this->updateProgress(m_transinfo); });
+  connect(m_timer, &QTimer::timeout, this, [this]() {
+    qDebug() << this->m_transinfo.m_progress;
+    this->updateProgress(m_transinfo);
+  });
 }
 
 SendTask::~SendTask() {}
@@ -27,6 +29,8 @@ void SendTask::run() {
   connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
   connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
   connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
+  qDebug() << m_transinfo.m_dest_ip;
+  qDebug() << m_transinfo.m_from_ip;
   m_socket->connectToHost(m_transinfo.m_dest_ip,
                           Setting::ins().m_file_trans_port);
   // report transfer progress per 0.1 sec
@@ -63,7 +67,10 @@ void SendTask::onBytesWritten(qint64 byte) {
     }
   }
 }
-void SendTask::onConnected() { sendHeader(); }
+void SendTask::onConnected() {
+  sendHeader();
+  m_send_file->open(QIODevice::ReadOnly);
+}
 
 /**
  * @brief Receiver offline

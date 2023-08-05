@@ -1,6 +1,7 @@
 #include "send_progress_model.h"
 
 #include <QMutexLocker>
+#include <stdexcept>
 
 using TransferProgress::Column;
 
@@ -58,50 +59,9 @@ QString stateToString(TransferState state) {
 
 }  // namespace
 
-SendProgressModel::SendProgressModel(QObject *parent)
-    : ProgressInterface(parent) {}
+SendProgressModel::SendProgressModel(QObject *parent) : ProgressModel(parent) {}
 
 SendProgressModel::~SendProgressModel() {}
-
-int SendProgressModel::rowCount(const QModelIndex &parent) const {
-  Q_UNUSED(parent);
-  return m_tasks.size();
-}
-
-int SendProgressModel::columnCount(const QModelIndex &parent) const {
-  Q_UNUSED(parent);
-  return (int)Column::Count;
-}
-
-QVariant SendProgressModel::data(const QModelIndex &index, int role) const {
-  if (index.isValid()) {
-    Column col = (Column)index.column();
-
-    auto task = m_tasks.at(index.row());
-    if (role == Qt::DisplayRole) {
-      switch (col) {
-        case Column::IP:
-          return task.m_dest_ip.toString();
-        case Column::FileName:
-          return task.m_file_name;
-        case Column::FileSize:
-          return sizeToString(task.m_file_size);
-        case Column::State:
-          return stateToString(task.m_state);
-        case Column::Progress:
-          return task.m_progress;
-        default:
-          return QVariant();
-      }
-    } else if (role == MyRole::InfoRole) {
-      return QVariant().fromValue(task);
-    } else {
-      return QVariant();
-    }
-  } else {
-    return QVariant();
-  }
-}
 
 QVariant SendProgressModel::headerData(int section, Qt::Orientation orientation,
                                        int role) const {
@@ -124,52 +84,4 @@ QVariant SendProgressModel::headerData(int section, Qt::Orientation orientation,
   }
 
   return QVariant();
-}
-
-void SendProgressModel::add(QVector<TransferInfo> info) {
-  QMutexLocker locker(&m_lock);
-  emit layoutAboutToBeChanged();
-  for (auto &&i : info) {
-    m_tasks.append(i);
-  }
-  emit layoutChanged();
-}
-
-void SendProgressModel::remove(QVector<TransferInfo> info) {
-  QMutexLocker locker(&m_lock);
-  emit layoutAboutToBeChanged();
-  for (auto &&i : info) {
-    m_tasks.removeAll(i);
-  }
-  emit layoutChanged();
-}
-
-void SendProgressModel::update(QVector<TransferInfo> info) {
-  QMutexLocker locker(&m_lock);
-  for (auto &&task : info) {
-    auto find = std::find(m_tasks.begin(), m_tasks.end(), task);
-    if (find != m_tasks.end()) {
-      *find = task;
-      int row = m_tasks.indexOf(*find);
-      emit dataChanged(index(row, (int)Column::State),
-                       index(row, (int)Column::Progress));
-    }
-  }
-}
-
-void SendProgressModel::clear() {
-  QMutexLocker locker(&m_lock);
-  emit layoutAboutToBeChanged();
-  QVector<TransferInfo> marked_remove;
-  for (auto &&i : m_tasks) {
-    if (i.m_state == TransferState::Cancelled ||
-        i.m_state == TransferState::Disconnected ||
-        i.m_state == TransferState::Finish) {
-      marked_remove.push_back(i);
-    }
-  }
-  for (auto &i : marked_remove) {
-    m_tasks.removeAll(i);
-  }
-  emit layoutChanged();
 }

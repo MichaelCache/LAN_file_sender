@@ -15,7 +15,27 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
 
   // server as sender
   connect(m_control_server, &ControlServer::acceptFile, m_transfer_server,
-          &TransferServer::onSendFile);
+          [&](QVector<TransferInfo> info) {
+            QVector<int> found_index;
+            for (auto&& i : info) {
+              int index = this->m_wating_task.indexOf(i);
+              if (index > -1)
+                ;
+              found_index.append(index);
+            }
+
+            QVector<TransferInfo> send_task;
+            for (auto&& i : found_index) {
+              send_task.append(this->m_wating_task[i]);
+            }
+
+            std::sort(found_index.begin(), found_index.end(), std::less<int>());
+            for (auto&& i : found_index) {
+              this->m_wating_task.removeAt(i);
+            }
+
+            this->m_transfer_server->onSendFile(send_task);
+          });
   // canceled file transfer by remote host
   connect(m_control_server, &ControlServer::cancelFile, m_transfer_server,
           &TransferServer::onCancelSend);
@@ -25,13 +45,21 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
   connect(m_control_server, &ControlServer::denyFile, this,
           &MainServer::sendFileDenied);
   connect(m_transfer_server, &TransferServer::updateSendProgress, this,
-          &MainServer::updateSendProgress);
+          [this](TransferInfo i) {
+            QVector<TransferInfo> info;
+            info.append(i);
+            emit this->updateSendProgress(info);
+          });
 
   // server as reciever
   connect(m_control_server, &ControlServer::recieveFileInfo, this,
           &MainServer::recieveFileInfo);
   connect(m_transfer_server, &TransferServer::updateReceiveProgress, this,
-          &MainServer::updateReceiveProgress);
+          [this](TransferInfo i) {
+            QVector<TransferInfo> info;
+            info.append(i);
+            emit this->updateReceiveProgress(info);
+          });
 }
 
 MainServer::~MainServer() {}
@@ -53,6 +81,10 @@ const QVector<QHostAddress>& MainServer::hostIp() {
 }
 
 void MainServer::onSendFile(QVector<TransferInfo> info) {
+  for (auto&& i : info) {
+    m_wating_task.append(i);
+  }
+
   m_control_server->sendFileInfo(info, ControlSignal::InfoSend);
 }
 
@@ -60,4 +92,8 @@ void MainServer::onSendCancelFile(QVector<TransferInfo> info) {
   // canceled file transfer by sender
   m_control_server->sendFileInfo(info, ControlSignal::CancelSend);
   m_transfer_server->onCancelSend(info);
+}
+
+void MainServer::onAcceptFile(QVector<TransferInfo> info) {
+  m_control_server->sendFileInfo(info, ControlSignal::AcceptSend);
 }

@@ -18,7 +18,6 @@ class SendProgressListView : public QTableView {
 
  Q_SIGNALS:
   void cancelSendTask(QVector<TransferInfo>);
-  void acceptSendTask(QVector<TransferInfo>);
   void clearFinished();
 
  private Q_SLOTS:

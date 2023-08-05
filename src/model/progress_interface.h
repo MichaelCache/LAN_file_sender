@@ -27,5 +27,6 @@ class ProgressInterface : public QAbstractTableModel {
   virtual void add(QVector<TransferInfo>) = 0;
   virtual void remove(QVector<TransferInfo>) = 0;
   virtual void update(QVector<TransferInfo>) = 0;
+  virtual const TransferInfo& get(QUuid id) = 0;
   virtual void clear() = 0;
 };
