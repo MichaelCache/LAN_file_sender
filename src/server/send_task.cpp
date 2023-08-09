@@ -15,10 +15,8 @@ SendTask::SendTask(const TransferInfo& info, QObject* parent)
   m_transinfo.m_progress = 0;
 
   m_timer = new QTimer(this);
-  connect(m_timer, &QTimer::timeout, this, [this]() {
-    qDebug() << this->m_transinfo.m_progress;
-    this->updateProgress(m_transinfo);
-  });
+  connect(m_timer, &QTimer::timeout, this,
+          [this]() { this->updateProgress(m_transinfo); });
 }
 
 SendTask::~SendTask() {}
@@ -29,8 +27,6 @@ void SendTask::run() {
   connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
   connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
   connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
-  qDebug() << m_transinfo.m_dest_ip;
-  qDebug() << m_transinfo.m_from_ip;
   m_socket->connectToHost(m_transinfo.m_dest_ip,
                           Setting::ins().m_file_trans_port);
   // report transfer progress per 0.1 sec
@@ -87,12 +83,8 @@ void SendTask::onDisconnected() {
 
 void SendTask::sendHeader() {
   QByteArray header_buffer;
-  auto name_data = m_transinfo.m_file_name.toUtf8();
-  int name_size = name_data.size();
-  header_buffer.append((char*)&name_size, sizeof(int));
-  header_buffer.append(name_data);
-  header_buffer.append((char*)&m_transinfo.m_file_size, sizeof(quint64));
-
+  QDataStream s(&header_buffer, QIODevice::WriteOnly);
+  s << m_transinfo.m_file_name << m_transinfo.m_file_size << m_transinfo.m_id;
   QByteArray send_data =
       TcpPackage::packData(PackageType::Header, header_buffer);
   m_socket->write(send_data);
@@ -117,7 +109,6 @@ void SendTask::sendFileData() {
 
   auto data = TcpPackage::packData(PackageType::Data, file_buffer);
   m_socket->write(data);
-  // qDebug() << "Sender: send data ";
   m_transinfo.m_state = TransferState::Transfering;
   auto progress =
       (m_transinfo.m_file_size - m_byte_remain) * 100 / m_transinfo.m_file_size;
@@ -128,7 +119,6 @@ void SendTask::sendFileData() {
 void SendTask::sendFinish() {
   auto data = TcpPackage::packData(PackageType::Finish);
   m_socket->write(data);
-  // qDebug() << "Sender: send finish ";
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
@@ -139,17 +129,16 @@ void SendTask::sendFinish() {
 void SendTask::sendCancelled() {
   auto data = TcpPackage::packData(PackageType::Cancel);
   m_socket->write(data);
-  // qDebug() << "Sender: send finish ";
   m_transinfo.m_state = TransferState::Cancelled;
-  // m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
   emit taskFinish(m_transinfo.id());
   exitDelete();
 }
 
 void SendTask::exitDelete() {
-  m_send_file->close();
-  m_socket->disconnectFromHost();
+  if (m_send_file && m_send_file->isOpen()) {
+    m_send_file->close();
+  }
   deleteLater();
   quit();
 }

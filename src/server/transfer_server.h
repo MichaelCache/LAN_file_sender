@@ -50,8 +50,8 @@ class TransferServer : public QTcpServer {
 
   QMutex m_lock;
 
-  QMap<TaskId, SendTask*> m_senders;
-  QMap<TaskId, ReceiveTask*> m_receivers;
-  QVector<QPair<TaskId, SendTask*>> m_sender_wait_queue;
-  QVector<QPair<TaskId, ReceiveTask*>> m_receiver_wait_queue;
+  QVector<SendTask*> m_senders;
+  QVector<ReceiveTask*> m_receivers;
+  QVector<SendTask*> m_sender_wait_queue;
+  QVector<ReceiveTask*> m_receiver_wait_queue;
 };

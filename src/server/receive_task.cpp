@@ -16,6 +16,10 @@ ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
   connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
   connect(m_socket, &QTcpSocket::disconnected, this,
           &ReceiveTask::onDisconnected);
+
+  m_timer = new QTimer(this);
+  connect(m_timer, &QTimer::timeout, this,
+          [this]() { this->updateProgress(m_transinfo); });
 }
 
 ReceiveTask::~ReceiveTask() {}
@@ -61,12 +65,10 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
       break;
     case PackageType::Cancel:
       processPackageCancel(data);
-      m_socket->disconnectFromHost();
       break;
       ;
     case PackageType::Finish:
       processPackageFinish(data);
-      m_socket->disconnectFromHost();
       break;
     default:
       qDebug() << "error type";
@@ -75,27 +77,26 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
 }
 
 void ReceiveTask::processPackageHeader(QByteArray& data) {
-  int name_byte_len = 0;
-  memcpy(&name_byte_len, data.data(), sizeof(int));
-  data.remove(0, sizeof(int));
-  QByteArray filename_data = data.left(name_byte_len);
-  QString filename = QString::fromUtf8(filename_data);
-  data.remove(0, name_byte_len);
-  quint64 file_size = 0;
-  memcpy(&file_size, data.data(), sizeof(quint64));
+  QDataStream s(data);
+  QString filename;
+  quint64 file_size;
+  QUuid id;
+  s >> filename >> file_size >> id;
 
   auto full_name = QDir(Setting::ins().m_download_dir).filePath(filename);
   m_file = new QFile(full_name);
   m_file->open(QIODevice::Append);
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
 
-  m_transinfo.m_dest_ip = from_ip;
+  m_transinfo.m_from_ip = from_ip;
   m_transinfo.m_file_path = full_name;
   m_transinfo.m_file_name = filename;
   m_transinfo.m_file_size = file_size;
   m_transinfo.m_state = TransferState::Waiting;
   m_transinfo.m_progress = 0;
+  m_transinfo.m_id = id;
   emit addProgress(m_transinfo);
+  m_timer->start(100);
 }
 
 void ReceiveTask::processPackageData(QByteArray& data) {
@@ -116,7 +117,6 @@ void ReceiveTask::processPackageFinish(QByteArray& data) {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
-  m_socket->disconnectFromHost();
   emit taskFinish(m_transinfo.id());
 }
 
@@ -130,8 +130,10 @@ void ReceiveTask::processPackageCancel(QByteArray& data) {
 }
 
 void ReceiveTask::exitDelete() {
-  m_file->close();
-  m_socket->disconnectFromHost();
+  if (m_file && m_file->isOpen()) {
+    m_file->close();
+  }
+
   deleteLater();
   quit();
 }

@@ -51,29 +51,37 @@ void TransferServer::onCancelSend(QVector<TransferInfo> info) {
     SendTask* sender;
     auto iter =
         std::find_if(m_sender_wait_queue.begin(), m_sender_wait_queue.end(),
-                     [task_id](const QPair<TaskId, SendTask*> pair) {
-                       if (pair.first == task_id) {
+                     [task_id](const SendTask* task) {
+                       if (task->taskId() == task_id) {
                          return true;
                        }
                        return false;
                      });
     if (iter != m_sender_wait_queue.end()) {
-      sender = iter->second;
+      sender = *iter;
       m_sender_wait_queue.erase(iter);
       sender->onCancelSend();
     }
 
-    sender = m_senders.value(task_id);
-    if (sender) {
-      m_senders.remove(task_id);
+    iter = std::find_if(m_senders.begin(), m_senders.end(),
+                        [task_id](const SendTask* task) {
+                          if (task->taskId() == task_id) {
+                            return true;
+                          }
+                          return false;
+                        });
+
+    if (iter != m_sender_wait_queue.end()) {
+      sender = *iter;
+      m_senders.erase(iter);
       sender->onCancelSend();
       // bump wait queue
       if ((quint32)m_senders.size() < Setting::ins().m_max_send_thread &&
           m_sender_wait_queue.size()) {
         auto wait_sender = m_sender_wait_queue.front();
         m_sender_wait_queue.pop_front();
-        m_senders.insert(wait_sender.first, wait_sender.second);
-        wait_sender.second->run();
+        m_senders.append(wait_sender);
+        wait_sender->run();
       }
     }
   }
@@ -84,29 +92,37 @@ void TransferServer::removeSend(const QUuid& task_id) {
   SendTask* sender;
   auto iter =
       std::find_if(m_sender_wait_queue.begin(), m_sender_wait_queue.end(),
-                   [task_id](const QPair<TaskId, SendTask*> pair) {
-                     if (pair.first == task_id) {
+                   [task_id](const SendTask* task) {
+                     if (task->taskId() == task_id) {
                        return true;
                      }
                      return false;
                    });
   if (iter != m_sender_wait_queue.end()) {
-    sender = iter->second;
+    sender = *iter;
     m_sender_wait_queue.erase(iter);
     sender->quit();
   }
 
-  sender = m_senders.value(task_id);
-  if (sender) {
-    m_senders.remove(task_id);
+  iter = std::find_if(m_senders.begin(), m_senders.end(),
+                      [task_id](const SendTask* task) {
+                        if (task->taskId() == task_id) {
+                          return true;
+                        }
+                        return false;
+                      });
+
+  if (iter != m_sender_wait_queue.end()) {
+    sender = *iter;
+    m_senders.erase(iter);
     sender->quit();
     // bump wait queue
     if ((quint32)m_senders.size() < Setting::ins().m_max_send_thread &&
         m_sender_wait_queue.size()) {
       auto wait_sender = m_sender_wait_queue.front();
       m_sender_wait_queue.pop_front();
-      m_senders.insert(wait_sender.first, wait_sender.second);
-      wait_sender.second->run();
+      m_senders.append(wait_sender);
+      wait_sender->run();
     }
   }
 }
@@ -116,29 +132,37 @@ void TransferServer::removeReceive(const QUuid& task_id) {
   ReceiveTask* receiver;
   auto iter =
       std::find_if(m_receiver_wait_queue.begin(), m_receiver_wait_queue.end(),
-                   [task_id](const QPair<TaskId, ReceiveTask*> pair) {
-                     if (pair.first == task_id) {
+                   [task_id](const ReceiveTask* task) {
+                     if (task->taskId() == task_id) {
                        return true;
                      }
                      return false;
                    });
   if (iter != m_receiver_wait_queue.end()) {
-    receiver = iter->second;
+    receiver = *iter;
     m_receiver_wait_queue.erase(iter);
     receiver->quit();
   }
 
-  receiver = m_receivers.value(task_id);
-  if (receiver) {
-    m_receivers.remove(task_id);
+  iter = std::find_if(m_receivers.begin(), m_receivers.end(),
+                      [task_id](const ReceiveTask* task) {
+                        if (task->taskId() == task_id) {
+                          return true;
+                        }
+                        return false;
+                      });
+
+  if (iter != m_receivers.end()) {
+    receiver = *iter;
+    m_receivers.erase(iter);
     receiver->quit();
     // bump wait queue
     if ((quint32)m_receivers.size() < Setting::ins().m_max_receive_thread &&
         m_receiver_wait_queue.size()) {
       auto wait_sender = m_receiver_wait_queue.front();
       m_receiver_wait_queue.pop_front();
-      m_receivers.insert(wait_sender.first, wait_sender.second);
-      wait_sender.second->run();
+      m_receivers.append(wait_sender);
+      wait_sender->run();
     }
   }
 }
@@ -146,20 +170,20 @@ void TransferServer::removeReceive(const QUuid& task_id) {
 void TransferServer::appendSend(const TaskId& id, SendTask* sender) {
   QMutexLocker locker(&m_lock);
   if ((quint32)m_senders.size() < Setting::ins().m_max_send_thread) {
-    m_senders.insert(id, sender);
+    m_senders.append(sender);
     sender->run();
   } else {
-    m_sender_wait_queue.push_back({id, sender});
+    m_sender_wait_queue.append(sender);
   }
 }
 
 void TransferServer::appendReceive(const TaskId& id, ReceiveTask* receiver) {
   QMutexLocker locker(&m_lock);
   if ((quint32)m_receivers.size() < Setting::ins().m_max_receive_thread) {
-    m_receivers.insert(id, receiver);
+    m_receivers.append(receiver);
     receiver->run();
   } else {
-    m_receiver_wait_queue.push_back({id, receiver});
+    m_receiver_wait_queue.append(receiver);
   }
 }
 
@@ -169,8 +193,8 @@ void TransferServer::bumpSendQueue() {
       m_sender_wait_queue.size()) {
     auto wait_sender = m_sender_wait_queue.front();
     m_sender_wait_queue.pop_front();
-    m_senders.insert(wait_sender.first, wait_sender.second);
-    wait_sender.second->run();
+    m_senders.append(wait_sender);
+    wait_sender->run();
   }
 }
 
@@ -180,7 +204,7 @@ void TransferServer::bumpReceiveQueue() {
       m_receiver_wait_queue.size()) {
     auto wait_sender = m_receiver_wait_queue.front();
     m_receiver_wait_queue.pop_front();
-    m_receivers.insert(wait_sender.first, wait_sender.second);
-    wait_sender.second->run();
+    m_receivers.append(wait_sender);
+    wait_sender->run();
   }
 }

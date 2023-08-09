@@ -16,6 +16,8 @@ class ProgressModel : public ProgressInterface {
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index,
                 int role = Qt::DisplayRole) const override;
+  QVariant headerData(int section, Qt::Orientation orientation,
+                      int role = Qt::DisplayRole) const override;
 
  public Q_SLOTS:
   virtual void add(QVector<TransferInfo>) override;

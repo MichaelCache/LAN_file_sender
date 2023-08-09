@@ -38,8 +38,6 @@ class TransferInfo {
   quint64 m_file_size{0};  // in byte
   TransferState m_state{TransferState::UnKonwn};
   quint8 m_progress{0};
-
- private:
   TaskId m_id{QUuid::createUuid()};
 };
 

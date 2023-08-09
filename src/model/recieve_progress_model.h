@@ -15,6 +15,7 @@ class RecieveProgressModel : public ProgressModel {
   RecieveProgressModel(QObject *parent = nullptr);
   ~RecieveProgressModel();
 
+  QVariant data(const QModelIndex &index, int role) const override;
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override;
 };

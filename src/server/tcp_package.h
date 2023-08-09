@@ -3,8 +3,8 @@
 #include <QByteArray>
 #include <QPair>
 
-enum class PackageType : char {
-  None = 0x00,
+enum class PackageType : quint8 {
+  None = 0,
   Header,
   Data,
   Finish,

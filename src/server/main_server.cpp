@@ -14,11 +14,12 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
           &MainServer::detectHostOffline);
 
   // server as sender
-  connect(m_control_server, &ControlServer::acceptFile, m_transfer_server,
+  connect(m_control_server, &ControlServer::sendFileAccepted, m_transfer_server,
           [&](QVector<TransferInfo> info) {
+            QMutexLocker locker(&m_lock);
             QVector<int> found_index;
             for (auto&& i : info) {
-              int index = this->m_wating_task.indexOf(i);
+              int index = this->m_send_wating_task.indexOf(i);
               if (index > -1)
                 ;
               found_index.append(index);
@@ -26,23 +27,23 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
 
             QVector<TransferInfo> send_task;
             for (auto&& i : found_index) {
-              send_task.append(this->m_wating_task[i]);
+              send_task.append(this->m_send_wating_task[i]);
             }
 
             std::sort(found_index.begin(), found_index.end(), std::less<int>());
             for (auto&& i : found_index) {
-              this->m_wating_task.removeAt(i);
+              this->m_send_wating_task.removeAt(i);
             }
 
             this->m_transfer_server->onSendFile(send_task);
           });
   // canceled file transfer by remote host
-  connect(m_control_server, &ControlServer::cancelFile, m_transfer_server,
-          &TransferServer::onCancelSend);
+  connect(m_control_server, &ControlServer::sendFileCancelled,
+          m_transfer_server, &TransferServer::onCancelSend);
   // when control server get accept signal, trans server can send file now
-  connect(m_control_server, &ControlServer::denyFile, m_transfer_server,
+  connect(m_control_server, &ControlServer::sendFiledenied, m_transfer_server,
           &TransferServer::onCancelSend);
-  connect(m_control_server, &ControlServer::denyFile, this,
+  connect(m_control_server, &ControlServer::sendFiledenied, this,
           &MainServer::sendFileDenied);
   connect(m_transfer_server, &TransferServer::updateSendProgress, this,
           [this](TransferInfo i) {
@@ -53,7 +54,12 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
 
   // server as reciever
   connect(m_control_server, &ControlServer::recieveFileInfo, this,
-          &MainServer::recieveFileInfo);
+          [&](QVector<TransferInfo> info) {
+            for (auto&& i : info) {
+              this->m_recieve_wating_task.append(i);
+            }
+            emit this->recieveFileInfo(info);
+          });
   connect(m_transfer_server, &TransferServer::updateReceiveProgress, this,
           [this](TransferInfo i) {
             QVector<TransferInfo> info;
@@ -82,7 +88,7 @@ const QVector<QHostAddress>& MainServer::hostIp() {
 
 void MainServer::onSendFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
-    m_wating_task.append(i);
+    m_send_wating_task.append(i);
   }
 
   m_control_server->sendFileInfo(info, ControlSignal::InfoSend);

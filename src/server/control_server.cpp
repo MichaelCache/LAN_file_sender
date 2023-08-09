@@ -78,13 +78,13 @@ void ControlServer::incomingConnection(descriptor descriptor) {
             emit this->recieveFileInfo(trans_infos);
             break;
           case ControlSignal::CancelSend:
-            emit this->cancelFile(trans_infos);
+            emit this->sendFileCancelled(trans_infos);
             break;
           case ControlSignal::AcceptSend:
-            emit this->acceptFile(trans_infos);
+            emit this->sendFileAccepted(trans_infos);
             break;
           case ControlSignal::DenySend:
-            emit this->denyFile(trans_infos);
+            emit this->sendFiledenied(trans_infos);
             break;
           default:
             break;

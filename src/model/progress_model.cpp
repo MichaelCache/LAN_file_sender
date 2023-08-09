@@ -103,6 +103,29 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
   }
 }
 
+QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
+                                   int role) const {
+  if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+    Column col = (Column)section;
+    switch (col) {
+      case Column::IP:
+        return "IP";
+      case Column::FileName:
+        return "FileName";
+      case Column::FileSize:
+        return "Size";
+      case Column::State:
+        return "State";
+      case Column::Progress:
+        return "Progress";
+      default:
+        return QVariant();
+    }
+  }
+
+  return QVariant();
+}
+
 void ProgressModel::add(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();

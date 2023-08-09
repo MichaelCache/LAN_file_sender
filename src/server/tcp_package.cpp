@@ -1,5 +1,7 @@
 #include "tcp_package.h"
 
+#include <QDataStream>
+
 QByteArray TcpPackage::packData(PackageType type, const QByteArray& data) {
   QByteArray result;
   PackageSize size = sizeof(PackageSize) + sizeof(PackageType) + data.size();

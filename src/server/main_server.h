@@ -38,7 +38,9 @@ class MainServer : public QObject {
   void updateReceiveProgress(QVector<TransferInfo> info);
 
  private:
-  QVector<TransferInfo> m_wating_task;
+  QMutex m_lock;
+  QVector<TransferInfo> m_send_wating_task;
+  QVector<TransferInfo> m_recieve_wating_task;
   HostBroadcaster* m_host_detector;
   ControlServer* m_control_server;
   TransferServer* m_transfer_server;
