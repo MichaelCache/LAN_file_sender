@@ -5,13 +5,13 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "model/progress_model.h"
-#include "model/receiver_model.h"
-#include "progress_list.h"
-#include "receiver_list.h"
+#include "host_list.h"
+#include "model/host_model.h"
+#include "recieve_progress_list.h"
+#include "send_progress_list.h"
 #include "server/host_broadcaster.h"
-#include "server/transfer_server.h"
-#include "server/control_server.h"
+#include "server/main_server.h"
+
 
 class MainWidget : public QWidget {
   Q_OBJECT
@@ -19,23 +19,30 @@ class MainWidget : public QWidget {
   MainWidget(QWidget *parent = nullptr);
   ~MainWidget();
 
- public Q_SLOTS:
   void onClose();
 
  private Q_SLOTS:
   void onUpdateSettings();
 
  private:
+  // ui
   QVBoxLayout *m_main_layout;
-  QHBoxLayout *m_receiver_progress_layout;
+  QHBoxLayout *m_host_progress_layout;
+  QVBoxLayout *m_progress_layout;
   QHBoxLayout *m_bottom_labels_layout;
-  ReceiverListView *m_receiver_view;
-  ProgressListView *m_progress_view;
-
   QLabel *m_localhostname;
   QLabel *m_localhostip;
 
+  // data view
+  HostListView *m_host_view;
+  SendProgressListView *m_send_progress_view;
+  RecieveProgressListView *m_receive_progress_view;
+
   // servers;
-  HostBroadcaster *m_host_detector;
-  TransferServer *m_file_transfer;
+  MainServer *m_server;
+
+  // data model
+  HostInterface *m_host_model;
+  ProgressInterface *m_send_task_model;
+  ProgressInterface *m_receive_task_model;
 };

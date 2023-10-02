@@ -11,7 +11,7 @@
 #include <QTimer>
 
 #include "model/host_info.h"
-#include "model/receiver_model.h"
+#include "model/host_model.h"
 
 enum class MsgType : int { None = 0, New, Update, Reply, Delete };
 
@@ -21,18 +21,18 @@ class HostBroadcaster : public QObject {
   HostBroadcaster(QObject* parent = nullptr);
   ~HostBroadcaster();
 
-  ReceiverModel* receiverModel();
+  void start();
+  void stop();
 
   const QVector<QHostAddress>& hostIp();
   void broadcast(MsgType type);
 
  Q_SIGNALS:
-  void addHost(const RemoteHostInfo&);
-  void removeHost(const RemoteHostInfo&);
+  void detectHostOnLine(const RemoteHostInfo&);
+  void detectHostOffline(const RemoteHostInfo&);
 
  public Q_SLOTS:
-  void onUpdateSettings();
-  void stop();
+  void onUpdateHostInfo();
 
  private Q_SLOTS:
   void consistBroadcast();
@@ -45,7 +45,7 @@ class HostBroadcaster : public QObject {
 
   bool isLocalHost(const QHostAddress&) const;
 
-  ReceiverModel* m_receiver_model;
+  // ReceiverModel* m_receiver_model;
 
   QVector<QHostAddress> m_local_host_ip;
   QVector<QHostAddress> m_broadcast_ip;

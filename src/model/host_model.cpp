@@ -1,21 +1,20 @@
-#include "receiver_model.h"
+#include "host_model.h"
 
 #include <QHostAddress>
 #include <QMutexLocker>
 
-#include "column.h"
 
 using RemoteClient::Column;
 
-ReceiverModel::ReceiverModel(QObject *parent) : QAbstractTableModel(parent) {}
+HostModel::HostModel(QObject *parent) : HostInterface(parent) {}
 
-ReceiverModel::~ReceiverModel() {}
+HostModel::~HostModel() {}
 
-bool ReceiverModel::contains(QHostAddress addr) {
+bool HostModel::contains(QHostAddress addr) {
   return m_remote_servers_addrs.contains(addr.toString());
 }
 
-void ReceiverModel::add(const RemoteHostInfo &server) {
+void HostModel::add(RemoteHostInfo server) {
   if (contains(server.m_host_addr)) {
     int row = 0;
     // find remote server in same ip, remote name or os may changed but ip not
@@ -48,7 +47,7 @@ void ReceiverModel::add(const RemoteHostInfo &server) {
   }
 }
 
-void ReceiverModel::remove(const RemoteHostInfo &server) {
+void HostModel::remove(RemoteHostInfo server) {
   auto it = m_remote_servers_addrs.find(server.m_host_addr.toString());
   if (it != m_remote_servers_addrs.end()) {
     m_remote_servers_addrs.erase(it);
@@ -65,17 +64,17 @@ void ReceiverModel::remove(const RemoteHostInfo &server) {
   }
 }
 
-int ReceiverModel::rowCount(const QModelIndex &parent) const {
+int HostModel::rowCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return m_remote_servers.size();
 }
 
-int ReceiverModel::columnCount(const QModelIndex &parent) const {
+int HostModel::columnCount(const QModelIndex &parent) const {
   Q_UNUSED(parent);
   return (int)Column::Count;
 }
 
-QVariant ReceiverModel::data(const QModelIndex &index, int role) const {
+QVariant HostModel::data(const QModelIndex &index, int role) const {
   if (index.isValid()) {
     Column col = (Column)index.column();
 
@@ -99,7 +98,7 @@ QVariant ReceiverModel::data(const QModelIndex &index, int role) const {
   return QVariant();
 }
 
-QVariant ReceiverModel::headerData(int section, Qt::Orientation orientation,
+QVariant HostModel::headerData(int section, Qt::Orientation orientation,
                                    int role) const {
   if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
     Column col = (Column)section;

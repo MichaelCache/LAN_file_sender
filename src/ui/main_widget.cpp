@@ -3,35 +3,62 @@
 #include <QMessageBox>
 
 #include "config.h"
+#include "model/recieve_progress_model.h"
+#include "model/send_progress_model.h"
 #include "setting.h"
 
 MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
-  m_host_detector = new HostBroadcaster(this);
-  m_host_detector->broadcast(MsgType::New);
-  connect(&Setting::ins(), &Setting::updateSettings, m_host_detector,
-          &HostBroadcaster::onUpdateSettings);
+  m_server = new MainServer(this);
 
-  m_file_transfer = new TransferServer(this);
-  // connect send file
-  m_receiver_view = new ReceiverListView(this);
-  m_receiver_view->setModel(m_host_detector->receiverModel());
-  connect(m_receiver_view, &ReceiverListView::sendFile, m_file_transfer,
-          &TransferServer::onSendFile);
+  m_host_model = new HostModel(this);
+  m_send_task_model = new SendProgressModel(this);
+  m_receive_task_model = new RecieveProgressModel(this);
 
-  m_file_transfer->listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
+  m_host_view = new HostListView(this);
+  m_send_progress_view = new SendProgressListView(this);
+  m_receive_progress_view = new RecieveProgressListView(this);
 
-  m_progress_view = new ProgressListView(this);
-  m_progress_view->setModel(m_file_transfer->progressModel());
+  m_host_view->setModel(m_host_model);
+  m_send_progress_view->setModel(m_send_task_model);
+  m_receive_progress_view->setModel(m_receive_task_model);
 
-  // connect cancel send
-  connect(m_progress_view, &ProgressListView::cancelSendTask, m_file_transfer,
-          &TransferServer::onCancelSend);
-  connect(m_progress_view, &ProgressListView::clearFinished,
-          m_file_transfer->progressModel(), &ProgressModel::clear);
+  // connect host info data
+  connect(m_server, &MainServer::detectHostOnLine, m_host_model,
+          &HostInterface::add);
+  connect(m_server, &MainServer::detectHostOffline, m_host_model,
+          &HostInterface::remove);
 
-  m_receiver_progress_layout = new QHBoxLayout();
-  m_receiver_progress_layout->addWidget(m_receiver_view, 3);
-  m_receiver_progress_layout->addWidget(m_progress_view, 6);
+  // connect send file as sender
+  connect(m_host_view, &HostListView::sendFile, m_server,
+          &MainServer::onSendFile);
+  connect(m_host_view, &HostListView::sendFile, m_send_task_model,
+          &ProgressInterface::add);
+  connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
+          &ProgressInterface::update);
+  connect(m_server, &MainServer::sendFileDenied, m_send_task_model,
+          &ProgressInterface::update);
+  connect(m_send_progress_view, &SendProgressListView::cancelSendTask, m_server,
+          &MainServer::onSendCancelFile);
+
+  // connect receive file as receiver
+  connect(m_server, &MainServer::recieveFileInfo, m_receive_task_model,
+          &ProgressInterface::add);
+  connect(m_server, &MainServer::updateReceiveProgress, m_receive_task_model,
+          &ProgressInterface::update);
+
+  connect(m_receive_progress_view, &RecieveProgressListView::acceptSendTask,
+          m_server, [&](QVector<TransferInfo> info) {
+            this->m_server->onAcceptFile(info);
+          });
+
+  // ui
+  m_progress_layout = new QVBoxLayout();
+  m_progress_layout->addWidget(m_send_progress_view);
+  m_progress_layout->addWidget(m_receive_progress_view);
+
+  m_host_progress_layout = new QHBoxLayout();
+  m_host_progress_layout->addWidget(m_host_view, 3);
+  m_host_progress_layout->addLayout(m_progress_layout, 6);
 
   m_localhostname = new QLabel(this);
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
@@ -40,7 +67,7 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
   m_localhostip = new QLabel(this);
   QString local_ips = "Host IP: ";
-  for (auto&& i : m_host_detector->hostIp()) {
+  for (auto&& i : m_server->hostIp()) {
     local_ips.append(QHostAddress(i.toIPv4Address()).toString() + "/");
   }
   if (local_ips.endsWith("/")) {
@@ -54,15 +81,17 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
   m_bottom_labels_layout->addWidget(m_localhostip);
 
   m_main_layout = new QVBoxLayout();
-  m_main_layout->addLayout(m_receiver_progress_layout);
+  m_main_layout->addLayout(m_host_progress_layout);
   m_main_layout->addLayout(m_bottom_labels_layout);
 
   setLayout(m_main_layout);
+
+  m_server->start();
 }
 
 MainWidget::~MainWidget() {}
 
-void MainWidget::onClose() { m_host_detector->stop(); }
+void MainWidget::onClose() { m_server->stop(); }
 
 void MainWidget::onUpdateSettings() {
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);

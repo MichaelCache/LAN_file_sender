@@ -6,22 +6,23 @@
 #include <QUuid>
 
 #include "progress_bar.h"
+#include "server/transfer_info.h"
 
-class ProgressListView : public QTableView {
+class SendProgressListView : public QTableView {
   Q_OBJECT
  private:
   /* data */
  public:
-  ProgressListView(QWidget* parent = nullptr);
-  ~ProgressListView();
+  SendProgressListView(QWidget* parent = nullptr);
+  ~SendProgressListView();
 
  Q_SIGNALS:
-  void cancelSendTask(QUuid);
+  void cancelSendTask(QVector<TransferInfo>);
   void clearFinished();
 
  private Q_SLOTS:
-  void onReceiverContextMenuRequested(const QPoint&);
-  void cancelTask();
+  void onCustomRightMouseButtonPressed(const QPoint&);
+  void onCancelButtonClickedk();
   void openDir();
 
  private:
@@ -31,6 +32,5 @@ class ProgressListView : public QTableView {
   QAction* m_cancel_ac;
   QAction* m_open_dir_ac;
   QAction* m_clear_ac;
-  QUuid m_selected_task;
-  QString m_selected_file_path;
+  QVector<TransferInfo> m_selected_task;
 };

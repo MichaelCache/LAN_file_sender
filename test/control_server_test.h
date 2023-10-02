@@ -12,7 +12,11 @@ class ControlServerTest : public QObject {
   void cancelTest();
   void accpetTest();
   void denyTest();
+  void reconnectSendTest();
+  void cleanupTestCase();
 
  private:
   ControlServer* m_cs;
+  QVector<TransferInfo> m_info_1;
+  QVector<TransferInfo> m_info_2;
 };

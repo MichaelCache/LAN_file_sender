@@ -7,43 +7,51 @@
 #include <QVector>
 #include <tuple>
 
-#include "control_state.h"
+#include "fileinfo.h"
 #include "setting.h"
+#include "transfer_info.h"
 #include "transfer_server.h"
+
+enum class ControlSignal : int {
+  None = 0,
+  InfoSend,
+  CancelSend,
+  AcceptSend,
+  DenySend,
+};
 
 class ControlServer : public QTcpServer {
   Q_OBJECT
  public:
-  ControlServer(QObject* parent = nullptr,
-                quint32 file_info_port = Setting::ins().m_file_info_port);
+  ControlServer(QObject* parent = nullptr);
   ~ControlServer();
 
+  void start();
+  void stop();
+
  public Q_SLOTS:
-  void sendFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst);
-  void cancelFileInfo(const QVector<FileInfo>& info, const QHostAddress& dst);
-  void acceptFileInfo(const QVector<FileInfo>& info, const QHostAddress& src);
-  void denyFileInfo(const QVector<FileInfo>& info, const QHostAddress& src);
+  void sendFileInfo(QVector<TransferInfo> info, ControlSignal signal,
+                    qint32 send_port = Setting::ins().m_file_info_port);
 
  Q_SIGNALS:
-  void acceptFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
-  void denyFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
-  void recieveFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
-  void cancelFile(const QVector<FileInfo>& filenames, const QHostAddress& dst);
+  void sendFileAccepted(const QVector<TransferInfo>& trans_info);
+  void sendFiledenied(const QVector<TransferInfo>& trans_info);
+  void recieveFileInfo(const QVector<TransferInfo>& trans_info);
+  void sendFileCancelled(const QVector<TransferInfo>& trans_info);
 
  protected:
-  void incomingConnection(qintptr socket_descriptor);
+  using descriptor = qintptr;
+  void incomingConnection(descriptor socket_descriptor);
 
  private:
   QByteArray packFileInfoPackage(ControlSignal, const QVector<FileInfo>&);
   std::tuple<ControlSignal, QVector<FileInfo>> unpackFileInfoPackage(
       QByteArray&);
 
-  void send(const QVector<FileInfo>& info, const QHostAddress& address,
-            const ControlSignal& signal);
+  void clearDisconnectedReciver();
 
   // data
   QHash<QHostAddress, QTcpSocket*> m_info_sender;
-  QMap<qintptr, QTcpSocket*> m_info_reciever;
-  QMap<qintptr, QByteArray> m_info_recieve_cache;
-  quint32 m_file_info_port;
+  QMap<descriptor, QTcpSocket*> m_info_reciever;
+  QMap<descriptor, QByteArray> m_info_recieve_cache;
 };

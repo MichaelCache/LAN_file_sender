@@ -7,18 +7,22 @@
 #include <QStringList>
 #include <QTableView>
 
-class ReceiverListView : public QTableView {
+#include "server/transfer_info.h"
+
+class HostListView : public QTableView {
   Q_OBJECT
 
  public:
-  ReceiverListView(QWidget* parent = nullptr);
-  ~ReceiverListView();
+  HostListView(QWidget* parent = nullptr);
+  ~HostListView();
 
  Q_SIGNALS:
-  void sendFile(const QString& filename, const QHostAddress& dst);
+  void sendFile(QVector<TransferInfo> info);
 
  private Q_SLOTS:
+  // slots for right mouse point click
   void onReceiverContextMenuRequested(const QPoint&);
+  
   void onSendFile(const QStringList&);
   void openFileDialog();
 

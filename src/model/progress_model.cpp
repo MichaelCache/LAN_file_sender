@@ -1,8 +1,7 @@
 #include "progress_model.h"
 
 #include <QMutexLocker>
-
-#include "column.h"
+#include <stdexcept>
 
 using TransferProgress::Column;
 
@@ -51,6 +50,8 @@ QString stateToString(TransferState state) {
       return "Transfering";
     case TransferState::Finish:
       return "Finish";
+    case TransferState::UnKonwn:
+      return "UnKonwn";
   }
 
   return QString();
@@ -58,7 +59,7 @@ QString stateToString(TransferState state) {
 
 }  // namespace
 
-ProgressModel::ProgressModel(QObject *parent) : QAbstractTableModel(parent) {}
+ProgressModel::ProgressModel(QObject *parent) : ProgressInterface(parent) {}
 
 ProgressModel::~ProgressModel() {}
 
@@ -79,9 +80,7 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
     auto task = m_tasks.at(index.row());
     if (role == Qt::DisplayRole) {
       switch (col) {
-        case Column::Type:
-          return transferTypeToString(task.m_type);
-        case Column::DestIP:
+        case Column::IP:
           return task.m_dest_ip.toString();
         case Column::FileName:
           return task.m_file_name;
@@ -94,10 +93,8 @@ QVariant ProgressModel::data(const QModelIndex &index, int role) const {
         default:
           return QVariant();
       }
-    } else if (role == MyRole::IdRole) {
-      return task.id();
-    } else if (role == MyRole::PathRole) {
-      return task.m_file_path;
+    } else if (role == MyRole::InfoRole) {
+      return QVariant().fromValue(task);
     } else {
       return QVariant();
     }
@@ -111,10 +108,8 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
     Column col = (Column)section;
     switch (col) {
-      case Column::Type:
-        return "Type";
-      case Column::DestIP:
-        return "DestIP";
+      case Column::IP:
+        return "IP";
       case Column::FileName:
         return "FileName";
       case Column::FileSize:
@@ -131,28 +126,47 @@ QVariant ProgressModel::headerData(int section, Qt::Orientation orientation,
   return QVariant();
 }
 
-void ProgressModel::add(const TransferInfo &info) {
+void ProgressModel::add(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
-  m_tasks.push_back(info);
+  for (auto &&i : info) {
+    m_tasks.append(i);
+  }
   emit layoutChanged();
 }
 
-void ProgressModel::remove(const TransferInfo &info) {
+void ProgressModel::remove(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
   emit layoutAboutToBeChanged();
-  m_tasks.removeAll(info);
+  for (auto &&i : info) {
+    m_tasks.removeAll(i);
+  }
   emit layoutChanged();
 }
 
-void ProgressModel::update(const TransferInfo &info) {
+void ProgressModel::update(QVector<TransferInfo> info) {
   QMutexLocker locker(&m_lock);
-  auto find = std::find(m_tasks.begin(), m_tasks.end(), info);
-  if (find != m_tasks.end()) {
-    *find = info;
-    int row = m_tasks.indexOf(*find);
-    emit dataChanged(index(row, (int)Column::State),
-                     index(row, (int)Column::Progress));
+  for (auto &&task : info) {
+    auto find = std::find(m_tasks.begin(), m_tasks.end(), task);
+    if (find != m_tasks.end()) {
+      *find = task;
+      int row = m_tasks.indexOf(*find);
+      emit dataChanged(index(row, (int)Column::State),
+                       index(row, (int)Column::Progress));
+    }
+  }
+}
+
+const TransferInfo &ProgressModel::get(QUuid id) {
+  QMutexLocker locker(&m_lock);
+  auto it =
+      std::find_if(m_tasks.begin(), m_tasks.end(),
+                   [&id](const TransferInfo &info) { return id == info.id(); });
+
+  if (it != m_tasks.end()) {
+    return *it;
+  } else {
+    throw std::runtime_error("No transfer info found");
   }
 }
 
