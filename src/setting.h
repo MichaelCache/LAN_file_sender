@@ -5,10 +5,11 @@
 
 #include "config.h"
 
+// singleton
 class Setting : public QSettings {
   Q_OBJECT
  public:
-  ~Setting();
+  ~Setting() = default;
   static Setting &ins();
 
   void saveSettings();
@@ -29,7 +30,5 @@ class Setting : public QSettings {
 
  private:
   Setting(QObject *parent = nullptr);
-  QString getDefaultDownloadPath();
   void loadSettingFile();
-  
 };

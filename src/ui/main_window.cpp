@@ -13,12 +13,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   setCentralWidget(m_central_widget);
 
   m_menubar = new QMenuBar(this);
-  m_setting = new QAction("Setting", m_menubar);
-  m_menubar->addAction(m_setting);
-
-  connect(m_setting, &QAction::triggered, this, &MainWindow::openSettingDialog);
-
   setMenuBar(m_menubar);
+  m_setting_ac = new QAction("Setting", m_menubar);
+  m_menubar->addAction(m_setting_ac);
 
   // close dialog
   m_close_msg = new QMessageBox(this);
@@ -28,13 +25,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
   // setting dialog
   m_setting_dialog = new SettingDialog(this);
-  connect(&Setting::ins(), &Setting::updateSettings, m_setting_dialog,
-          &SettingDialog::onUpdataSettings);
+
+  connect(m_setting_ac, &QAction::triggered, m_setting_dialog,
+          &SettingDialog::exec);
 }
-
-MainWindow::~MainWindow() {}
-
-void MainWindow::openSettingDialog() { m_setting_dialog->exec(); }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   auto ret = m_close_msg->exec();

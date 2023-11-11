@@ -5,26 +5,16 @@
 #include <QStandardPaths>
 
 #include "config.h"
+#include "utils.h"
 
 Setting::Setting(QObject *parent) : QSettings(ORG_NAME, APP_NAME, parent) {
   m_download_dir = getDefaultDownloadPath();
   loadSettingFile();
 }
 
-Setting::~Setting() {}
-
 Setting &Setting::ins() {
   static Setting s;
   return s;
-}
-
-QString Setting::getDefaultDownloadPath() {
-#if defined(Q_OS_WIN)
-  return QStandardPaths::locate(QStandardPaths::DownloadLocation, QString(),
-                                QStandardPaths::LocateDirectory);
-#else
-  return QDir::homePath() + QDir::separator() + "Downloads";
-#endif
 }
 
 void Setting::loadSettingFile() {
@@ -67,5 +57,5 @@ void Setting::reset() {
   m_download_dir = getDefaultDownloadPath();
   m_replace_exsit_file = true;
   m_boradcast_interval = DefaultBroadcastInterval;
-  emit updateSettings();
+  // emit updateSettings();
 }
