@@ -11,7 +11,7 @@
 SendTask::SendTask(const TransferInfo& info, QObject* parent)
     : QThread(parent), m_transinfo(info) {
   m_byte_remain = m_transinfo.m_file_size;
-  m_transinfo.m_state = TransferState::Waiting;
+  m_transinfo.m_state = TransferState::Pending;
   m_transinfo.m_progress = 0;
 
   m_timer = new QTimer(this);
@@ -50,7 +50,7 @@ void SendTask::onBytesWritten(qint64 byte) {
   Q_UNUSED(byte);
   // send file data
   if (!m_socket->bytesToWrite()) {
-    if (m_transinfo.m_state == TransferState::Waiting ||
+    if (m_transinfo.m_state == TransferState::Pending ||
         m_transinfo.m_state == TransferState::Transfering) {
       sendFileData();
       if (!m_byte_remain) {
@@ -74,7 +74,7 @@ void SendTask::onConnected() {
  */
 void SendTask::onDisconnected() {
   if (m_transinfo.m_state == TransferState::Transfering ||
-      m_transinfo.m_state == TransferState::Waiting) {
+      m_transinfo.m_state == TransferState::Pending) {
     m_transinfo.m_state = TransferState::Disconnected;
     emit updateProgress(m_transinfo);
   }

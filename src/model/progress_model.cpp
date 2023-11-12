@@ -38,7 +38,7 @@ QString sizeToString(qint64 size) {
 
 QString stateToString(TransferState state) {
   switch (state) {
-    case TransferState::Waiting:
+    case TransferState::Pending:
       return "Waiting";
     case TransferState::Disconnected:
       return "Disconnected";

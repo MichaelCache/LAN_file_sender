@@ -11,15 +11,13 @@
 #include "receive_task.h"
 #include "setting.h"
 
-TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {}
-
-TransferServer::~TransferServer() {}
-
 void TransferServer::start() {
   listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
 }
 
-void TransferServer::stop() {}
+void TransferServer::stop() {
+  // do nothing
+}
 
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
   auto receiver = new ReceiveTask(socketDescriptor, this);

@@ -17,8 +17,8 @@
 class TransferServer : public QTcpServer {
   Q_OBJECT
  public:
-  TransferServer(QObject* parent = nullptr);
-  ~TransferServer();
+  using QTcpServer::QTcpServer;
+  ~TransferServer() = default;
 
   void start();
   void stop();

@@ -63,7 +63,7 @@ void ControlServerTest::sendTest() {
 }
 
 void ControlServerTest::cancelTest() {
-  QSignalSpy spy(m_cs, &ControlServer::sendFileCancelled);
+  QSignalSpy spy(m_cs, &ControlServer::sendFileBeCancelled);
 
   m_cs->sendFileInfo(m_info_1, ControlSignal::CancelSend);
   QVERIFY(spy.wait());
@@ -95,7 +95,7 @@ void ControlServerTest::cancelTest() {
 }
 
 void ControlServerTest::accpetTest() {
-  QSignalSpy spy(m_cs, &ControlServer::sendFileAccepted);
+  QSignalSpy spy(m_cs, &ControlServer::sendFileBeAccepted);
 
   m_cs->sendFileInfo(m_info_1, ControlSignal::AcceptSend);
   QVERIFY(spy.wait());
@@ -113,9 +113,9 @@ void ControlServerTest::accpetTest() {
 }
 
 void ControlServerTest::denyTest() {
-  QSignalSpy spy(m_cs, &ControlServer::sendFiledenied);
+  QSignalSpy spy(m_cs, &ControlServer::sendFileBeRejected);
 
-  m_cs->sendFileInfo(m_info_1, ControlSignal::DenySend);
+  m_cs->sendFileInfo(m_info_1, ControlSignal::RejectSend);
   QVERIFY(spy.wait());
   QCOMPARE(spy.count(), 1);
 
@@ -136,7 +136,7 @@ void ControlServerTest::reconnectSendTest() {
   qint32 port = 11715;
 
   reciver->listen(QHostAddress::Any, port);
-  QSignalSpy spy(reciver, &ControlServer::sendFileAccepted);
+  QSignalSpy spy(reciver, &ControlServer::sendFileBeAccepted);
 
   sender->sendFileInfo(m_info_1, ControlSignal::AcceptSend, port);
 
@@ -150,7 +150,7 @@ void ControlServerTest::reconnectSendTest() {
   loop.enterLoop(3);
 
   auto reciver2 = new ControlServer();
-  QSignalSpy spy1(reciver2, &ControlServer::sendFileAccepted);
+  QSignalSpy spy1(reciver2, &ControlServer::sendFileBeAccepted);
 
   reciver2->listen(QHostAddress::Any, port);
   sender->sendFileInfo(m_info_2, ControlSignal::AcceptSend, port);

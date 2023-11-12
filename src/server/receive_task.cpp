@@ -48,7 +48,7 @@ void ReceiveTask::onDisconnected() {
     m_file = nullptr;
   }
   if (m_transinfo.m_state == TransferState::Transfering ||
-      m_transinfo.m_state == TransferState::Waiting) {
+      m_transinfo.m_state == TransferState::Pending) {
     m_transinfo.m_state = TransferState::Disconnected;
     emit updateProgress(m_transinfo);
   }
@@ -92,7 +92,7 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   m_transinfo.m_file_path = full_name;
   m_transinfo.m_file_name = filename;
   m_transinfo.m_file_size = file_size;
-  m_transinfo.m_state = TransferState::Waiting;
+  m_transinfo.m_state = TransferState::Pending;
   m_transinfo.m_progress = 0;
   m_transinfo.m_id = id;
   emit addProgress(m_transinfo);

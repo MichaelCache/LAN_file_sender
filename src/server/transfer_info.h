@@ -8,7 +8,8 @@
 
 enum class TransferState : quint32 {
   UnKonwn = 0,
-  Waiting,
+  Pending,
+  Rejected,
   Disconnected,
   Paused,
   Cancelled,

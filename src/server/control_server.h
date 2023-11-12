@@ -17,14 +17,14 @@ enum class ControlSignal : int {
   InfoSend,
   CancelSend,
   AcceptSend,
-  DenySend,
+  RejectSend,
 };
 
 class ControlServer : public QTcpServer {
   Q_OBJECT
  public:
-  ControlServer(QObject* parent = nullptr);
-  ~ControlServer();
+  using QTcpServer::QTcpServer;
+  ~ControlServer() = default;
 
   void start();
   void stop();
@@ -34,10 +34,10 @@ class ControlServer : public QTcpServer {
                     qint32 send_port = Setting::ins().m_file_info_port);
 
  Q_SIGNALS:
-  void sendFileAccepted(const QVector<TransferInfo>& trans_info);
-  void sendFiledenied(const QVector<TransferInfo>& trans_info);
+  void sendFileBeAccepted(const QVector<TransferInfo>& trans_info);
+  void sendFileBeRejected(const QVector<TransferInfo>& trans_info);
   void recieveFileInfo(const QVector<TransferInfo>& trans_info);
-  void sendFileCancelled(const QVector<TransferInfo>& trans_info);
+  void sendFileBeCancelled(const QVector<TransferInfo>& trans_info);
 
  protected:
   using descriptor = qintptr;

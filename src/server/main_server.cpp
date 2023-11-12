@@ -14,37 +14,15 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
           &MainServer::detectHostOffline);
 
   // server as sender
-  connect(m_control_server, &ControlServer::sendFileAccepted, m_transfer_server,
-          [&](QVector<TransferInfo> info) {
-            QMutexLocker locker(&m_lock);
-            QVector<int> found_index;
-            for (auto&& i : info) {
-              int index = this->m_send_wating_task.indexOf(i);
-              if (index > -1)
-                ;
-              found_index.append(index);
-            }
-
-            QVector<TransferInfo> send_task;
-            for (auto&& i : found_index) {
-              send_task.append(this->m_send_wating_task[i]);
-            }
-
-            std::sort(found_index.begin(), found_index.end(), std::less<int>());
-            for (auto&& i : found_index) {
-              this->m_send_wating_task.removeAt(i);
-            }
-
-            this->m_transfer_server->onSendFile(send_task);
-          });
+  connect(m_control_server, &ControlServer::sendFileBeAccepted, this,
+          &MainServer::senderSendFileBeAccepted);
   // canceled file transfer by remote host
-  connect(m_control_server, &ControlServer::sendFileCancelled,
-          m_transfer_server, &TransferServer::onCancelSend);
-  // when control server get accept signal, trans server can send file now
-  connect(m_control_server, &ControlServer::sendFiledenied, m_transfer_server,
-          &TransferServer::onCancelSend);
-  connect(m_control_server, &ControlServer::sendFiledenied, this,
-          &MainServer::sendFileDenied);
+  connect(m_control_server, &ControlServer::sendFileBeCancelled, this,
+          &MainServer::senderSendFileBeCanceled);
+  // deny pending send file
+  connect(m_control_server, &ControlServer::sendFileBeRejected, this,
+          &MainServer::senderSendFileBeRejected);
+
   connect(m_transfer_server, &TransferServer::updateSendProgress, this,
           [this](TransferInfo i) {
             QVector<TransferInfo> info;
@@ -54,21 +32,14 @@ MainServer::MainServer(QObject* parent) : QObject(parent) {
 
   // server as reciever
   connect(m_control_server, &ControlServer::recieveFileInfo, this,
-          [&](QVector<TransferInfo> info) {
-            for (auto&& i : info) {
-              this->m_recieve_wating_task.append(i);
-            }
-            emit this->recieveFileInfo(info);
-          });
+          reciverReciveFileInfo);
   connect(m_transfer_server, &TransferServer::updateReceiveProgress, this,
           [this](TransferInfo i) {
             QVector<TransferInfo> info;
             info.append(i);
-            emit this->updateReceiveProgress(info);
+            emit this->updateReciveProgress(info);
           });
 }
-
-MainServer::~MainServer() {}
 
 void MainServer::start() {
   m_host_detector->start();
@@ -86,20 +57,58 @@ const QVector<QHostAddress>& MainServer::hostIp() {
   return m_host_detector->hostIp();
 }
 
-void MainServer::onSendFile(QVector<TransferInfo> info) {
+void MainServer::senderSendFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
-    m_send_wating_task.append(i);
+    m_send_pending_task.insert(i);
   }
 
   m_control_server->sendFileInfo(info, ControlSignal::InfoSend);
 }
 
-void MainServer::onSendCancelFile(QVector<TransferInfo> info) {
+void MainServer::senderSendFileBeAccepted(QVector<TransferInfo> info) {
+  QVector<int> found_index;
+  // find pending send file info and mark those be accepted
+  QVector<TransferInfo> send_task;
+  for (auto&& i : info) {
+    if (m_send_pending_task.count(i) &&
+        m_send_pending_task.find(i)->m_state == TransferState::Pending) {
+      auto& task = *m_send_pending_task.find(i);
+      send_task.push_back(task);
+      const_cast<TransferInfo&>(task).m_state = TransferState::Transfering;
+    }
+  }
+  m_transfer_server->onSendFile(send_task);
+}
+
+void MainServer::senderSendFileBeRejected(QVector<TransferInfo> info) {
+  for (auto&& i : info) {
+    m_send_pending_task.erase(i);
+  }
+}
+
+void MainServer::senderSendFileBeCanceled(QVector<TransferInfo> info) {
   // canceled file transfer by sender
+  for (auto&& i : info) {
+    m_send_pending_task.erase(i);
+  }
   m_control_server->sendFileInfo(info, ControlSignal::CancelSend);
   m_transfer_server->onCancelSend(info);
 }
 
-void MainServer::onAcceptFile(QVector<TransferInfo> info) {
+void MainServer::senderSendFileFinished(QVector<TransferInfo> info) {
+  for (auto&& i : info) {
+    m_send_pending_task.erase(i);
+  }
+}
+
+void MainServer::reciverAcceptFile(QVector<TransferInfo> info) {
   m_control_server->sendFileInfo(info, ControlSignal::AcceptSend);
+}
+
+void MainServer::reciverRejectFile(QVector<TransferInfo> info) {
+  m_control_server->sendFileInfo(info, ControlSignal::RejectSend);
+}
+
+void MainServer::reciverCancelFile(QVector<TransferInfo> info) {
+  m_control_server->sendFileInfo(info, ControlSignal::CancelSend);
 }
