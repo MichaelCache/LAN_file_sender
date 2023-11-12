@@ -5,13 +5,12 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "host_list.h"
+#include "host_list_view.h"
 #include "model/host_model.h"
 #include "recieve_progress_list.h"
 #include "send_progress_list.h"
 #include "server/host_broadcaster.h"
 #include "server/main_server.h"
-
 
 class MainWidget : public QWidget {
   Q_OBJECT
@@ -22,7 +21,7 @@ class MainWidget : public QWidget {
   void onClose();
 
  private Q_SLOTS:
-  void onUpdateSettings();
+  void onHostnameChanged();
 
  private:
   // ui

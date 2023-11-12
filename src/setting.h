@@ -26,7 +26,7 @@ class Setting : public QSettings {
   quint32 m_boradcast_interval{DefaultBroadcastInterval};
 
  Q_SIGNALS:
-  void updateSettings();
+  void hostnameChanged();
 
  private:
   Setting(QObject *parent = nullptr);

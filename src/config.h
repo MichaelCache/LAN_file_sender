@@ -2,8 +2,8 @@
 
 #if defined(Q_OS_WIN)
 #define OS_NAME "Windows"
-// #elif defined(Q_OS_OSX)
-// #define OS_NAME "Mac OSX"
+#elif defined(Q_OS_OSX)
+#define OS_NAME "Mac OSX"
 #elif defined(Q_OS_LINUX)
 #define OS_NAME "Linux"
 #else

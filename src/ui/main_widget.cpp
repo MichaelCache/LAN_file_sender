@@ -62,8 +62,8 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
   m_localhostname = new QLabel(this);
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
-  connect(&Setting::ins(), &Setting::updateSettings, this,
-          &MainWidget::onUpdateSettings);
+  connect(&Setting::ins(), &Setting::hostnameChanged, this,
+          &MainWidget::onHostnameChanged);
 
   m_localhostip = new QLabel(this);
   QString local_ips = "Host IP: ";
@@ -93,6 +93,6 @@ MainWidget::~MainWidget() {}
 
 void MainWidget::onClose() { m_server->stop(); }
 
-void MainWidget::onUpdateSettings() {
+void MainWidget::onHostnameChanged() {
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
 }

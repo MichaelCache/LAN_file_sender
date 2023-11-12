@@ -41,7 +41,10 @@ class MainServer : public QObject {
   QMutex m_lock;
   QVector<TransferInfo> m_send_wating_task;
   QVector<TransferInfo> m_recieve_wating_task;
+  // broadcaster for broadcast host info like name, ip
   HostBroadcaster* m_host_detector;
+  // control server for send/recive file tranfer control signal
   ControlServer* m_control_server;
+  // transfer server for file data transfer
   TransferServer* m_transfer_server;
 };

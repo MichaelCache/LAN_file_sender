@@ -45,7 +45,7 @@ void Setting::saveSettings() {
   setValue(SEND_PORT, m_file_trans_port);
   setValue(REPLACE, m_replace_exsit_file);
   setValue(BROAD_INTER, m_boradcast_interval);
-  emit updateSettings();
+  emit hostnameChanged();
 }
 
 void Setting::reset() {
@@ -57,5 +57,4 @@ void Setting::reset() {
   m_download_dir = getDefaultDownloadPath();
   m_replace_exsit_file = true;
   m_boradcast_interval = DefaultBroadcastInterval;
-  // emit updateSettings();
 }

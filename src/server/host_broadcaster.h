@@ -3,12 +3,12 @@
 #include <QAtomicInt>
 #include <QHostAddress>
 #include <QMutex>
+#include <QSet>
 #include <QSignalMapper>
 #include <QTcpServer>
 #include <QTcpSocket>
-#include <QSet>
-#include <QUdpSocket>
 #include <QTimer>
+#include <QUdpSocket>
 
 #include "model/host_info.h"
 #include "model/host_model.h"
@@ -19,7 +19,7 @@ class HostBroadcaster : public QObject {
   Q_OBJECT
  public:
   HostBroadcaster(QObject* parent = nullptr);
-  ~HostBroadcaster();
+  ~HostBroadcaster() = default;
 
   void start();
   void stop();

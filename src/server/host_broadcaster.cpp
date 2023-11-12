@@ -14,9 +14,6 @@ HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
 
-  connect(&Setting::ins(), &Setting::updateSettings, this,
-          &HostBroadcaster::onUpdateHostInfo);
-
   m_timer = new QTimer(this);
 
   // share port for broadcast and listen this port in same time
@@ -25,9 +22,10 @@ HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   connect(m_broadcast_udp, &QUdpSocket::readyRead, this,
           &HostBroadcaster::receiveBroadcast);
   connect(m_timer, &QTimer::timeout, this, &HostBroadcaster::consistBroadcast);
+  connect(&Setting::ins(), &Setting::hostnameChanged, this,
+          &HostBroadcaster::onUpdateHostInfo);
+  broadcast(MsgType::New);
 }
-
-HostBroadcaster::~HostBroadcaster() {}
 
 void HostBroadcaster::start() {
   broadcast(MsgType::New);

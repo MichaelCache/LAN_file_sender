@@ -1,6 +1,8 @@
 #include "main_window.h"
 
 #include <QAction>
+#include <QApplication>
+#include <QDesktopWidget>
 #include <QMenuBar>
 #include <QMessageBox>
 
@@ -8,7 +10,13 @@
 #include "setting.h"
 #include "setting_dialog.h"
 
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+  auto const rec = QApplication::desktop()->screenGeometry();
+  auto const height = rec.height();
+  auto const width = rec.width();
+  resize(width * 2 / 3, height * 2 / 3);
+
   m_central_widget = new MainWidget(this);
   setCentralWidget(m_central_widget);
 

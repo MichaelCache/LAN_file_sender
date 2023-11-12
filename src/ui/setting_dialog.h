@@ -25,6 +25,10 @@ class SettingDialog : public QDialog {
   void resetSetting();
 
  private:
+  /**
+   * @brief Get Setting information from setting
+   * and update setting dialog widgets
+   */
   void getSetting();
 
   QVBoxLayout* m_layout;
