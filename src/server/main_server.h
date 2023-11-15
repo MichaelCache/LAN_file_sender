@@ -38,16 +38,14 @@ class MainServer : public QObject {
   void detectHostOnLine(RemoteHostInfo);
   void detectHostOffline(RemoteHostInfo);
 
-  // signal as sender
-  void sendFileDenied(QVector<TransferInfo> trans_info);
+  // signal from sender
   void updateSendProgress(QVector<TransferInfo>);
 
-  // signal as reciever
-  void reciverReciveFileInfo(QVector<TransferInfo> info);
+  // signal from reciever
   void updateReciveProgress(QVector<TransferInfo> info);
 
  private:
-  QMutex m_lock;
+  // QMutex m_lock;
   // QMap<QUuid, TransferInfo> m_send_pending_task;
   struct TransferInfoHash {
     size_t operator()(const TransferInfo& info) const {

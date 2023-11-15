@@ -22,7 +22,7 @@ class ReceiveTask : public QThread {
   QUuid taskId() const;
 
  Q_SIGNALS:
-  void addProgress(const TransferInfo&);
+  // void addProgress(const TransferInfo&);
   void updateProgress(const TransferInfo&);
   void taskFinish(QUuid);
 
@@ -45,5 +45,4 @@ class ReceiveTask : public QThread {
   QByteArray m_buff;
   QFile* m_file{nullptr};
   TransferInfo m_transinfo;
-  QTimer* m_timer;
 };

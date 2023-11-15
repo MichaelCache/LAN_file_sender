@@ -21,7 +21,7 @@ void TransferServer::stop() {
 
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
   auto receiver = new ReceiveTask(socketDescriptor, this);
-  emit newReceiveTaskCreated(receiver);
+  // emit newReceiveTaskCreated(receiver);
   connect(receiver, &ReceiveTask::taskFinish, this,
           &TransferServer::removeReceive);
   connect(receiver, &ReceiveTask::updateProgress, this,
@@ -33,7 +33,7 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
 void TransferServer::onSendFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     auto sender = new SendTask(i);
-    emit newSendTaskCreated(sender);
+    // emit newSendTaskCreated(sender);
     auto& task = sender->task();
     connect(sender, &SendTask::taskFinish, this, &TransferServer::removeSend);
     connect(sender, &SendTask::updateProgress, this,

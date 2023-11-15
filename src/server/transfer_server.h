@@ -34,8 +34,8 @@ class TransferServer : public QTcpServer {
  Q_SIGNALS:
   void updateSendProgress(const TransferInfo&);
   void updateReceiveProgress(const TransferInfo&);
-  void newReceiveTaskCreated(ReceiveTask*);
-  void newSendTaskCreated(SendTask*);
+  // void newReceiveTaskCreated(ReceiveTask*);
+  // void newSendTaskCreated(SendTask*);
 
  protected:
   void incomingConnection(qintptr socketDescriptor);

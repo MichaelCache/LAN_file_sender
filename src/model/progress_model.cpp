@@ -153,6 +153,9 @@ void ProgressModel::update(QVector<TransferInfo> info) {
       int row = m_tasks.indexOf(*find);
       emit dataChanged(index(row, (int)Column::State),
                        index(row, (int)Column::Progress));
+    } else if (task.m_state == TransferState::Pending) {
+      m_tasks.append(task);
+      emit layoutChanged();
     }
   }
 }

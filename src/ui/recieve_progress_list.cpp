@@ -80,7 +80,7 @@ void RecieveProgressListView::onCustomRightMouseButtonPressed(
 
     auto task_state = m_selected_task.front().m_state;
     // show right mouse menu
-    auto &actions = m_right_menu->actions();
+    const auto &actions = m_right_menu->actions();
     if (task_state == TransferState::Cancelled ||
         task_state == TransferState::Disconnected ||
         task_state == TransferState::Finish) {
@@ -136,13 +136,9 @@ void RecieveProgressListView::openDir() {
   param << QDir::toNativeSeparators(selected_file_path);
   QProcess::startDetached(explorer, param);
 #else
-  QFileInfo fileinfo(selected_file_path);
-  const QString folder =
-      fileinfo.isDir() ? fileinfo.absoluteFilePath() : fileinfo.filePath();
-  const QString app = UnixUtils::fileBrowser(ICore::settings());
-  QProcess browserProc;
-  const QString browser_args =
-      UnixUtils::substituteFileBrowserParameters(app, folder);
-  QProcess::startDetached(app, browser_args);
+  auto file_path = QUrl::fromLocalFile(selected_file_path);
+  auto dir = file_path.path();
+  dir.truncate(file_path.path().size() - file_path.fileName().size());
+  QDesktopServices::openUrl(dir);
 #endif
 }

@@ -16,10 +16,6 @@ ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
   connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
   connect(m_socket, &QTcpSocket::disconnected, this,
           &ReceiveTask::onDisconnected);
-
-  m_timer = new QTimer(this);
-  connect(m_timer, &QTimer::timeout, this,
-          [this]() { this->updateProgress(m_transinfo); });
 }
 
 ReceiveTask::~ReceiveTask() {}
@@ -95,8 +91,8 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   m_transinfo.m_state = TransferState::Pending;
   m_transinfo.m_progress = 0;
   m_transinfo.m_id = id;
-  emit addProgress(m_transinfo);
-  m_timer->start(100);
+  emit updateProgress(m_transinfo);
+  // m_timer->start(100);
 }
 
 void ReceiveTask::processPackageData(QByteArray& data) {

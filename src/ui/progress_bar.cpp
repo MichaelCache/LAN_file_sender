@@ -5,7 +5,9 @@
 
 #include "model/progress_interface.h"
 
-ProgressBar::ProgressBar(QObject *parent) : QStyledItemDelegate(parent) {}
+ProgressBar::ProgressBar(QObject *parent) : QStyledItemDelegate(parent) {
+  startTimer(500);
+}
 
 ProgressBar::~ProgressBar() {}
 

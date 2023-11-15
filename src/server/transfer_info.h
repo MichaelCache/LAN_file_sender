@@ -23,7 +23,7 @@ class TransferInfo {
  public:
   TransferInfo(/* args */);
   TransferInfo(const FileInfo& info);
-  ~TransferInfo();
+  ~TransferInfo() = default;
 
   using TaskId = QUuid;
 

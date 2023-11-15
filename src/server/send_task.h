@@ -14,7 +14,7 @@ class SendTask : public QThread, public TcpPackage {
   Q_OBJECT
  public:
   SendTask(const TransferInfo& info, QObject* parent = nullptr);
-  ~SendTask();
+  ~SendTask() = default;
 
   virtual void run() override;
 

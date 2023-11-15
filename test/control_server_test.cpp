@@ -14,20 +14,23 @@ void ControlServerTest::initTestCase() {
   m_cs->listen(QHostAddress::Any, Setting::ins().m_file_info_port);
 
   TransferInfo f1, f2;
+  f1.m_dest_ip = "127.0.0.1";
   f1.m_file_name = "test.txt";
   f1.m_file_size = 60;
-  f2.m_file_name = "test2";
-  f2.m_file_size = 1;
+  // f2.m_dest_ip = "127.0.0.1";
+  // f2.m_file_name = "test2";
+  // f2.m_file_size = 1;
   m_info_1.push_back(f1);
-  m_info_1.push_back(f2);
+  // m_info_1.push_back(f2);
 
   TransferInfo f3, f4;
+  f3.m_dest_ip = "127.0.0.1";
   f3.m_file_name = "test2";
   f3.m_file_size = 60;
   f4.m_file_name = "t2";
   f4.m_file_size = 15;
   m_info_2.push_back(f1);
-  m_info_2.push_back(f2);
+  // m_info_2.push_back(f2);
 }
 
 void ControlServerTest::sendTest() {

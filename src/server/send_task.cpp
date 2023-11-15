@@ -14,12 +14,10 @@ SendTask::SendTask(const TransferInfo& info, QObject* parent)
   m_transinfo.m_state = TransferState::Pending;
   m_transinfo.m_progress = 0;
 
-  m_timer = new QTimer(this);
-  connect(m_timer, &QTimer::timeout, this,
-          [this]() { this->updateProgress(m_transinfo); });
+  // m_timer = new QTimer(this);
+  // connect(m_timer, &QTimer::timeout, this,
+  //         [this]() { this->updateProgress(m_transinfo); });
 }
-
-SendTask::~SendTask() {}
 
 void SendTask::run() {
   m_socket = new QTcpSocket(this);
@@ -30,7 +28,7 @@ void SendTask::run() {
   m_socket->connectToHost(m_transinfo.m_dest_ip,
                           Setting::ins().m_file_trans_port);
   // report transfer progress per 0.1 sec
-  m_timer->start(100);
+  // m_timer->start(100);
 }
 
 QUuid SendTask::taskId() const { return m_transinfo.id(); }
@@ -52,10 +50,10 @@ void SendTask::onBytesWritten(qint64 byte) {
   if (!m_socket->bytesToWrite()) {
     if (m_transinfo.m_state == TransferState::Pending ||
         m_transinfo.m_state == TransferState::Transfering) {
-      sendFileData();
-      if (!m_byte_remain) {
+      if (m_byte_remain) {
+        sendFileData();
+      } else {
         sendFinish();
-        // wait rececive socket disconnect;
       }
     } else if (m_transinfo.m_state == TransferState::Cancelled) {
       sendCancelled();
@@ -73,6 +71,10 @@ void SendTask::onConnected() {
  *
  */
 void SendTask::onDisconnected() {
+  if (m_send_file && m_send_file->isOpen()) {
+    m_send_file->close();
+    m_send_file = nullptr;
+  }
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Pending) {
     m_transinfo.m_state = TransferState::Disconnected;
