@@ -1,12 +1,9 @@
 #include "send_task.h"
 
 #include <QDataStream>
-#include <QFileInfo>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QMutexLocker>
 
 #include "setting.h"
+#include "tcp_package.h"
 
 SendTask::SendTask(const TransferInfo& info, QObject* parent)
     : QThread(parent), m_transinfo(info) {
@@ -14,56 +11,55 @@ SendTask::SendTask(const TransferInfo& info, QObject* parent)
   m_transinfo.m_state = TransferState::Pending;
   m_transinfo.m_progress = 0;
 
-  // m_timer = new QTimer(this);
-  // connect(m_timer, &QTimer::timeout, this,
-  //         [this]() { this->updateProgress(m_transinfo); });
+  m_send_file = new QFile(m_transinfo.m_file_path, this);
+
+  m_socket = new QTcpSocket(this);
+  // connect(m_socket, &QTcpSocket::bytesWritten, this,
+  // &SendTask::onBytesWritten);
+  connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
+  connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
 }
 
 void SendTask::run() {
-  m_socket = new QTcpSocket(this);
-  m_send_file = new QFile(m_transinfo.m_file_path, static_cast<QThread*>(this));
-  connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
-  connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
-  connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
   m_socket->connectToHost(m_transinfo.m_dest_ip,
                           Setting::ins().m_file_trans_port);
-  // report transfer progress per 0.1 sec
-  // m_timer->start(100);
 }
 
 QUuid SendTask::taskId() const { return m_transinfo.id(); }
 
-const TransferInfo SendTask::task() const { return m_transinfo; }
-
-void SendTask::onCancelSend() {
+void SendTask::onCancelSendTask() {
   if (m_transinfo.m_state == TransferState::Disconnected ||
-      m_transinfo.m_state == TransferState::Finish) {
+      m_transinfo.m_state == TransferState::Finish ||
+      m_transinfo.m_state == TransferState::Rejected) {
     return;
   }
-  m_transinfo.m_state = TransferState::Cancelled;
+  m_transinfo.m_state = TransferState::Canceled;
+  sendCanceled();
   emit updateProgress(m_transinfo);
+  exitDelete();
 }
 
-void SendTask::onBytesWritten(qint64 byte) {
-  Q_UNUSED(byte);
-  // send file data
-  if (!m_socket->bytesToWrite()) {
-    if (m_transinfo.m_state == TransferState::Pending ||
-        m_transinfo.m_state == TransferState::Transfering) {
-      if (m_byte_remain) {
-        sendFileData();
-      } else {
-        sendFinish();
-      }
-    } else if (m_transinfo.m_state == TransferState::Cancelled) {
-      sendCancelled();
-      // wait rececive socket disconnect;
-    }
-  }
-}
+// void SendTask::onBytesWritten(qint64 byte) {
+//   Q_UNUSED(byte);
+//   // send file data
+//   if (!m_socket->bytesToWrite()) {
+//     if (m_transinfo.m_state == TransferState::Pending ||
+//         m_transinfo.m_state == TransferState::Transfering) {
+//       if (m_byte_remain) {
+//         sendFileData();
+//       } else {
+//         sendFinish();
+//       }
+//     }
+//   }
+// }
 void SendTask::onConnected() {
   sendHeader();
   m_send_file->open(QIODevice::ReadOnly);
+  while (m_byte_remain) {
+    sendFileData();
+  }
+  sendFinish();
 }
 
 /**
@@ -71,10 +67,6 @@ void SendTask::onConnected() {
  *
  */
 void SendTask::onDisconnected() {
-  if (m_send_file && m_send_file->isOpen()) {
-    m_send_file->close();
-    m_send_file = nullptr;
-  }
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Pending) {
     m_transinfo.m_state = TransferState::Disconnected;
@@ -124,16 +116,14 @@ void SendTask::sendFinish() {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
-  emit taskFinish(m_transinfo.id());
   exitDelete();
 }
 
-void SendTask::sendCancelled() {
+void SendTask::sendCanceled() {
   auto data = TcpPackage::packData(PackageType::Cancel);
   m_socket->write(data);
-  m_transinfo.m_state = TransferState::Cancelled;
+  m_transinfo.m_state = TransferState::Canceled;
   emit updateProgress(m_transinfo);
-  emit taskFinish(m_transinfo.id());
   exitDelete();
 }
 
@@ -141,6 +131,7 @@ void SendTask::exitDelete() {
   if (m_send_file && m_send_file->isOpen()) {
     m_send_file->close();
   }
+  emit taskFinish(m_transinfo.id());
   deleteLater();
   quit();
 }

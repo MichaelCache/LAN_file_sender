@@ -30,7 +30,8 @@ class ControlServer : public QTcpServer {
   void stop();
 
  public Q_SLOTS:
-  void sendFileInfo(QVector<TransferInfo> info, ControlSignal signal,
+  void sendFileInfo(const QHostAddress& dst_ip, QVector<TransferInfo> info,
+                    ControlSignal signal,
                     qint32 send_port = Setting::ins().m_file_info_port);
 
  Q_SIGNALS:

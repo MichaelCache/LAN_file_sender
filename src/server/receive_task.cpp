@@ -3,8 +3,6 @@
 #include <QDataStream>
 #include <QDir>
 #include <QFile>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QTcpSocket>
 
 #include "setting.h"
@@ -17,8 +15,6 @@ ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
   connect(m_socket, &QTcpSocket::disconnected, this,
           &ReceiveTask::onDisconnected);
 }
-
-ReceiveTask::~ReceiveTask() {}
 
 void ReceiveTask::run() { m_socket->setSocketDescriptor(m_socket_descriptor); }
 
@@ -39,10 +35,6 @@ void ReceiveTask::onReadyRead() {
 }
 
 void ReceiveTask::onDisconnected() {
-  if (m_file && m_file->isOpen()) {
-    m_file->close();
-    m_file = nullptr;
-  }
   if (m_transinfo.m_state == TransferState::Transfering ||
       m_transinfo.m_state == TransferState::Pending) {
     m_transinfo.m_state = TransferState::Disconnected;
@@ -80,7 +72,11 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   s >> filename >> file_size >> id;
 
   auto full_name = QDir(Setting::ins().m_download_dir).filePath(filename);
-  m_file = new QFile(full_name);
+  // delete same file_name file before write
+  if (QFile::exists(full_name)) {
+    QFile(full_name).remove();
+  }
+  m_file = new QFile(full_name, this);
   m_file->open(QIODevice::Append);
   auto from_ip = QHostAddress(m_socket->peerAddress().toIPv4Address());
 
@@ -92,7 +88,6 @@ void ReceiveTask::processPackageHeader(QByteArray& data) {
   m_transinfo.m_progress = 0;
   m_transinfo.m_id = id;
   emit updateProgress(m_transinfo);
-  // m_timer->start(100);
 }
 
 void ReceiveTask::processPackageData(QByteArray& data) {
@@ -113,23 +108,23 @@ void ReceiveTask::processPackageFinish(QByteArray& data) {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
-  emit taskFinish(m_transinfo.id());
+  exitDelete();
 }
 
 void ReceiveTask::processPackageCancel(QByteArray& data) {
   if (m_file && m_file->isOpen()) {
     m_file->close();
   }
-  m_transinfo.m_state = TransferState::Cancelled;
+  m_transinfo.m_state = TransferState::Canceled;
   emit updateProgress(m_transinfo);
-  emit taskFinish(m_transinfo.id());
+  exitDelete();
 }
 
 void ReceiveTask::exitDelete() {
   if (m_file && m_file->isOpen()) {
     m_file->close();
   }
-
+  emit taskFinish(m_transinfo.id());
   deleteLater();
   quit();
 }

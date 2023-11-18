@@ -7,13 +7,13 @@
 #include <QHeaderView>
 #include <QProcess>
 
-// #include "model/column.h"
 #include "model/send_progress_model.h"
 #include "setting.h"
 
 using TransferProgress::Column;
 
-SendProgressListView::SendProgressListView(QWidget *parent) : QTableView(parent) {
+SendProgressListView::SendProgressListView(QWidget *parent)
+    : QTableView(parent) {
   setSelectionMode(QAbstractItemView::MultiSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -39,14 +39,17 @@ SendProgressListView::SendProgressListView(QWidget *parent) : QTableView(parent)
   m_right_menu->addAction(m_cancel_ac);
   m_right_menu->addAction(m_open_dir_ac);
   m_right_menu->addAction(m_clear_ac);
+  // disable all buttons default, enable in case
+  m_cancel_ac->setDisabled(true);
+  m_open_dir_ac->setDisabled(true);
+  m_clear_ac->setDisabled(true);
   connect(m_cancel_ac, &QAction::triggered, this,
-          &SendProgressListView::onCancelButtonClickedk);
-  connect(m_open_dir_ac, &QAction::triggered, this, &SendProgressListView::openDir);
+          &SendProgressListView::onCancelButtonClicked);
+  connect(m_open_dir_ac, &QAction::triggered, this,
+          &SendProgressListView::onOpenDirButtonClicked);
   connect(m_clear_ac, &QAction::triggered, this,
-          &SendProgressListView::clearFinished);
+          &SendProgressListView::onClearButtonClicked);
 }
-
-SendProgressListView::~SendProgressListView() {}
 
 void SendProgressListView::onCustomRightMouseButtonPressed(const QPoint &pos) {
   m_selected_task.clear();
@@ -63,17 +66,37 @@ void SendProgressListView::onCustomRightMouseButtonPressed(const QPoint &pos) {
     // get mouse pos
     QPoint glob_pos = mapToGlobal(pos);
 
+    auto task_state = m_selected_task.front().m_state;
+    // show right mouse menu
+    const auto &actions = m_right_menu->actions();
+    if (task_state == TransferState::Canceled ||
+        task_state == TransferState::Disconnected ||
+        task_state == TransferState::Finish ||
+        task_state == TransferState::Rejected) {
+      // enable open and clear
+      actions.at(1)->setEnabled(true);
+      actions.at(2)->setEnabled(true);
+    } else if (task_state == TransferState::Transfering ||
+               task_state == TransferState::Pending) {
+      // enable cancel and open
+      actions.at(0)->setEnabled(true);
+      actions.at(1)->setEnabled(true);
+    }
+
     // show right mouse menu
     m_right_menu->exec(glob_pos);
+    for (auto &&i : actions) {
+      i->setDisabled(true);
+    }
   }
 }
 
-void SendProgressListView::onCancelButtonClickedk() {
+void SendProgressListView::onCancelButtonClicked() {
   emit cancelSendTask(m_selected_task);
   m_selected_task.clear();
 }
 
-void SendProgressListView::openDir() {
+void SendProgressListView::onOpenDirButtonClicked() {
   auto selected_file_path = m_selected_task.front().m_file_path;
 #if defined(Q_OS_WIN)
   // use windows file explorer show file
@@ -89,4 +112,8 @@ void SendProgressListView::openDir() {
   dir.truncate(file_path.path().size() - file_path.fileName().size());
   QDesktopServices::openUrl(dir);
 #endif
+}
+
+void SendProgressListView::onClearButtonClicked(){
+  
 }

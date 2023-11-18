@@ -12,7 +12,7 @@ enum class TransferState : quint32 {
   Rejected,
   Disconnected,
   Paused,
-  Cancelled,
+  Canceled,
   Transfering,
   Finish
 };

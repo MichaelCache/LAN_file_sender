@@ -44,7 +44,7 @@ QString stateToString(TransferState state) {
       return "Disconnected";
     case TransferState::Paused:
       return "Paused";
-    case TransferState::Cancelled:
+    case TransferState::Canceled:
       return "Cancelled";
     case TransferState::Transfering:
       return "Transfering";
@@ -178,7 +178,7 @@ void ProgressModel::clear() {
   emit layoutAboutToBeChanged();
   QVector<TransferInfo> marked_remove;
   for (auto &&i : m_tasks) {
-    if (i.m_state == TransferState::Cancelled ||
+    if (i.m_state == TransferState::Canceled ||
         i.m_state == TransferState::Disconnected ||
         i.m_state == TransferState::Finish) {
       marked_remove.push_back(i);

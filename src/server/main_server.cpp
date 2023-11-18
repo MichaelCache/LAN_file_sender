@@ -60,7 +60,8 @@ void MainServer::senderSendFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     m_send_pending_task.insert(i);
   }
-  m_control_server->sendFileInfo(info, ControlSignal::InfoSend);
+  m_control_server->sendFileInfo(info.front().m_dest_ip, info,
+                                 ControlSignal::InfoSend);
   emit updateSendProgress(info);
 }
 
@@ -91,7 +92,8 @@ void MainServer::senderSendFileBeCanceled(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     m_send_pending_task.erase(i);
   }
-  m_control_server->sendFileInfo(info, ControlSignal::CancelSend);
+  m_control_server->sendFileInfo(info.front().m_dest_ip, info,
+                                 ControlSignal::CancelSend);
   m_transfer_server->onCancelSend(info);
   emit updateSendProgress(info);
 }
@@ -104,13 +106,16 @@ void MainServer::senderSendFileFinished(QVector<TransferInfo> info) {
 }
 
 void MainServer::reciverAcceptFile(QVector<TransferInfo> info) {
-  m_control_server->sendFileInfo(info, ControlSignal::AcceptSend);
+  m_control_server->sendFileInfo(info.front().m_from_ip, info,
+                                 ControlSignal::AcceptSend);
 }
 
 void MainServer::reciverRejectFile(QVector<TransferInfo> info) {
-  m_control_server->sendFileInfo(info, ControlSignal::RejectSend);
+  m_control_server->sendFileInfo(info.front().m_from_ip, info,
+                                 ControlSignal::RejectSend);
 }
 
 void MainServer::reciverCancelFile(QVector<TransferInfo> info) {
-  m_control_server->sendFileInfo(info, ControlSignal::CancelSend);
+  m_control_server->sendFileInfo(info.front().m_from_ip, info,
+                                 ControlSignal::CancelSend);
 }

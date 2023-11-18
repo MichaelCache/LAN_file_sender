@@ -14,16 +14,16 @@ class SendProgressListView : public QTableView {
   /* data */
  public:
   SendProgressListView(QWidget* parent = nullptr);
-  ~SendProgressListView();
+  ~SendProgressListView() = default;
 
  Q_SIGNALS:
   void cancelSendTask(QVector<TransferInfo>);
-  void clearFinished();
 
  private Q_SLOTS:
   void onCustomRightMouseButtonPressed(const QPoint&);
-  void onCancelButtonClickedk();
-  void openDir();
+  void onCancelButtonClicked();
+  void onOpenDirButtonClicked();
+  void onClearButtonClicked();
 
  private:
   ProgressBar* m_progress;

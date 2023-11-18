@@ -14,10 +14,10 @@ void ControlServer::stop() {
   // do nothing
 }
 
-void ControlServer::sendFileInfo(QVector<TransferInfo> info,
+void ControlServer::sendFileInfo(const QHostAddress& dst_ip, QVector<TransferInfo> info,
                                  ControlSignal signal, qint32 send_port) {
   for (auto&& i : info) {
-    auto address = i.m_dest_ip;
+    auto address = dst_ip;
     // use FileInfo to send tcp package for save network load
     QVector<FileInfo> file_infos;
     file_infos.push_back(FileInfo{i.m_file_name, i.m_file_size, i.id()});

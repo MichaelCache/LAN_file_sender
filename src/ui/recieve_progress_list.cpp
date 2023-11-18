@@ -1,13 +1,11 @@
 #include "recieve_progress_list.h"
 
-#include <QDebug>
 #include <QDesktopServices>
 #include <QFileDialog>
-#include <QFileSystemModel>
+// #include <QFileSystemModel>
 #include <QHeaderView>
 #include <QProcess>
 
-// #include "model/column.h"
 #include "model/recieve_progress_model.h"
 #include "setting.h"
 
@@ -44,6 +42,7 @@ RecieveProgressListView::RecieveProgressListView(QWidget *parent)
   m_right_menu->addAction(m_cancel_ac);
   m_right_menu->addAction(m_open_dir_ac);
   m_right_menu->addAction(m_clear_ac);
+  // disable all buttons default, enable in case
   m_accept_ac->setDisabled(true);
   m_reject_ac->setDisabled(true);
   m_cancel_ac->setDisabled(true);
@@ -56,12 +55,10 @@ RecieveProgressListView::RecieveProgressListView(QWidget *parent)
   connect(m_cancel_ac, &QAction::triggered, this,
           &RecieveProgressListView::onCancelButtonClicked);
   connect(m_open_dir_ac, &QAction::triggered, this,
-          &RecieveProgressListView::openDir);
+          &RecieveProgressListView::onOpenDirButtonClicked);
   connect(m_clear_ac, &QAction::triggered, this,
-          &RecieveProgressListView::clearFinished);
+          &RecieveProgressListView::onClearButtonClicked);
 }
-
-RecieveProgressListView::~RecieveProgressListView() {}
 
 void RecieveProgressListView::onCustomRightMouseButtonPressed(
     const QPoint &pos) {
@@ -81,15 +78,19 @@ void RecieveProgressListView::onCustomRightMouseButtonPressed(
     auto task_state = m_selected_task.front().m_state;
     // show right mouse menu
     const auto &actions = m_right_menu->actions();
-    if (task_state == TransferState::Cancelled ||
+    if (task_state == TransferState::Canceled ||
         task_state == TransferState::Disconnected ||
-        task_state == TransferState::Finish) {
+        task_state == TransferState::Finish ||
+        task_state == TransferState::Rejected) {
+      // enable open and clear
       actions.at(3)->setEnabled(true);
       actions.at(4)->setEnabled(true);
     } else if (task_state == TransferState::Transfering) {
+      // enable cancel and open
       actions.at(2)->setEnabled(true);
       actions.at(3)->setEnabled(true);
     } else if (task_state == TransferState::Pending) {
+      // enable accept and reject
       actions.at(0)->setEnabled(true);
       actions.at(1)->setEnabled(true);
     }
@@ -100,32 +101,25 @@ void RecieveProgressListView::onCustomRightMouseButtonPressed(
   }
 }
 
-void RecieveProgressListView::onCancelButtonClicked() {
-  emit cancelSendTask(m_selected_task);
-  m_selected_task.clear();
-}
-
 void RecieveProgressListView::onAcceptButtonClicked() {
   auto selected_task = m_selected_task;
   m_selected_task.clear();
-  for (auto &&i : selected_task) {
-    std::swap(i.m_dest_ip, i.m_from_ip);
-  }
-
   emit acceptSendTask(selected_task);
 }
 
 void RecieveProgressListView::onRejectButtonClicked() {
   auto selected_task = m_selected_task;
   m_selected_task.clear();
-  for (auto &&i : selected_task) {
-    std::swap(i.m_dest_ip, i.m_from_ip);
-  }
-
   emit rejectSendTask(selected_task);
 }
 
-void RecieveProgressListView::openDir() {
+void RecieveProgressListView::onCancelButtonClicked() {
+  auto selected_task = m_selected_task;
+  m_selected_task.clear();
+  emit cancelSendTask(m_selected_task);
+}
+
+void RecieveProgressListView::onOpenDirButtonClicked() {
   auto selected_file_path = m_selected_task.front().m_file_path;
 #if defined(Q_OS_WIN)
   // use windows file explorer show file
@@ -142,3 +136,5 @@ void RecieveProgressListView::openDir() {
   QDesktopServices::openUrl(dir);
 #endif
 }
+
+void RecieveProgressListView::onClearButtonClicked() {}
