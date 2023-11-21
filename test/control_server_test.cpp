@@ -102,7 +102,7 @@ void ControlServerTest::cancelTest() {
 }
 
 void ControlServerTest::accpetTest() {
-  QSignalSpy spy(m_cs, &ControlServer::sendFileBeAccepted);
+  QSignalSpy spy(m_cs, &ControlServer::remoteAccept);
 
   m_cs->sendFileInfo(QHostAddress("127.0.0.1"), m_info_1,
                      ControlSignal::AcceptSend);
@@ -121,7 +121,7 @@ void ControlServerTest::accpetTest() {
 }
 
 void ControlServerTest::denyTest() {
-  QSignalSpy spy(m_cs, &ControlServer::sendFileBeRejected);
+  QSignalSpy spy(m_cs, &ControlServer::remoteReject);
 
   m_cs->sendFileInfo(QHostAddress("127.0.0.1"), m_info_1,
                      ControlSignal::RejectSend);
@@ -145,7 +145,7 @@ void ControlServerTest::reconnectSendTest() {
   qint32 port = 11715;
 
   reciver->listen(QHostAddress::Any, port);
-  QSignalSpy spy(reciver, &ControlServer::sendFileBeAccepted);
+  QSignalSpy spy(reciver, &ControlServer::remoteAccept);
 
   sender->sendFileInfo(QHostAddress("127.0.0.1"), m_info_1,
                        ControlSignal::AcceptSend, port);
@@ -160,7 +160,7 @@ void ControlServerTest::reconnectSendTest() {
   loop.enterLoop(3);
 
   auto reciver2 = new ControlServer();
-  QSignalSpy spy1(reciver2, &ControlServer::sendFileBeAccepted);
+  QSignalSpy spy1(reciver2, &ControlServer::remoteAccept);
 
   reciver2->listen(QHostAddress::Any, port);
   sender->sendFileInfo(QHostAddress("127.0.0.1"), m_info_2,

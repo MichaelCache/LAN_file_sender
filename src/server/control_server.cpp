@@ -14,7 +14,8 @@ void ControlServer::stop() {
   // do nothing
 }
 
-void ControlServer::sendFileInfo(const QHostAddress& dst_ip, QVector<TransferInfo> info,
+void ControlServer::sendFileInfo(const QHostAddress& dst_ip,
+                                 QVector<TransferInfo> info,
                                  ControlSignal signal, qint32 send_port) {
   for (auto&& i : info) {
     auto address = dst_ip;
@@ -72,11 +73,16 @@ void ControlServer::incomingConnection(descriptor descriptor) {
             emit this->sendFileBeCancelled(trans_infos);
             break;
           case ControlSignal::AcceptSend:
-            emit this->sendFileBeAccepted(trans_infos);
+            emit this->remoteAccept(trans_infos);
             break;
-          case ControlSignal::RejectSend:
-            emit this->sendFileBeRejected(trans_infos);
+          case ControlSignal::RejectSend: {
+            for (auto&& i : trans_infos) {
+              i.m_state = TransferState::Rejected;
+            }
+
+            emit this->remoteReject(trans_infos);
             break;
+          }
           default:
             break;
         }

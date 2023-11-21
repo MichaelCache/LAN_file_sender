@@ -33,7 +33,7 @@ class ReceiveTask : public QThread {
   void processPackageHeader(QByteArray& data);
   void processPackageData(QByteArray& data);
   void processPackageFinish(QByteArray& data);
-  void processPackageCancel(QByteArray& data);
+  // void processPackageCancel(QByteArray& data);
 
   void exitDelete();
 

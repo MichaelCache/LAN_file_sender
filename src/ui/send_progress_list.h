@@ -18,6 +18,7 @@ class SendProgressListView : public QTableView {
 
  Q_SIGNALS:
   void cancelSendTask(QVector<TransferInfo>);
+  void clearFinished(QVector<TransferInfo>);
 
  private Q_SLOTS:
   void onCustomRightMouseButtonPressed(const QPoint&);

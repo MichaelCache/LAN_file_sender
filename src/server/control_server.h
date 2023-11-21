@@ -35,8 +35,8 @@ class ControlServer : public QTcpServer {
                     qint32 send_port = Setting::ins().m_file_info_port);
 
  Q_SIGNALS:
-  void sendFileBeAccepted(const QVector<TransferInfo>& trans_info);
-  void sendFileBeRejected(const QVector<TransferInfo>& trans_info);
+  void remoteAccept(const QVector<TransferInfo>& trans_info);
+  void remoteReject(const QVector<TransferInfo>& trans_info);
   void recieveFileInfo(const QVector<TransferInfo>& trans_info);
   void sendFileBeCancelled(const QVector<TransferInfo>& trans_info);
 

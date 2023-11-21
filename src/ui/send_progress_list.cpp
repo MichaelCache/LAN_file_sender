@@ -36,7 +36,7 @@ SendProgressListView::SendProgressListView(QWidget *parent)
   m_cancel_ac = new QAction("Cancel", this);
   m_open_dir_ac = new QAction("Open In Dir", this);
   m_clear_ac = new QAction("Clear Finished", this);
-  m_right_menu->addAction(m_cancel_ac);
+  // m_right_menu->addAction(m_cancel_ac);
   m_right_menu->addAction(m_open_dir_ac);
   m_right_menu->addAction(m_clear_ac);
   // disable all buttons default, enable in case
@@ -74,13 +74,13 @@ void SendProgressListView::onCustomRightMouseButtonPressed(const QPoint &pos) {
         task_state == TransferState::Finish ||
         task_state == TransferState::Rejected) {
       // enable open and clear
+      actions.at(0)->setEnabled(true);
       actions.at(1)->setEnabled(true);
-      actions.at(2)->setEnabled(true);
     } else if (task_state == TransferState::Transfering ||
                task_state == TransferState::Pending) {
       // enable cancel and open
       actions.at(0)->setEnabled(true);
-      actions.at(1)->setEnabled(true);
+      // actions.at(1)->setEnabled(true);
     }
 
     // show right mouse menu
@@ -115,5 +115,6 @@ void SendProgressListView::onOpenDirButtonClicked() {
 }
 
 void SendProgressListView::onClearButtonClicked(){
-  
+  emit clearFinished(m_selected_task);
+  m_selected_task.clear();
 }

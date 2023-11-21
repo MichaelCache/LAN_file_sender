@@ -39,13 +39,13 @@ QString sizeToString(qint64 size) {
 QString stateToString(TransferState state) {
   switch (state) {
     case TransferState::Pending:
-      return "Waiting";
+      return "Pending";
     case TransferState::Disconnected:
       return "Disconnected";
     case TransferState::Paused:
       return "Paused";
     case TransferState::Canceled:
-      return "Cancelled";
+      return "Canceled";
     case TransferState::Transfering:
       return "Transfering";
     case TransferState::Finish:
@@ -151,6 +151,7 @@ void ProgressModel::update(QVector<TransferInfo> info) {
     if (find != m_tasks.end()) {
       *find = task;
       int row = m_tasks.indexOf(*find);
+      // only change state and progress
       emit dataChanged(index(row, (int)Column::State),
                        index(row, (int)Column::Progress));
     } else if (task.m_state == TransferState::Pending) {

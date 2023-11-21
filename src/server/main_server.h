@@ -29,8 +29,8 @@ class MainServer : public QObject {
 
  private Q_SLOTS:
   // slots as sender
-  void senderSendFileBeAccepted(QVector<TransferInfo> info);
-  void senderSendFileBeRejected(QVector<TransferInfo> info);
+  void sendFileToRemote(QVector<TransferInfo> info);
+  void clearRejectedSend(QVector<TransferInfo> info);
   void senderSendFileFinished(QVector<TransferInfo> info);
 
  Q_SIGNALS:

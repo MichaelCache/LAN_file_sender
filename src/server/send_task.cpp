@@ -14,8 +14,7 @@ SendTask::SendTask(const TransferInfo& info, QObject* parent)
   m_send_file = new QFile(m_transinfo.m_file_path, this);
 
   m_socket = new QTcpSocket(this);
-  // connect(m_socket, &QTcpSocket::bytesWritten, this,
-  // &SendTask::onBytesWritten);
+  connect(m_socket, &QTcpSocket::bytesWritten, this, &SendTask::onBytesWritten);
   connect(m_socket, &QTcpSocket::connected, this, &SendTask::onConnected);
   connect(m_socket, &QTcpSocket::disconnected, this, &SendTask::onDisconnected);
 }
@@ -27,39 +26,36 @@ void SendTask::run() {
 
 QUuid SendTask::taskId() const { return m_transinfo.id(); }
 
-void SendTask::onCancelSendTask() {
-  if (m_transinfo.m_state == TransferState::Disconnected ||
-      m_transinfo.m_state == TransferState::Finish ||
-      m_transinfo.m_state == TransferState::Rejected) {
-    return;
+// void SendTask::onCancelSendTask() {
+//   if (m_transinfo.m_state == TransferState::Disconnected ||
+//       m_transinfo.m_state == TransferState::Finish ||
+//       m_transinfo.m_state == TransferState::Rejected) {
+//     return;
+//   }
+//   m_transinfo.m_state = TransferState::Canceled;
+//   sendCanceled();
+//   emit updateProgress(m_transinfo);
+//   exitDelete();
+// }
+
+void SendTask::onBytesWritten(qint64 byte) {
+  Q_UNUSED(byte);
+  // send file data
+  if (!m_socket->bytesToWrite()) {
+    if (m_transinfo.m_state == TransferState::Pending ||
+        m_transinfo.m_state == TransferState::Transfering) {
+      if (m_byte_remain) {
+        sendFileData();
+      } else {
+        sendFinish();
+      }
+    }
   }
-  m_transinfo.m_state = TransferState::Canceled;
-  sendCanceled();
-  emit updateProgress(m_transinfo);
-  exitDelete();
 }
 
-// void SendTask::onBytesWritten(qint64 byte) {
-//   Q_UNUSED(byte);
-//   // send file data
-//   if (!m_socket->bytesToWrite()) {
-//     if (m_transinfo.m_state == TransferState::Pending ||
-//         m_transinfo.m_state == TransferState::Transfering) {
-//       if (m_byte_remain) {
-//         sendFileData();
-//       } else {
-//         sendFinish();
-//       }
-//     }
-//   }
-// }
 void SendTask::onConnected() {
-  sendHeader();
   m_send_file->open(QIODevice::ReadOnly);
-  while (m_byte_remain) {
-    sendFileData();
-  }
-  sendFinish();
+  sendHeader();
 }
 
 /**
@@ -116,7 +112,6 @@ void SendTask::sendFinish() {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
-  exitDelete();
 }
 
 void SendTask::sendCanceled() {

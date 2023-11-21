@@ -58,7 +58,7 @@ void TransferServer::onCancelSend(QVector<TransferInfo> info) {
     if (iter != m_sender_wait_queue.end()) {
       sender = *iter;
       m_sender_wait_queue.erase(iter);
-      sender->onCancelSendTask();
+      // sender->onCancelSendTask();
     }
 
     iter = std::find_if(m_senders.begin(), m_senders.end(),
@@ -72,7 +72,7 @@ void TransferServer::onCancelSend(QVector<TransferInfo> info) {
     if (iter != m_sender_wait_queue.end()) {
       sender = *iter;
       m_senders.erase(iter);
-      sender->onCancelSendTask();
+      // sender->onCancelSendTask();
       // bump wait queue
       if ((quint32)m_senders.size() < Setting::ins().m_max_send_thread &&
           m_sender_wait_queue.size()) {

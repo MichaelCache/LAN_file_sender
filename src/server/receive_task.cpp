@@ -12,8 +12,8 @@ ReceiveTask::ReceiveTask(qintptr descriptor, QObject* parent)
     : QThread(parent), m_socket_descriptor(descriptor) {
   m_socket = new QTcpSocket(this);
   connect(m_socket, &QTcpSocket::readyRead, this, &ReceiveTask::onReadyRead);
-  connect(m_socket, &QTcpSocket::disconnected, this,
-          &ReceiveTask::onDisconnected);
+  // connect(m_socket, &QTcpSocket::disconnected, this,
+  //         &ReceiveTask::onDisconnected);
 }
 
 void ReceiveTask::run() { m_socket->setSocketDescriptor(m_socket_descriptor); }
@@ -51,10 +51,9 @@ void ReceiveTask::processPackage(PackageType type, QByteArray& data) {
     case PackageType::Data:
       processPackageData(data);
       break;
-    case PackageType::Cancel:
-      processPackageCancel(data);
-      break;
-      ;
+    // case PackageType::Cancel:
+    //   processPackageCancel(data);
+    //   break;
     case PackageType::Finish:
       processPackageFinish(data);
       break;
@@ -108,17 +107,19 @@ void ReceiveTask::processPackageFinish(QByteArray& data) {
   m_transinfo.m_state = TransferState::Finish;
   m_transinfo.m_progress = 100;
   emit updateProgress(m_transinfo);
+  QTcpSocket* send_socket = qobject_cast<QTcpSocket*>(sender());
+  send_socket->disconnectFromHost();
   exitDelete();
 }
 
-void ReceiveTask::processPackageCancel(QByteArray& data) {
-  if (m_file && m_file->isOpen()) {
-    m_file->close();
-  }
-  m_transinfo.m_state = TransferState::Canceled;
-  emit updateProgress(m_transinfo);
-  exitDelete();
-}
+// void ReceiveTask::processPackageCancel(QByteArray& data) {
+//   if (m_file && m_file->isOpen()) {
+//     m_file->close();
+//   }
+//   m_transinfo.m_state = TransferState::Canceled;
+//   emit updateProgress(m_transinfo);
+//   exitDelete();
+// }
 
 void ReceiveTask::exitDelete() {
   if (m_file && m_file->isOpen()) {

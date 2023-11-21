@@ -22,10 +22,10 @@ class SendTask : public QThread {
   void taskFinish(QUuid);
 
  public Q_SLOTS:
-  void onCancelSendTask();
+  // void onCancelSendTask();
 
  private Q_SLOTS:
-  // void onBytesWritten(qint64 byte);
+  void onBytesWritten(qint64 byte);
   void onConnected();
   void onDisconnected();
 

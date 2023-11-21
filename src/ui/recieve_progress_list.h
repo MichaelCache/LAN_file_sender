@@ -20,6 +20,7 @@ class RecieveProgressListView : public QTableView {
   void cancelSendTask(QVector<TransferInfo>);
   void acceptSendTask(QVector<TransferInfo>);
   void rejectSendTask(QVector<TransferInfo>);
+  void clearFinished(QVector<TransferInfo>);
   
 
  private Q_SLOTS:
