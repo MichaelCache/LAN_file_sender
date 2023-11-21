@@ -35,7 +35,7 @@ SendProgressListView::SendProgressListView(QWidget *parent)
   m_right_menu = new QMenu(this);
   m_cancel_ac = new QAction("Cancel", this);
   m_open_dir_ac = new QAction("Open In Dir", this);
-  m_clear_ac = new QAction("Clear Finished", this);
+  m_clear_ac = new QAction("Clear", this);
   // m_right_menu->addAction(m_cancel_ac);
   m_right_menu->addAction(m_open_dir_ac);
   m_right_menu->addAction(m_clear_ac);

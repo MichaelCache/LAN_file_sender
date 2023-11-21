@@ -35,21 +35,16 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
   // connect send file as sender
   connect(m_host_view, &HostListView::sendFile, m_server,
-          &MainServer::senderSendFile);
+          &MainServer::sendFileInfo);
   //   connect(m_send_progress_view, &SendProgressListView::cancelSendTask,
   //   m_server,
   //           &MainServer::senderSendFileBeCanceled);
 
   // connect recieve file as reciever
   connect(m_receive_progress_view, &RecieveProgressListView::acceptSendTask,
-          m_server, &MainServer::reciverAcceptFile);
+          m_server, &MainServer::hostAcceptFile);
   connect(m_receive_progress_view, &RecieveProgressListView::rejectSendTask,
-          m_server, &MainServer::reciverRejectFile);
-  connect(m_receive_progress_view, &RecieveProgressListView::rejectSendTask,
-          m_receive_task_model, &ProgressInterface::update);
-  //   connect(m_receive_progress_view,
-  //   &RecieveProgressListView::rejectSendTask,
-  //           m_server, &MainServer::reciverCancelFile);
+          m_server, &MainServer::hostRejectFile);
 
   // connect clear
   connect(m_send_progress_view, &SendProgressListView::clearFinished,

@@ -56,7 +56,7 @@ const QVector<QHostAddress>& MainServer::hostIp() {
   return m_host_detector->hostIp();
 }
 
-void MainServer::senderSendFile(QVector<TransferInfo> info) {
+void MainServer::sendFileInfo(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     m_send_pending_task.insert(i);
   }
@@ -105,12 +105,12 @@ void MainServer::senderSendFileFinished(QVector<TransferInfo> info) {
   emit updateSendProgress(info);
 }
 
-void MainServer::reciverAcceptFile(QVector<TransferInfo> info) {
+void MainServer::hostAcceptFile(QVector<TransferInfo> info) {
   m_control_server->sendFileInfo(info.front().m_from_ip, info,
                                  ControlSignal::AcceptSend);
 }
 
-void MainServer::reciverRejectFile(QVector<TransferInfo> info) {
+void MainServer::hostRejectFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     i.m_state = TransferState::Rejected;
   }

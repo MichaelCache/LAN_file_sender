@@ -1,6 +1,7 @@
 #include "control_server.h"
 
 #include <QDataStream>
+#include <QDir>
 #include <QFileInfo>
 #include <QTcpSocket>
 
@@ -60,6 +61,8 @@ void ControlServer::incomingConnection(descriptor descriptor) {
         QVector<TransferInfo> trans_infos;
         for (auto&& i : files) {
           TransferInfo trans_info(i);
+          trans_info.m_file_path = QDir(Setting::ins().m_download_dir)
+                                       .filePath(trans_info.m_file_name);
           trans_info.m_from_ip = from_ip;
           trans_info.m_state = TransferState::Pending;
           trans_infos.push_back(trans_info);
@@ -77,6 +80,7 @@ void ControlServer::incomingConnection(descriptor descriptor) {
             break;
           case ControlSignal::RejectSend: {
             for (auto&& i : trans_infos) {
+              std::swap(i.m_dest_ip, i.m_from_ip);
               i.m_state = TransferState::Rejected;
             }
 

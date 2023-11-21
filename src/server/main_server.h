@@ -19,12 +19,12 @@ class MainServer : public QObject {
 
  public Q_SLOTS:
   // slots as sender
-  void senderSendFile(QVector<TransferInfo> info);
+  void sendFileInfo(QVector<TransferInfo> info);
   void senderSendFileBeCanceled(QVector<TransferInfo> info);
 
   // slots as reciver
-  void reciverAcceptFile(QVector<TransferInfo> info);
-  void reciverRejectFile(QVector<TransferInfo> info);
+  void hostAcceptFile(QVector<TransferInfo> info);
+  void hostRejectFile(QVector<TransferInfo> info);
   void reciverCancelFile(QVector<TransferInfo> info);
 
  private Q_SLOTS:
@@ -45,8 +45,7 @@ class MainServer : public QObject {
   void updateReciveProgress(QVector<TransferInfo> info);
 
  private:
-  // QMutex m_lock;
-  // QMap<QUuid, TransferInfo> m_send_pending_task;
+
   struct TransferInfoHash {
     size_t operator()(const TransferInfo& info) const {
       return qHash(info.id());

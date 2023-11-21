@@ -50,6 +50,8 @@ QString stateToString(TransferState state) {
       return "Transfering";
     case TransferState::Finish:
       return "Finish";
+    case TransferState::Rejected:
+      return  "Rejected";
     case TransferState::UnKonwn:
       return "UnKonwn";
   }
@@ -149,7 +151,8 @@ void ProgressModel::update(QVector<TransferInfo> info) {
   for (auto &&task : info) {
     auto find = std::find(m_tasks.begin(), m_tasks.end(), task);
     if (find != m_tasks.end()) {
-      *find = task;
+      find->m_progress = task.m_progress;
+      find->m_state = task.m_state;
       int row = m_tasks.indexOf(*find);
       // only change state and progress
       emit dataChanged(index(row, (int)Column::State),
