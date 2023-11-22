@@ -38,18 +38,20 @@ QString sizeToString(qint64 size) {
 
 QString stateToString(TransferState state) {
   switch (state) {
-    case TransferState::Waiting:
-      return "Waiting";
+    case TransferState::Pending:
+      return "Pending";
     case TransferState::Disconnected:
       return "Disconnected";
     case TransferState::Paused:
       return "Paused";
-    case TransferState::Cancelled:
-      return "Cancelled";
+    case TransferState::Canceled:
+      return "Canceled";
     case TransferState::Transfering:
       return "Transfering";
     case TransferState::Finish:
       return "Finish";
+    case TransferState::Rejected:
+      return  "Rejected";
     case TransferState::UnKonwn:
       return "UnKonwn";
   }
@@ -149,10 +151,15 @@ void ProgressModel::update(QVector<TransferInfo> info) {
   for (auto &&task : info) {
     auto find = std::find(m_tasks.begin(), m_tasks.end(), task);
     if (find != m_tasks.end()) {
-      *find = task;
+      find->m_progress = task.m_progress;
+      find->m_state = task.m_state;
       int row = m_tasks.indexOf(*find);
+      // only change state and progress
       emit dataChanged(index(row, (int)Column::State),
                        index(row, (int)Column::Progress));
+    } else if (task.m_state == TransferState::Pending) {
+      m_tasks.append(task);
+      emit layoutChanged();
     }
   }
 }
@@ -175,7 +182,7 @@ void ProgressModel::clear() {
   emit layoutAboutToBeChanged();
   QVector<TransferInfo> marked_remove;
   for (auto &&i : m_tasks) {
-    if (i.m_state == TransferState::Cancelled ||
+    if (i.m_state == TransferState::Canceled ||
         i.m_state == TransferState::Disconnected ||
         i.m_state == TransferState::Finish) {
       marked_remove.push_back(i);

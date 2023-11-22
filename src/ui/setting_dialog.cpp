@@ -1,8 +1,11 @@
 #include "setting_dialog.h"
 
 #include <QFileDialog>
+#include <QHostInfo>
 
 #include "setting.h"
+#include "utils.h"
+#include "config.h"
 
 SettingDialog::SettingDialog(QWidget* parent) : QDialog(parent) {
   resize(450, 470);
@@ -26,14 +29,12 @@ SettingDialog::SettingDialog(QWidget* parent) : QDialog(parent) {
   m_download_dir_edit =
       new QLineEdit(Setting::ins().m_download_dir, m_group_box);
   m_select_dir_bt = new QPushButton("Browse", m_group_box);
-  connect(m_select_dir_bt, &QPushButton::clicked, this,
-          &SettingDialog::selectDownloadDir);
 
   m_dir_layout = new QHBoxLayout();
   m_dir_layout->addWidget(m_download_dir_edit);
   m_dir_layout->addWidget(m_select_dir_bt);
 
-// broadcast interval
+  // broadcast interval
   m_broad_interval_label = new QLabel("Broadcast Interval", m_group_box);
   m_broad_interval_edit = new QSpinBox(m_group_box);
   m_broad_interval_edit->setRange(0, 9999);
@@ -70,13 +71,16 @@ SettingDialog::SettingDialog(QWidget* parent) : QDialog(parent) {
   connect(m_cancel_bt, &QPushButton::clicked, this, &SettingDialog::reject);
   connect(m_reset_bt, &QPushButton::clicked, this,
           &SettingDialog::resetSetting);
-
-  // (m_layout);
+  connect(m_select_dir_bt, &QPushButton::clicked, this,
+          &SettingDialog::selectDownloadDir);
 }
 
-SettingDialog::~SettingDialog() {}
+int SettingDialog::exec() {
+  getSetting();
+  return QDialog::exec();
+}
 
-void SettingDialog::onUpdataSettings() {
+void SettingDialog::getSetting() {
   auto& s = Setting::ins();
   m_hostname_edit->setText(s.m_hostname);
   m_download_dir_edit->setText(s.m_download_dir);
@@ -89,6 +93,7 @@ void SettingDialog::saveSetting() {
   s.m_hostname = m_hostname_edit->text();
   s.m_boradcast_interval = m_broad_interval_edit->value();
   s.saveSettings();
+  getSetting();
   accept();
 }
 
@@ -100,4 +105,8 @@ void SettingDialog::selectDownloadDir() {
   if (!new_dir.isEmpty()) m_download_dir_edit->setText(new_dir);
 }
 
-void SettingDialog::resetSetting() { Setting::ins().reset(); }
+void SettingDialog::resetSetting() {
+  m_hostname_edit->setText(QHostInfo::localHostName());
+  m_download_dir_edit->setText(getDefaultDownloadPath());
+  m_broad_interval_edit->setValue(DefaultBroadcastInterval);
+}

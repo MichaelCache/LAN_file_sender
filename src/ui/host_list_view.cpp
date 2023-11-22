@@ -1,4 +1,4 @@
-#include "host_list.h"
+#include "host_list_view.h"
 
 #include <QContextMenuEvent>
 #include <QFileDialog>
@@ -9,7 +9,7 @@
 #include "server/transfer_info.h"
 
 HostListView::HostListView(QWidget *parent) : QTableView(parent) {
-  setSelectionMode(QAbstractItemView::MultiSelection);
+  setSelectionMode(QAbstractItemView::SingleSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
   setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -54,11 +54,11 @@ void HostListView::onSendFile(const QStringList &filenames) {
     TransferInfo info;
     info.m_dest_ip = dst;
     // no need set from ip, reciever will get ip from socket
-    info.m_from_ip = info.m_file_path = f;
+    info.m_file_path = f;
     QFileInfo file_info(f);
     info.m_file_name = file_info.fileName();
     info.m_file_size = file_info.size();
-    info.m_state = TransferState::Waiting;
+    info.m_state = TransferState::Pending;
     infos.append(info);
   }
   emit sendFile(infos);

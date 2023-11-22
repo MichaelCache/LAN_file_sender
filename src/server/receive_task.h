@@ -4,7 +4,6 @@
 #include <QFile>
 #include <QTcpSocket>
 #include <QThread>
-#include <QTimer>
 
 #include "tcp_package.h"
 #include "transfer_info.h"
@@ -15,14 +14,13 @@ class ReceiveTask : public QThread {
   /* data */
  public:
   ReceiveTask(qintptr descriptor, QObject* parent = nullptr);
-  ~ReceiveTask();
+  ~ReceiveTask() = default;
 
   virtual void run() override;
 
   QUuid taskId() const;
 
  Q_SIGNALS:
-  void addProgress(const TransferInfo&);
   void updateProgress(const TransferInfo&);
   void taskFinish(QUuid);
 
@@ -35,7 +33,7 @@ class ReceiveTask : public QThread {
   void processPackageHeader(QByteArray& data);
   void processPackageData(QByteArray& data);
   void processPackageFinish(QByteArray& data);
-  void processPackageCancel(QByteArray& data);
+  // void processPackageCancel(QByteArray& data);
 
   void exitDelete();
 
@@ -45,5 +43,4 @@ class ReceiveTask : public QThread {
   QByteArray m_buff;
   QFile* m_file{nullptr};
   TransferInfo m_transinfo;
-  QTimer* m_timer;
 };

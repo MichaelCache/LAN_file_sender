@@ -14,9 +14,6 @@ HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   m_local_host_ip = getLocalAddressFromInterfaces();
   m_broadcast_ip = getBroadcastAddressFromInterfaces();
 
-  connect(&Setting::ins(), &Setting::updateSettings, this,
-          &HostBroadcaster::onUpdateHostInfo);
-
   m_timer = new QTimer(this);
 
   // share port for broadcast and listen this port in same time
@@ -25,9 +22,10 @@ HostBroadcaster::HostBroadcaster(QObject *parent) : QObject(parent) {
   connect(m_broadcast_udp, &QUdpSocket::readyRead, this,
           &HostBroadcaster::receiveBroadcast);
   connect(m_timer, &QTimer::timeout, this, &HostBroadcaster::consistBroadcast);
+  connect(&Setting::ins(), &Setting::hostnameChanged, this,
+          &HostBroadcaster::onUpdateHostInfo);
+  broadcast(MsgType::New);
 }
-
-HostBroadcaster::~HostBroadcaster() {}
 
 void HostBroadcaster::start() {
   broadcast(MsgType::New);
@@ -103,9 +101,13 @@ void HostBroadcaster::receiveBroadcast() {
                                    obj.value("os").toString()};
 
       auto msg_type = (MsgType)(obj.value("type").toInt());
+
       if (msg_type == MsgType::New) {
         if (!m_added_host.contains(sender)) {
           emit detectHostOnLine(remote_server);
+          // Reply for new host online
+          sendHostInfo(sender, MsgType::Reply);
+          m_added_host.insert(sender);
         }
 
       } else if (msg_type == MsgType::Update || msg_type == MsgType::Reply) {
@@ -113,12 +115,6 @@ void HostBroadcaster::receiveBroadcast() {
       } else if (msg_type == MsgType::Delete) {
         emit detectHostOffline(remote_server);
         m_added_host.remove(sender);
-      }
-
-      if (msg_type == MsgType::New && !m_added_host.contains(sender)) {
-        // send back new remote server this host info
-        sendHostInfo(sender, MsgType::Reply);
-        m_added_host.insert(sender);
       }
     }
   }

@@ -11,10 +11,7 @@ class MainWindow : public QMainWindow {
   Q_OBJECT
  public:
   MainWindow(QWidget *parent = nullptr);
-  ~MainWindow();
-
- private Q_SLOTS:
-  void openSettingDialog();
+  ~MainWindow() = default;
 
  protected:
   virtual void closeEvent(QCloseEvent *event) override;
@@ -22,7 +19,7 @@ class MainWindow : public QMainWindow {
  private:
   MainWidget *m_central_widget;
   QMenuBar *m_menubar;
-  QAction *m_setting;
+  QAction *m_setting_ac;
   QMessageBox *m_close_msg;
   SettingDialog *m_setting_dialog;
 };

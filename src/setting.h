@@ -5,10 +5,11 @@
 
 #include "config.h"
 
+// singleton
 class Setting : public QSettings {
   Q_OBJECT
  public:
-  ~Setting();
+  ~Setting() = default;
   static Setting &ins();
 
   void saveSettings();
@@ -25,11 +26,9 @@ class Setting : public QSettings {
   quint32 m_boradcast_interval{DefaultBroadcastInterval};
 
  Q_SIGNALS:
-  void updateSettings();
+  void hostnameChanged();
 
  private:
   Setting(QObject *parent = nullptr);
-  QString getDefaultDownloadPath();
   void loadSettingFile();
-  
 };

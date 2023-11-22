@@ -11,19 +11,17 @@
 #include "receive_task.h"
 #include "setting.h"
 
-TransferServer::TransferServer(QObject* parent) : QTcpServer(parent) {}
-
-TransferServer::~TransferServer() {}
-
 void TransferServer::start() {
   listen(QHostAddress::Any, Setting::ins().m_file_trans_port);
 }
 
-void TransferServer::stop() {}
+void TransferServer::stop() {
+  // do nothing
+}
 
 void TransferServer::incomingConnection(qintptr socketDescriptor) {
   auto receiver = new ReceiveTask(socketDescriptor, this);
-  emit newReceiveTaskCreated(receiver);
+  // emit newReceiveTaskCreated(receiver);
   connect(receiver, &ReceiveTask::taskFinish, this,
           &TransferServer::removeReceive);
   connect(receiver, &ReceiveTask::updateProgress, this,
@@ -35,8 +33,8 @@ void TransferServer::incomingConnection(qintptr socketDescriptor) {
 void TransferServer::onSendFile(QVector<TransferInfo> info) {
   for (auto&& i : info) {
     auto sender = new SendTask(i);
-    emit newSendTaskCreated(sender);
-    auto& task = sender->task();
+    // emit newSendTaskCreated(sender);
+    // auto& task = sender->task();
     connect(sender, &SendTask::taskFinish, this, &TransferServer::removeSend);
     connect(sender, &SendTask::updateProgress, this,
             &TransferServer::updateSendProgress);
@@ -60,7 +58,7 @@ void TransferServer::onCancelSend(QVector<TransferInfo> info) {
     if (iter != m_sender_wait_queue.end()) {
       sender = *iter;
       m_sender_wait_queue.erase(iter);
-      sender->onCancelSend();
+      // sender->onCancelSendTask();
     }
 
     iter = std::find_if(m_senders.begin(), m_senders.end(),
@@ -74,7 +72,7 @@ void TransferServer::onCancelSend(QVector<TransferInfo> info) {
     if (iter != m_sender_wait_queue.end()) {
       sender = *iter;
       m_senders.erase(iter);
-      sender->onCancelSend();
+      // sender->onCancelSendTask();
       // bump wait queue
       if ((quint32)m_senders.size() < Setting::ins().m_max_send_thread &&
           m_sender_wait_queue.size()) {

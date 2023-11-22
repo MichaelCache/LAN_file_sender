@@ -5,10 +5,6 @@
 
 #include "model/progress_interface.h"
 
-ProgressBar::ProgressBar(QObject *parent) : QStyledItemDelegate(parent) {}
-
-ProgressBar::~ProgressBar() {}
-
 void ProgressBar::paint(QPainter *painter, const QStyleOptionViewItem &option,
                         const QModelIndex &index) const {
   if (index.column() == (int)TransferProgress::Column::Progress) {

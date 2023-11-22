@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <unordered_set>
 
 #include "control_server.h"
 #include "host_broadcaster.h"
@@ -10,7 +11,7 @@ class MainServer : public QObject {
   Q_OBJECT
  public:
   MainServer(QObject* parent = nullptr);
-  ~MainServer();
+  ~MainServer() = default;
 
   void start();
   void stop();
@@ -18,30 +19,43 @@ class MainServer : public QObject {
 
  public Q_SLOTS:
   // slots as sender
-  void onSendFile(QVector<TransferInfo> info);
-  void onSendCancelFile(QVector<TransferInfo> info);
+  void sendFileInfo(QVector<TransferInfo> info);
+  void senderSendFileBeCanceled(QVector<TransferInfo> info);
 
   // slots as reciver
-  void onAcceptFile(QVector<TransferInfo> info);
+  void hostAcceptFile(QVector<TransferInfo> info);
+  void hostRejectFile(QVector<TransferInfo> info);
+  void reciverCancelFile(QVector<TransferInfo> info);
+
+ private Q_SLOTS:
+  // slots as sender
+  void sendFileToRemote(QVector<TransferInfo> info);
+  void clearRejectedSend(QVector<TransferInfo> info);
+  void senderSendFileFinished(QVector<TransferInfo> info);
 
  Q_SIGNALS:
   // signal from broadcast
   void detectHostOnLine(RemoteHostInfo);
   void detectHostOffline(RemoteHostInfo);
 
-  // signal as sender
-  void recieveFileInfo(QVector<TransferInfo> info);
-  void sendFileDenied(QVector<TransferInfo> trans_info);
+  // signal from sender
   void updateSendProgress(QVector<TransferInfo>);
 
-  // signal as reciever
-  void updateReceiveProgress(QVector<TransferInfo> info);
+  // signal from reciever
+  void updateReciveProgress(QVector<TransferInfo> info);
 
  private:
-  QMutex m_lock;
-  QVector<TransferInfo> m_send_wating_task;
-  QVector<TransferInfo> m_recieve_wating_task;
+
+  struct TransferInfoHash {
+    size_t operator()(const TransferInfo& info) const {
+      return qHash(info.id());
+    }
+  };
+  std::unordered_set<TransferInfo, TransferInfoHash> m_send_pending_task;
+  // broadcaster for broadcast host info like name, ip
   HostBroadcaster* m_host_detector;
+  // control server for send/recive file tranfer control signal
   ControlServer* m_control_server;
+  // transfer server for file data transfer
   TransferServer* m_transfer_server;
 };

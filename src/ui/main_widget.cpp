@@ -27,29 +27,30 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
           &HostInterface::add);
   connect(m_server, &MainServer::detectHostOffline, m_host_model,
           &HostInterface::remove);
+  // update send and recive progress
+  connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
+          &ProgressInterface::update);
+  connect(m_server, &MainServer::updateReciveProgress, m_receive_task_model,
+          &ProgressInterface::update);
 
   // connect send file as sender
   connect(m_host_view, &HostListView::sendFile, m_server,
-          &MainServer::onSendFile);
-  connect(m_host_view, &HostListView::sendFile, m_send_task_model,
-          &ProgressInterface::add);
-  connect(m_server, &MainServer::updateSendProgress, m_send_task_model,
-          &ProgressInterface::update);
-  connect(m_server, &MainServer::sendFileDenied, m_send_task_model,
-          &ProgressInterface::update);
-  connect(m_send_progress_view, &SendProgressListView::cancelSendTask, m_server,
-          &MainServer::onSendCancelFile);
+          &MainServer::sendFileInfo);
+  //   connect(m_send_progress_view, &SendProgressListView::cancelSendTask,
+  //   m_server,
+  //           &MainServer::senderSendFileBeCanceled);
 
-  // connect receive file as receiver
-  connect(m_server, &MainServer::recieveFileInfo, m_receive_task_model,
-          &ProgressInterface::add);
-  connect(m_server, &MainServer::updateReceiveProgress, m_receive_task_model,
-          &ProgressInterface::update);
-
+  // connect recieve file as reciever
   connect(m_receive_progress_view, &RecieveProgressListView::acceptSendTask,
-          m_server, [&](QVector<TransferInfo> info) {
-            this->m_server->onAcceptFile(info);
-          });
+          m_server, &MainServer::hostAcceptFile);
+  connect(m_receive_progress_view, &RecieveProgressListView::rejectSendTask,
+          m_server, &MainServer::hostRejectFile);
+
+  // connect clear
+  connect(m_send_progress_view, &SendProgressListView::clearFinished,
+          m_send_task_model, &ProgressInterface::remove);
+  connect(m_receive_progress_view, &RecieveProgressListView::clearFinished,
+          m_receive_task_model, &ProgressInterface::remove);
 
   // ui
   m_progress_layout = new QVBoxLayout();
@@ -62,8 +63,8 @@ MainWidget::MainWidget(QWidget* parent) : QWidget(parent) {
 
   m_localhostname = new QLabel(this);
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
-  connect(&Setting::ins(), &Setting::updateSettings, this,
-          &MainWidget::onUpdateSettings);
+  connect(&Setting::ins(), &Setting::hostnameChanged, this,
+          &MainWidget::onHostnameChanged);
 
   m_localhostip = new QLabel(this);
   QString local_ips = "Host IP: ";
@@ -93,6 +94,6 @@ MainWidget::~MainWidget() {}
 
 void MainWidget::onClose() { m_server->stop(); }
 
-void MainWidget::onUpdateSettings() {
+void MainWidget::onHostnameChanged() {
   m_localhostname->setText("Host Name: " + Setting::ins().m_hostname);
 }

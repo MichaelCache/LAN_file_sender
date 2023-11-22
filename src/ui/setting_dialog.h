@@ -14,9 +14,23 @@ class SettingDialog : public QDialog {
   Q_OBJECT
  public:
   SettingDialog(QWidget* parent = nullptr);
-  ~SettingDialog();
+  ~SettingDialog() = default;
+
+ public Q_SLOTS:
+  virtual int exec() override;
+
+ private Q_SLOTS:
+  void saveSetting();
+  void selectDownloadDir();
+  void resetSetting();
 
  private:
+  /**
+   * @brief Get Setting information from setting
+   * and update setting dialog widgets
+   */
+  void getSetting();
+
   QVBoxLayout* m_layout;
 
   QGridLayout* m_content_layout;
@@ -35,13 +49,4 @@ class SettingDialog : public QDialog {
   QPushButton* m_reset_bt;
   QPushButton* m_sure_bt;
   QPushButton* m_cancel_bt;
-
- public Q_SLOTS:
-  void onUpdataSettings();
-
- private Q_SLOTS:
-
-  void saveSetting();
-  void selectDownloadDir();
-  void resetSetting();
 };

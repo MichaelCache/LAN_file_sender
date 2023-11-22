@@ -8,10 +8,11 @@
 
 enum class TransferState : quint32 {
   UnKonwn = 0,
-  Waiting,
+  Pending,
+  Rejected,
   Disconnected,
   Paused,
-  Cancelled,
+  Canceled,
   Transfering,
   Finish
 };
@@ -22,7 +23,7 @@ class TransferInfo {
  public:
   TransferInfo(/* args */);
   TransferInfo(const FileInfo& info);
-  ~TransferInfo();
+  ~TransferInfo() = default;
 
   using TaskId = QUuid;
 

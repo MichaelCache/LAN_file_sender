@@ -11,8 +11,6 @@ TransferInfo::TransferInfo(const FileInfo& info) {
   m_id = info.m_id;
 }
 
-TransferInfo::~TransferInfo() {}
-
 bool TransferInfo::operator==(const TransferInfo& other) const {
   // stats and progress is variant, only match taskid;
   return m_id == other.m_id;

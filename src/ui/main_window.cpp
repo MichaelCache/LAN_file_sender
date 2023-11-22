@@ -1,6 +1,8 @@
 #include "main_window.h"
 
 #include <QAction>
+#include <QApplication>
+#include <QDesktopWidget>
 #include <QMenuBar>
 #include <QMessageBox>
 
@@ -8,17 +10,20 @@
 #include "setting.h"
 #include "setting_dialog.h"
 
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+  auto const rec = QApplication::desktop()->screenGeometry();
+  auto const height = rec.height();
+  auto const width = rec.width();
+  resize(width * 2 / 3, height * 2 / 3);
+
   m_central_widget = new MainWidget(this);
   setCentralWidget(m_central_widget);
 
   m_menubar = new QMenuBar(this);
-  m_setting = new QAction("Setting", m_menubar);
-  m_menubar->addAction(m_setting);
-
-  connect(m_setting, &QAction::triggered, this, &MainWindow::openSettingDialog);
-
   setMenuBar(m_menubar);
+  m_setting_ac = new QAction("Setting", m_menubar);
+  m_menubar->addAction(m_setting_ac);
 
   // close dialog
   m_close_msg = new QMessageBox(this);
@@ -28,13 +33,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
   // setting dialog
   m_setting_dialog = new SettingDialog(this);
-  connect(&Setting::ins(), &Setting::updateSettings, m_setting_dialog,
-          &SettingDialog::onUpdataSettings);
+
+  connect(m_setting_ac, &QAction::triggered, m_setting_dialog,
+          &SettingDialog::exec);
 }
-
-MainWindow::~MainWindow() {}
-
-void MainWindow::openSettingDialog() { m_setting_dialog->exec(); }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   auto ret = m_close_msg->exec();

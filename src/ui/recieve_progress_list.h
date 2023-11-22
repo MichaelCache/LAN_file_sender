@@ -14,18 +14,23 @@ class RecieveProgressListView : public QTableView {
   /* data */
  public:
   RecieveProgressListView(QWidget* parent = nullptr);
-  ~RecieveProgressListView();
+  ~RecieveProgressListView() = default;
 
  Q_SIGNALS:
   void cancelSendTask(QVector<TransferInfo>);
   void acceptSendTask(QVector<TransferInfo>);
-  void clearFinished();
+  void rejectSendTask(QVector<TransferInfo>);
+  void clearFinished(QVector<TransferInfo>);
+  
 
  private Q_SLOTS:
   void onCustomRightMouseButtonPressed(const QPoint&);
-  void onCancelButtonClickedk();
-  void onAcceptButtonClickedk();
-  void openDir();
+
+  void onAcceptButtonClicked();
+  void onRejectButtonClicked();
+  void onCancelButtonClicked();
+  void onOpenDirButtonClicked();
+  void onClearButtonClicked();
 
  private:
   ProgressBar* m_progress;
@@ -33,6 +38,7 @@ class RecieveProgressListView : public QTableView {
   QMenu* m_right_menu;
   QAction* m_cancel_ac;
   QAction* m_accept_ac;
+  QAction* m_reject_ac;
   QAction* m_open_dir_ac;
   QAction* m_clear_ac;
   QVector<TransferInfo> m_selected_task;
