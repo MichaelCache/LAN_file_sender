@@ -36,7 +36,7 @@ RecieveProgressListView::RecieveProgressListView(QWidget *parent)
   m_reject_ac = new QAction("Reject", this);
   m_cancel_ac = new QAction("Cancel", this);
   m_open_dir_ac = new QAction("Open In Dir", this);
-  m_clear_ac = new QAction("Clear Finished", this);
+  m_clear_ac = new QAction("Clear", this);
   m_right_menu->addAction(m_accept_ac);
   m_right_menu->addAction(m_reject_ac);
   // m_right_menu->addAction(m_cancel_ac);
