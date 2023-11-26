@@ -17,6 +17,10 @@ find_package(
   COMPONENTS Widgets Network Core
   REQUIRED)
 
-add_executable(lanshare main.cpp)
-target_link_libraries(lanshare PRIVATE share Qt5::Core Qt5::Widgets
+if(WIN32)
+  add_executable(lantransfer WIN32 main.cpp)
+else()
+  add_executable(lantransfer main.cpp)
+endif()
+target_link_libraries(lantransfer PRIVATE share Qt5::Core Qt5::Widgets
                                        Qt5::Network)

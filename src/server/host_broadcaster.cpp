@@ -6,6 +6,7 @@
 #include <QNetworkInterface>
 #include <QProcess>
 #include <QStandardPaths>
+#include <cassert>
 
 #include "config.h"
 #include "setting.h"
