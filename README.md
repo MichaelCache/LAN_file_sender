@@ -5,4 +5,5 @@ File sender in LAN, depends qt5:
  - auto detect client in LAN
  - support windows and linux
 
-![pic](pic/cap.PNG)
+<img src="pic/cap.PNG">
+<!-- ![pic](pic/cap.PNG) -->
